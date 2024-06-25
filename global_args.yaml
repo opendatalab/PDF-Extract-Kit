@@ -1,0 +1,29 @@
+model_args:
+  device: cuda
+  img_size: 1888
+  conf_thres: 0.25
+  iou_thres: 0.45
+  pdf_dpi: 200
+  layout_weight: /mnt/hwfile/opendatalab/ouyanglinke/PDF_Formula/checkpoint/Layoutlmv3/yanbao_r2/model_final.pth
+  mfd_weight: /mnt/hwfile/opendatalab/wufan/weights/ocr_pipeline/yolov8/withouscihubtrain_addr4_epoch91.pt
+  mfr_weight: /mnt/hwfile/opendatalab/wufan/weights/ocr_pipeline/UniMERNet/models_old
+  faiss_img_list: /mnt/hwfile/opendatalab/ouyanglinke/PDF_Formula/faiss/train_img_list.txt
+  img_ap_ar: /mnt/hwfile/opendatalab/ouyanglinke/PDF_Formula/faiss/img_ap_ar.json
+
+s3_args:
+  input_s3_dir: s3://llm-pdf-text/pdf-meta/scihub/v002/
+  # input_s3_dir: s3://llm-pdf-text/xuchao/law-pdf-meta/
+  # input_s3_dir: s3://llm-pdf-text/pdf_textbook_ocr/enroll_split/
+  # input_s3_dir: s3://llm-process-pperf/ebook/test/textbook_4w_0506_res_fail/
+  
+  output_s3_dir: s3://llm-pdf-text/pdf_gpu_output/scihub0405/
+  # output_s3_dir: s3://llm-pdf-text/xuchao/law-pdf-mode-output/
+  # output_s3_dir: s3://llm-pdf-text/layoutlmv3_ocr_pipeline/textbook_2k_jsonl/
+  # output_s3_dir: s3://llm-pdf-text/layoutlmv3_ocr_pipeline/textbook_res_fail/
+
+run_args:
+  input_list_file: input_list.log
+  output_list_file: output_list.log
+  partition: s2_bigdata
+  run_num: 10000
+  gpu_quota: 20
