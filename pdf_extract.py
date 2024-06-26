@@ -25,7 +25,6 @@ from modules.layoutlmv3.model_init import Layoutlmv3_Predictor
 from modules.self_modify import ModifiedPaddleOCR
 from modules.post_process import get_croped_image, latex_rm_whitespace
 
-from modules.faiss_model.faiss_run import Faiss_Index
 
 def mfd_model_init(weight):
     mfd_model = YOLO(weight)
@@ -71,6 +70,7 @@ class MathDataset(Dataset):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--pdf', type=str)
+    parser.add_argument('--output', type=str, default="output")
     parser.add_argument('--vis', action='store_true')
     parser.add_argument('--render', action='store_true')
     args = parser.parse_args()
@@ -82,19 +82,18 @@ if __name__ == '__main__':
     print('Started!')
     
     ## ======== model init ========##
-    with open('global_args.yaml') as f:
-        global_args = yaml.load(f, Loader=yaml.FullLoader)
-    img_size = global_args['model_args']['img_size']
-    conf_thres = global_args['model_args']['conf_thres']
-    iou_thres = global_args['model_args']['iou_thres']
-    device = global_args['model_args']['device']
-    dpi = global_args['model_args']['pdf_dpi']
-    mfd_model = mfd_model_init(global_args['model_args']['mfd_weight'])
-    mfr_model, mfr_vis_processors = mfr_model_init(global_args['model_args']['mfr_weight'], device=device)
+    with open('configs/model_configs.yaml') as f:
+        model_configs = yaml.load(f, Loader=yaml.FullLoader)
+    img_size = model_configs['model_args']['img_size']
+    conf_thres = model_configs['model_args']['conf_thres']
+    iou_thres = model_configs['model_args']['iou_thres']
+    device = model_configs['model_args']['device']
+    dpi = model_configs['model_args']['pdf_dpi']
+    mfd_model = mfd_model_init(model_configs['model_args']['mfd_weight'])
+    mfr_model, mfr_vis_processors = mfr_model_init(model_configs['model_args']['mfr_weight'], device=device)
     mfr_transform = transforms.Compose([mfr_vis_processors, ])
-    layout_model = layout_model_init(global_args['model_args']['layout_weight'])
+    layout_model = layout_model_init(model_configs['model_args']['layout_weight'])
     ocr_model = ModifiedPaddleOCR(show_log=True)
-    faiss_model = Faiss_Index(global_args['model_args']['faiss_img_list'], global_args['model_args']['img_ap_ar'])
     print(now.strftime('%Y-%m-%d %H:%M:%S'))
     print('Model init done!')
     ## ======== model init ========##
@@ -121,16 +120,6 @@ if __name__ == '__main__':
         for idx, image in enumerate(img_list):
             img_H, img_W = image.shape[0], image.shape[1]
             layout_res = layout_model(image, ignore_catids=[])
-
-            # 单页面检索
-            check_img = faiss_model.trans_img(image)
-            D, I = faiss_model.index.search(check_img, 10)
-            ap_list = faiss_model.get_retrival_ap_list(I, D)
-            search_judge, cannot_find = faiss_model.low_ap_percentage(ap_list)
-            score_judge = faiss_model.score_judge(layout_res['layout_dets'])  # 仅计算了layout检测的score
-            final_judge = score_judge and search_judge
-            layout_res['judge'] = {'final_judge': final_judge, 'search_judge': search_judge, 'score_judge': score_judge, 'cannot_find': cannot_find, 'search_list': ap_list}
-
             # 公式检测
             mfd_res = mfd_model.predict(image, imgsz=img_size, conf=conf_thres, iou=iou_thres, verbose=True)[0]
             for xyxy, conf, cla in zip(mfd_res.boxes.xyxy.cpu(), mfd_res.boxes.conf.cpu(), mfd_res.boxes.cls.cpu()):
@@ -199,7 +188,7 @@ if __name__ == '__main__':
                                 'text': text,
                             })
 
-        output_dir = 'data/output'
+        output_dir = args.output
         os.makedirs(output_dir, exist_ok=True)
         basename = os.path.basename(single_pdf)[0:-4]
         with open(os.path.join(output_dir, f'{basename}.json'), 'w') as f:
@@ -239,7 +228,7 @@ if __name__ == '__main__':
                         except Exception as e:
                             print(f"got exception on {text}, error info: {e}")
                     draw.rectangle([x_min, y_min, x_max, y_max], fill=None, outline=color_palette[label], width=1)
-                    fontText = ImageFont.truetype("simhei.ttf", 15, encoding="utf-8")
+                    fontText = ImageFont.truetype("assets/fonts/simhei.ttf", 15, encoding="utf-8")
                     draw.text((x_min, y_min), label_name, color_palette[label], font=fontText)
                 
                 width, height = vis_img.size
