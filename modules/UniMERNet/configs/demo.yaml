@@ -4,7 +4,7 @@ model:
   model_config:
     model_name: ./models
     max_seq_len: 1024
-    length_aware: True
+    length_aware: False
   load_pretrained: True
   pretrained: ./models/pytorch_model.bin
   tokenizer_config:
