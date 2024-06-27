@@ -96,7 +96,7 @@ TODO
 
 ### 环境安装
 
-```
+```bash
 conda create -n pipeline python=3.10
 
 pip install unimernet
@@ -108,7 +108,7 @@ pip install --extra-index-url https://miropsota.github.io/torch_packages_builder
 
 安装完环境后，可能会遇到一些版本冲突导致版本变更，如果遇到了版本相关的报错，可以尝试下面的命令重新安装指定版本的库。
 
-```
+```bash
 pip uninstall PyMuPDF
 
 pip install PyMuPDF==1.20.2
@@ -118,7 +118,7 @@ pip install pillow==8.4.0
 
 除了版本冲突外，可能还会遇到torch无法调用的错误，可以先把下面的库卸载，然后重新安装cuda12和cudnn。
 
-```
+```bash
 pip uninstall nvidia-cusparse-cu12
 ```
 
@@ -133,15 +133,15 @@ python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
 ```
 
 相关参数解释：
-- --pdf 待处理的pdf文件，如果传入一个文件夹，则会处理文件夹下的所有pdf文件。
-- --output 处理结果保存的路径，默认是"output"
-- --vis 是否对结果可视化，是则会把检测的结果可视化出来，主要是检测框和类别
-- --render 是否把识别得的结果渲染出来，包括公式的latex代码，以及普通文本，都会渲染出来放在检测框中。注意：此过程非常耗时，另外也需要提前安装`xelatex`和`imagemagic`。
+- `--pdf` 待处理的pdf文件，如果传入一个文件夹，则会处理文件夹下的所有pdf文件。
+- `--output` 处理结果保存的路径，默认是"output"
+- `--vis` 是否对结果可视化，是则会把检测的结果可视化出来，主要是检测框和类别
+- `--render` 是否把识别得的结果渲染出来，包括公式的latex代码，以及普通文本，都会渲染出来放在检测框中。注意：此过程非常耗时，另外也需要提前安装`xelatex`和`imagemagic`。
 
 
 
 
-## Acknowledgement
+## 致谢
 
    - [LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3): 布局检测模型
    - [UniMERNet](https://github.com/opendatalab/UniMERNet): 公式识别模型
