@@ -16,7 +16,7 @@ The PDF content extraction framework is illustrated below:
 
 
 <details>
-  <summary>PDF-Extract-Kit输出格式</summary>
+  <summary>PDF-Extract-Kit Output Format</summary>
 
 ```Bash
 {
