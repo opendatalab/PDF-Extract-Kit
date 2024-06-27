@@ -7,8 +7,30 @@
 
 整体的提取框架如下图所示：
 
-![](assets/demo/pipeline.png)
+![](assets/demo/pipeline_v2.png)
 
+
+## 效果展示
+
+我们在模型框架的基础上，新增了训练数据进行训练，使得模型能够适用于多种应用场景。目前在科学论文、中英文教材、行业研报、财报等场景下都能有较好的效果，并且可以克服扫描模糊、水印等问题。
+
+![](assets/demo/example1.png)
+
+![](assets/demo/example2.png)
+
+## 评测指标
+
+### Layout检测
+
+xxxxxxxxxxxxx
+
+### 公式检测
+
+xxxxxxxxxx
+
+### 公式识别
+
+xxxxxxxxxxxxx
 
 ## 安装教程
 
