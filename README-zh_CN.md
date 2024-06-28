@@ -73,9 +73,7 @@ PDF内容提取框架如下图所示
 结合多样性PDF文档标注，我们训练了鲁棒的`布局检测`和`公式检测`模型。在论文、教材、研报、财报等多样性的PDF文档上，我们的pipeline都能得到准确的提取结果，对于扫描模糊、水印等情况也有较高鲁棒性。
 
 
-![](assets/demo/example1.png)
-
-![](assets/demo/example2.png)
+![](assets/demo/example.png)
 
 ## 评测指标
 
@@ -83,13 +81,107 @@ PDF内容提取框架如下图所示
 
 <span id="layout-anchor"></span>
 ### 布局检测
-TODO
+
+我们与现有的开源Layout检测模型做了对比，包括[DocXchain](https://github.com/AlibabaResearch/AdvancedLiterateMachinery/tree/main/Applications/DocXChain)、[Surya](https://github.com/VikParuchuri/surya)、[360LayoutAnalysis](https://github.com/360AILAB-NLP/360LayoutAnalysis)的两个模型，而LayoutLMv3-SFT指的是我们在[LayoutLMv3](https://github.com/microsoft/unilm/blob/master/layoutlmv3)的基础上进一步做了SFT训练后的模型。论文验证集由402张Arxiv论文页面构成，教材验证集由587张不同来源的教材页面构成。
+
+<table>
+    <tr>
+        <th align="center" rowspan="2">模型</th> 
+        <th colspan="3" align="center">论文验证集</th> 
+        <th colspan="3" align="center">教材验证集</th> 
+   </tr>
+    <tr>
+      	 <th>mAP</th>
+         <th>AP50</th>
+         <th>AR50</th>
+         <th>mAP</th>
+         <th>AP50</th>
+         <th>AR50</th>    
+    </tr>
+    <tr>
+        <td>DocXchain</td>
+        <td>52.8</td>
+        <td>69.5</td>
+        <td>77.3</td> 
+        <td>34.9</td>
+        <td>50.1</td>
+        <td>63.5</td>   
+    </tr>
+    <tr>
+        <td>Surya</td>
+        <td>24.2</td>
+        <td>39.4</td>
+        <td>66.1</td> 
+        <td>13.9</td>
+        <td>23.3</td>
+        <td>49.9</td>   
+    </tr>
+    <tr>
+        <td>360LayoutAnalysis-Paper</td>
+        <td>37.7</td>
+        <td>53.6</td>
+        <td>59.8</td> 
+        <td>20.7</td>
+        <td>31.3</td>
+        <td>43.6</td>   
+    </tr>
+    <tr>
+        <td>360LayoutAnalysis-Report</td>
+        <td>35.1</td>
+        <td>46.9</td>
+        <td>55.9</td> 
+        <td>25.4</td>
+        <td>33.7</td>
+        <td>45.1</td>   
+    </tr>
+    <tr>
+        <td bgcolor="#f0f0f0">LayoutLMv3-SFT</td>
+        <th bgcolor="#f0f0f0">77.6</th>
+        <th bgcolor="#f0f0f0">93.3</th>
+        <th bgcolor="#f0f0f0">95.5</th> 
+        <th bgcolor="#f0f0f0">67.9</th>
+        <th bgcolor="#f0f0f0">82.7</th>
+        <th bgcolor="#f0f0f0">87.9</th>   
+    </tr>
+</table>
+
 
 <span id="mfd-anchor"></span>
 ### 公式检测
-TODO
+
+我们与开源的模型[Pix2Text-MFD](https://github.com/breezedeus/pix2text)做了对比，另外，Yolov8-SFT是我们在Yolov8模型的基础上进行了SFT训练后的权重。论文验证集由255张Arxiv论文页面构成，多源验证集由789张不同来源的页面构成，包括教材、书籍等。
+
+<table>
+    <tr>
+        <th align="center" rowspan="2">模型</th> 
+        <th colspan="2" align="center">论文验证集</th> 
+        <th colspan="2" align="center">多源验证集</th> 
+   </tr>
+    <tr>
+         <th>AP50</th>
+         <th>AR50</th>
+         <th>AP50</th>
+         <th>AR50</th>    
+    </tr>
+    <tr>
+        <td>Pix2Text-MFD</td>
+        <td>60.1</td> 
+        <td>64.6</td>
+        <td>58.9</td>
+        <td>62.8</td>   
+    </tr>
+    <tr>
+        <td bgcolor="#f0f0f0">Yolov8-FT</td>
+        <th bgcolor="#f0f0f0">87.7</th> 
+        <th bgcolor="#f0f0f0">89.9</th>
+        <th bgcolor="#f0f0f0">82.4</th>
+        <th bgcolor="#f0f0f0">87.3</th>   
+    </tr>
+</table>
 
 ### 公式识别
+
+公式识别我们使用的是[Unimernet](https://github.com/opendatalab/UniMERNet)的权重，没有进一步的SFT训练，其精度验证结果可以在其GitHub页面获取。
 
 
 ## 使用教程
