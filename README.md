@@ -81,7 +81,7 @@ Existing open-source models are often trained on data from Arxiv papers and fall
 <span id="layout-anchor"></span>
 ### Layout Detection
 
-We have compared our model with existing open-source layout detection models, including [DocXchain](https://github.com/AlibabaResearch/AdvancedLiterateMachinery/tree/main/Applications/DocXChain), [Surya](https://github.com/VikParuchuri/surya), and two models from [360LayoutAnalysis](https://github.com/360AILAB-NLP/360LayoutAnalysis). The model present as LayoutLMv3-SFT in the table refers to the checkpoint we further trained with our SFT data on [LayoutLMv3](https://github.com/microsoft/unilm/blob/master/layoutlmv3). The validation set for academic papers consists of 402 pages from Arxiv, while the textbook validation set is composed of 587 pages from various sources of textbooks.
+We have compared our model with existing open-source layout detection models, including [DocXchain](https://github.com/AlibabaResearch/AdvancedLiterateMachinery/tree/main/Applications/DocXChain), [Surya](https://github.com/VikParuchuri/surya), and two models from [360LayoutAnalysis](https://github.com/360AILAB-NLP/360LayoutAnalysis). The model present as LayoutLMv3-SFT in the table refers to the checkpoint we further trained with our SFT data on [LayoutLMv3](https://github.com/microsoft/unilm/blob/master/layoutlmv3). The validation set for academic papers consists of 402 pages, while the textbook validation set is composed of 587 pages from various sources of textbooks.
 
 <table>
     <tr>
