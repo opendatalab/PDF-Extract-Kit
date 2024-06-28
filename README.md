@@ -147,7 +147,7 @@ We have compared our model with existing open-source layout detection models, in
 <span id="mfd-anchor"></span>
 ### Formula Detection
 
-We have compared our model with the open-source formula detection model [Pix2Text-MFD](https://github.com/breezedeus/pix2text). Additionally, the YoloV8-SFT is the weight obtained after we performed SFT training on the basis of the YoloV8 model. The paper's validation set is composed of 255 Arxiv paper pages, and the multi-source validation set consists of 789 pages from various sources, including textbooks and books.
+We have compared our model with the open-source formula detection model [Pix2Text-MFD](https://github.com/breezedeus/pix2text). Additionally, the YoloV8-SFT is the weight obtained after we performed SFT training on the basis of the YoloV8 model. The paper's validation set is composed of 255 academic paper pages, and the multi-source validation set consists of 789 pages from various sources, including textbooks and books.
 
 <table>
     <tr>
