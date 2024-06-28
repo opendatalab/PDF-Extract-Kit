@@ -71,9 +71,8 @@ The types included in `category_id` are as follows:
 
 By annotating a variety of PDF documents, we have trained robust models for `layout detection` and `formula detection`. Our pipeline achieves accurate extraction results on diverse types of PDF documents such as academic papers, textbooks, research reports, and financial statements, and is highly robust even in cases of scanned blurriness or watermarks.
 
-![](assets/demo/example1.png)
+![](assets/demo/example.png)
 
-![](assets/demo/example2.png)
 
 ## Evaluation Metrics
 
@@ -81,13 +80,106 @@ Existing open-source models are often trained on data from Arxiv papers and fall
 
 <span id="layout-anchor"></span>
 ### Layout Detection
-TODO
+
+We have compared our model with existing open-source layout detection models, including [DocXchain](https://github.com/AlibabaResearch/AdvancedLiterateMachinery/tree/main/Applications/DocXChain), [Surya](https://github.com/VikParuchuri/surya), and two models from [360LayoutAnalysis](https://github.com/360AILAB-NLP/360LayoutAnalysis). The model present as LayoutLMv3-SFT in the table refers to the checkpoint we further trained with our SFT data on [LayoutLMv3](https://github.com/microsoft/unilm/blob/master/layoutlmv3). The validation set for academic papers consists of 402 pages from Arxiv, while the textbook validation set is composed of 587 pages from various sources of textbooks.
+
+<table>
+    <tr>
+        <th align="center" rowspan="2">Model</th> 
+        <th colspan="3" align="center">Academic papers val</th> 
+        <th colspan="3" align="center">Textbook val</th> 
+   </tr>
+    <tr>
+      	 <th>mAP</th>
+         <th>AP50</th>
+         <th>AR50</th>
+         <th>mAP</th>
+         <th>AP50</th>
+         <th>AR50</th>    
+    </tr>
+    <tr>
+        <td>DocXchain</td>
+        <td>52.8</td>
+        <td>69.5</td>
+        <td>77.3</td> 
+        <td>34.9</td>
+        <td>50.1</td>
+        <td>63.5</td>   
+    </tr>
+    <tr>
+        <td>Surya</td>
+        <td>24.2</td>
+        <td>39.4</td>
+        <td>66.1</td> 
+        <td>13.9</td>
+        <td>23.3</td>
+        <td>49.9</td>   
+    </tr>
+    <tr>
+        <td>360LayoutAnalysis-Paper</td>
+        <td>37.7</td>
+        <td>53.6</td>
+        <td>59.8</td> 
+        <td>20.7</td>
+        <td>31.3</td>
+        <td>43.6</td>   
+    </tr>
+    <tr>
+        <td>360LayoutAnalysis-Report</td>
+        <td>35.1</td>
+        <td>46.9</td>
+        <td>55.9</td> 
+        <td>25.4</td>
+        <td>33.7</td>
+        <td>45.1</td>   
+    </tr>
+    <tr>
+        <td bgcolor="#f0f0f0">LayoutLMv3-SFT</td>
+        <th bgcolor="#f0f0f0">77.6</th>
+        <th bgcolor="#f0f0f0">93.3</th>
+        <th bgcolor="#f0f0f0">95.5</th> 
+        <th bgcolor="#f0f0f0">67.9</th>
+        <th bgcolor="#f0f0f0">82.7</th>
+        <th bgcolor="#f0f0f0">87.9</th>   
+    </tr>
+</table>
 
 <span id="mfd-anchor"></span>
 ### Formula Detection
-TODO
+
+We have compared our model with the open-source formula detection model [Pix2Text-MFD](https://github.com/breezedeus/pix2text). Additionally, the YoloV8-SFT is the weight obtained after we performed SFT training on the basis of the YoloV8 model. The paper's validation set is composed of 255 Arxiv paper pages, and the multi-source validation set consists of 789 pages from various sources, including textbooks and books.
+
+<table>
+    <tr>
+        <th align="center" rowspan="2">Model</th> 
+        <th colspan="2" align="center">Academic papers val</th> 
+        <th colspan="2" align="center">Multi-source val</th> 
+   </tr>
+    <tr>
+         <th>AP50</th>
+         <th>AR50</th>
+         <th>AP50</th>
+         <th>AR50</th>    
+    </tr>
+    <tr>
+        <td>Pix2Text-MFD</td>
+        <td align="center">60.1</td> 
+        <td align="center">64.6</td>
+        <td align="center">58.9</td>
+        <td align="center">62.8</td>   
+    </tr>
+    <tr>
+        <td bgcolor="#f0f0f0">Yolov8-SFT</td>
+        <th bgcolor="#f0f0f0">87.7</th> 
+        <th bgcolor="#f0f0f0">89.9</th>
+        <th bgcolor="#f0f0f0">82.4</th>
+        <th bgcolor="#f0f0f0">87.3</th>   
+    </tr>
+</table>
 
 ### Formula Recognition
+
+The formula recognition we used is based on the weights downloaded from [Unimernet](https://github.com/opendatalab/UniMERNet), without any further SFT training, and the accuracy validation results can be obtained on its GitHub page.
 
 ## Installation Guide
 
