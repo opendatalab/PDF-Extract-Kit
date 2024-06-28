@@ -149,7 +149,7 @@ PDF内容提取框架如下图所示
 <span id="mfd-anchor"></span>
 ### 公式检测
 
-我们与开源的模型[Pix2Text-MFD](https://github.com/breezedeus/pix2text)做了对比，另外，Yolov8-SFT是我们在Yolov8模型的基础上进行了SFT训练后的权重。论文验证集由255张Arxiv论文页面构成，多源验证集由789张不同来源的页面构成，包括教材、书籍等。
+我们与开源的模型[Pix2Text-MFD](https://github.com/breezedeus/pix2text)做了对比，另外，Yolov8-SFT是我们在Yolov8模型的基础上进行了SFT训练后的权重。论文验证集由255张论文页面构成，多源验证集由789张不同来源的页面构成，包括教材、书籍等。
 
 <table>
     <tr>
