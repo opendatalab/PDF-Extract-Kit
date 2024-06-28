@@ -82,7 +82,7 @@ PDF内容提取框架如下图所示
 <span id="layout-anchor"></span>
 ### 布局检测
 
-我们与现有的开源Layout检测模型做了对比，包括[DocXchain](https://github.com/AlibabaResearch/AdvancedLiterateMachinery/tree/main/Applications/DocXChain)、[Surya](https://github.com/VikParuchuri/surya)、[360LayoutAnalysis](https://github.com/360AILAB-NLP/360LayoutAnalysis)的两个模型，而LayoutLMv3-SFT指的是我们在[LayoutLMv3](https://github.com/microsoft/unilm/blob/master/layoutlmv3)的基础上进一步做了SFT训练后的模型。论文验证集由402张Arxiv论文页面构成，教材验证集由587张不同来源的教材页面构成。
+我们与现有的开源Layout检测模型做了对比，包括[DocXchain](https://github.com/AlibabaResearch/AdvancedLiterateMachinery/tree/main/Applications/DocXChain)、[Surya](https://github.com/VikParuchuri/surya)、[360LayoutAnalysis](https://github.com/360AILAB-NLP/360LayoutAnalysis)的两个模型，而LayoutLMv3-SFT指的是我们在[LayoutLMv3](https://github.com/microsoft/unilm/blob/master/layoutlmv3)的基础上进一步做了SFT训练后的模型。论文验证集由402张论文页面构成，教材验证集由587张不同来源的教材页面构成。
 
 <table>
     <tr>
