@@ -82,7 +82,7 @@ PDF内容提取框架如下图所示
 <span id="layout-anchor"></span>
 ### 布局检测
 
-我们与现有的开源Layout检测模型做了对比，包括[DocXchain](https://github.com/AlibabaResearch/AdvancedLiterateMachinery/tree/main/Applications/DocXChain)、[Surya](https://github.com/VikParuchuri/surya)、[360LayoutAnalysis](https://github.com/360AILAB-NLP/360LayoutAnalysis)的两个模型，而LayoutLMv3-SFT指的是我们在[LayoutLMv3](https://github.com/microsoft/unilm/blob/master/layoutlmv3)的基础上进一步做了SFT训练后的模型。论文验证集由402张论文页面构成，教材验证集由587张不同来源的教材页面构成。
+我们与现有的开源Layout检测模型做了对比，包括[DocXchain](https://github.com/AlibabaResearch/AdvancedLiterateMachinery/tree/main/Applications/DocXChain)、[Surya](https://github.com/VikParuchuri/surya)、[360LayoutAnalysis](https://github.com/360AILAB-NLP/360LayoutAnalysis)的两个模型。而LayoutLMv3-SFT指的是我们在[LayoutLMv3-base-chinese预训练权重](https://huggingface.co/microsoft/layoutlmv3-base-chinese)的基础上进一步做了SFT训练后的模型。论文验证集由402张论文页面构成，教材验证集由587张不同来源的教材页面构成。
 
 <table>
     <tr>
@@ -149,7 +149,7 @@ PDF内容提取框架如下图所示
 <span id="mfd-anchor"></span>
 ### 公式检测
 
-我们与开源的模型[Pix2Text-MFD](https://github.com/breezedeus/pix2text)做了对比，另外，Yolov8-SFT是我们在Yolov8模型的基础上进行了SFT训练后的权重。论文验证集由255张论文页面构成，多源验证集由789张不同来源的页面构成，包括教材、书籍等。
+我们与开源的模型[Pix2Text-MFD](https://github.com/breezedeus/pix2text)做了对比。另外，YOLOv8-Trained是我们在[YOLOv8l](https://github.com/ultralytics/)模型的基础上训练后的权重。论文验证集由255张论文页面构成，多源验证集由789张不同来源的页面构成，包括教材、书籍等。
 
 <table>
     <tr>
@@ -171,7 +171,7 @@ PDF内容提取框架如下图所示
         <td>62.8</td>   
     </tr>
     <tr>
-        <td bgcolor="#f0f0f0">Yolov8-FT</td>
+        <td bgcolor="#f0f0f0">YOLOv8-Trained</td>
         <th bgcolor="#f0f0f0">87.7</th> 
         <th bgcolor="#f0f0f0">89.9</th>
         <th bgcolor="#f0f0f0">82.4</th>
@@ -231,6 +231,11 @@ python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
 - `--render` 是否把识别得的结果渲染出来，包括公式的latex代码，以及普通文本，都会渲染出来放在检测框中。注意：此过程非常耗时，另外也需要提前安装`xelatex`和`imagemagic`。
 
 
+## 协议
+
+本仓库的代码依照 [Apache-2.0](LICENSE) 协议开源。
+
+使用模型权重时，请遵循对应的模型协议：[LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3) / [UniMERNet](https://github.com/opendatalab/UniMERNet) / [YOLOv8](https://github.com/ultralytics/ultralytics) / [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR).
 
 
 ## 致谢
