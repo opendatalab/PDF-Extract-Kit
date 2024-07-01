@@ -81,7 +81,7 @@ Existing open-source models are often trained on data from Arxiv papers and fall
 <span id="layout-anchor"></span>
 ### Layout Detection
 
-We have compared our model with existing open-source layout detection models, including [DocXchain](https://github.com/AlibabaResearch/AdvancedLiterateMachinery/tree/main/Applications/DocXChain), [Surya](https://github.com/VikParuchuri/surya), and two models from [360LayoutAnalysis](https://github.com/360AILAB-NLP/360LayoutAnalysis). The model present as LayoutLMv3-SFT in the table refers to the checkpoint we further trained with our SFT data on [LayoutLMv3](https://github.com/microsoft/unilm/blob/master/layoutlmv3). The validation set for academic papers consists of 402 pages, while the textbook validation set is composed of 587 pages from various sources of textbooks.
+We have compared our model with existing open-source layout detection models, including [DocXchain](https://github.com/AlibabaResearch/AdvancedLiterateMachinery/tree/main/Applications/DocXChain), [Surya](https://github.com/VikParuchuri/surya), and two models from [360LayoutAnalysis](https://github.com/360AILAB-NLP/360LayoutAnalysis). The model present as LayoutLMv3-SFT in the table refers to the checkpoint we further trained with our SFT data on [LayoutLMv3-base-chinese pre-trained model](https://huggingface.co/microsoft/layoutlmv3-base-chinese). The validation set for academic papers consists of 402 pages, while the textbook validation set is composed of 587 pages from various sources of textbooks.
 
 <table>
     <tr>
@@ -147,7 +147,7 @@ We have compared our model with existing open-source layout detection models, in
 <span id="mfd-anchor"></span>
 ### Formula Detection
 
-We have compared our model with the open-source formula detection model [Pix2Text-MFD](https://github.com/breezedeus/pix2text). Additionally, the YoloV8-SFT is the weight obtained after we performed SFT training on the basis of the YoloV8 model. The paper's validation set is composed of 255 academic paper pages, and the multi-source validation set consists of 789 pages from various sources, including textbooks and books.
+We have compared our model with the open-source formula detection model [Pix2Text-MFD](https://github.com/breezedeus/pix2text). Additionally, the YOLOv8-Trained is the weight obtained after we performed training on the basis of the [YOLOv8l](https://github.com/ultralytics/) model. The paper's validation set is composed of 255 academic paper pages, and the multi-source validation set consists of 789 pages from various sources, including textbooks and books.
 
 <table>
     <tr>
@@ -169,7 +169,7 @@ We have compared our model with the open-source formula detection model [Pix2Tex
         <td align="center">62.8</td>   
     </tr>
     <tr>
-        <td bgcolor="#f0f0f0">Yolov8-SFT</td>
+        <td bgcolor="#f0f0f0">YOLOv8-Trained</td>
         <th bgcolor="#f0f0f0">87.7</th> 
         <th bgcolor="#f0f0f0">89.9</th>
         <th bgcolor="#f0f0f0">82.4</th>
@@ -222,6 +222,13 @@ Parameter explanations:
 - `--output`: Path where the results are saved, default is "output".
 - `--vis`: Whether to visualize the results; if yes, detection results including bounding boxes and categories will be visualized.
 - `--render`: Whether to render the recognized results, including LaTeX code for formulas and plain text, which will be rendered and placed in the detection boxes. Note: This process is very time-consuming, and also requires prior installation of `xelatex` and `imagemagic`.
+
+## License
+
+This repository is licensed under the [Apache-2.0 License](LICENSE).
+
+Please follow the model licenses to use the corresponding model weights: [LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3) / [UniMERNet](https://github.com/opendatalab/UniMERNet) / [YOLOv8](https://github.com/ultralytics/ultralytics) / [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR).
+
 
 ## Acknowledgement
 
