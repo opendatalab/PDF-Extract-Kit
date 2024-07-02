@@ -33,7 +33,7 @@ pip install -r requirements-windows.txt
 
 # detectron2需要编译安装,自行编译安装可以参考https://github.com/facebookresearch/detectron2/issues/5114
 # 或直接使用我们编译好的的whl包
-pip install https://github.com/opendatalab/PDF-Extract-Kit/blob/main/assets/whl/detectron2-0.6-cp310-cp310-win_amd64.whl
+pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-win_amd64.whl
 
 # 使用cpu方案时，pytorch 2.3.1版本性能比2.2.2版本提升很大
 # 建议安装2.3.1套装

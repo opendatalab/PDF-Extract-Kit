@@ -32,7 +32,7 @@ pip install -r requirements-windows.txt
 
 # For detectron2, compile it yourself as per https://github.com/facebookresearch/detectron2/issues/5114
 # Or use our precompiled wheel
-pip install https://github.com/opendatalab/PDF-Extract-Kit/blob/main/assets/whl/detectron2-0.6-cp310-cp310-win_amd64.whl
+pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-win_amd64.whl
 
 # For CPU usage, PyTorch 2.3.1 has significantly better performance than 2.2.2(over 100% faster)
 # It's advised to install the 2.3.1 suite
