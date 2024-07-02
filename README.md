@@ -211,6 +211,12 @@ pip uninstall nvidia-cusparse-cu12
 
 ### Refer to [Model Download](models/README.md) to download the required model weights.
 
+
+## Running on Windows
+
+If you intend to run this project on Windows, please refer to [Using PDF-Extract-Kit on Windows](docs/Install_in_Windows_en.md).
+
+
 ## Run Extraction Script
 
 ```bash 

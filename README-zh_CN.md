@@ -217,6 +217,10 @@ pip uninstall nvidia-cusparse-cu12
 ### 参考[模型下载](models/README.md)下载所需模型权重
 
 
+## 在Windows上运行
+
+如需要在windows上运行本项目，请参考[在Windows环境下使用PDF-Extract-Kit](docs/Install_in_Windows_zh_cn.md)。
+
 
 ## 运行提取脚本
 
