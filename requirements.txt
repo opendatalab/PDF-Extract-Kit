@@ -6,7 +6,6 @@ pyclipper
 matplotlib
 boto3
 tenacity
-fitz
 PyMuPDF==1.20.2
 ultralytics
 paddlepaddle-gpu
