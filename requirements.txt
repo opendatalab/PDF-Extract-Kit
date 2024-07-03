@@ -1,12 +1,6 @@
-pdfplumber
-modelscope
-ipdb
-shapely
-pyclipper
+unimernet
 matplotlib
-boto3
-tenacity
-PyMuPDF==1.20.2
+PyMuPDF
 ultralytics
 paddlepaddle-gpu
-paddleocr==2.7.3
+paddleocr

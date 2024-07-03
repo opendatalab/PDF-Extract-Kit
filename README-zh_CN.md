@@ -191,20 +191,14 @@ PDF内容提取框架如下图所示
 ```bash
 conda create -n pipeline python=3.10
 
-pip install unimernet
-
 pip install -r requirements.txt
 
-pip install --extra-index-url https://miropsota.github.io/torch_packages_builder detectron2==0.6+pt2.2.2cu121
+pip install --extra-index-url https://miropsota.github.io/torch_packages_builder detectron2==0.6+pt2.3.1cu121
 ```
 
 安装完环境后，可能会遇到一些版本冲突导致版本变更，如果遇到了版本相关的报错，可以尝试下面的命令重新安装指定版本的库。
 
 ```bash
-pip uninstall PyMuPDF
-
-pip install PyMuPDF==1.20.2
-
 pip install pillow==8.4.0
 ```
 

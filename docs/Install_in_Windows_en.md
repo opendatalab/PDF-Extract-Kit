@@ -27,17 +27,11 @@ Use either venv or conda, with Python version recommended as 3.10.
 ### 2.Install Dependencies
 
 ```bash
-pip install unimernet
 pip install -r requirements-windows.txt
 
 # For detectron2, compile it yourself as per https://github.com/facebookresearch/detectron2/issues/5114
 # Or use our precompiled wheel
 pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-win_amd64.whl
-
-# For CPU usage, PyTorch 2.3.1 has significantly better performance than 2.2.2(over 100% faster)
-# It's advised to install the 2.3.1 suite
-pip uninstall torch torchtext torchvision
-pip install torch==2.3.1 torchvision==0.18.1 torchtext==0.18.0 
 ```
 
 ### 3.Modify Configurations for CPU Inference
@@ -66,7 +60,10 @@ python pdf_extract.py --pdf demo/demo1.pdf
   https://developer.nvidia.com/cuda-11-8-0-download-archive
   - cuDNN v8.7.0 (November 28th, 2022), for CUDA 11.x
   https://developer.nvidia.com/rdp/cudnn-archive
-- Confirm that your graphics card has sufficient VRAM, with a recommendation of at least 6GB.
+- Ensure your GPU has adequate memory, with a minimum of 6GB recommended; ideally, 16GB or more is preferred.
+  - If the GPU memory is less than 16GB, adjust the `batch_size` in the [Preprocessing](#Preprocessing) section as needed, lowering it to "64" or "32" appropriately.
+
+
 
 ### 2.Create a Virtual Environment
 
@@ -75,18 +72,14 @@ Use either venv or conda, with Python version recommended as 3.10.
 ### 3.Install Dependencies
 
 ```bash
-pip install unimernet
 pip install -r requirements-windows.txt
 
 # For detectron2, compile it yourself as per https://github.com/facebookresearch/detectron2/issues/5114
 # Or use our precompiled wheel
 pip install https://github.com/opendatalab/PDF-Extract-Kit/blob/main/assets/whl/detectron2-0.6-cp310-cp310-win_amd64.whl
 
-# For GPU usage, PyTorch 2.3.1 offers about a 10% performance boost over 2.2.2
-# Install the 2.3.1 suite
-pip uninstall torch torchtext torchvision
-pip install torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu118
-pip install torchtext==0.18.0
+# For GPU usage, ensure PyTorch is installed with CUDA support.
+pip install --force-reinstall torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu118
 ```
 
 ### 3.Modify Configurations for CUDA Inference

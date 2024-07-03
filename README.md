@@ -186,20 +186,14 @@ The formula recognition we used is based on the weights downloaded from [Unimern
 ```bash
 conda create -n pipeline python=3.10
 
-pip install unimernet
-
 pip install -r requirements.txt
 
-pip install --extra-index-url https://miropsota.github.io/torch_packages_builder detectron2==0.6+pt2.2.2cu121
+pip install --extra-index-url https://miropsota.github.io/torch_packages_builder detectron2==0.6+pt2.3.1cu121
 ```
 
 After installation, you may encounter some version conflicts leading to version changes. If you encounter version-related errors, you can try the following commands to reinstall specific versions of the libraries.
 
 ```bash
-pip uninstall PyMuPDF
-
-pip install PyMuPDF==1.20.2
-
 pip install pillow==8.4.0
 ```
 

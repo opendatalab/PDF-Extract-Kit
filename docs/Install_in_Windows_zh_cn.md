@@ -28,17 +28,11 @@
 ### 2.安装依赖
 
 ```bash
-pip install unimernet
 pip install -r requirements-windows.txt
 
 # detectron2需要编译安装,自行编译安装可以参考https://github.com/facebookresearch/detectron2/issues/5114
 # 或直接使用我们编译好的的whl包
 pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-win_amd64.whl
-
-# 使用cpu方案时，pytorch 2.3.1版本性能比2.2.2版本提升很大
-# 建议安装2.3.1套装
-pip uninstall torch torchtext torchvision
-pip install torch==2.3.1 torchvision==0.18.1 torchtext==0.18.0 
 ```
 
 ### 3.修改config, 使用cpu推理
@@ -67,7 +61,8 @@ python pdf_extract.py --pdf demo/demo1.pdf
   https://developer.nvidia.com/cuda-11-8-0-download-archive
   - cuDNN v8.7.0 (November 28th, 2022), for CUDA 11.x
   https://developer.nvidia.com/rdp/cudnn-archive
-- 确认显卡显存是否够用，建议至少6GB
+- 确认显卡显存是否够用，最低6GB，推荐16GB及以上 
+  - 如果显存小于16GB，请将[预处理](#预处理)中需要修改的配置中batch_size酌情调低至"64"或"32"
 
 
 ### 2.创建一个虚拟环境
@@ -77,18 +72,14 @@ python pdf_extract.py --pdf demo/demo1.pdf
 ### 3.安装依赖
 
 ```bash
-pip install unimernet
 pip install -r requirements-windows.txt
 
 # detectron2需要编译安装,自行编译安装可以参考https://github.com/facebookresearch/detectron2/issues/5114
 # 或直接使用我们编译好的的whl包
 pip install https://github.com/opendatalab/PDF-Extract-Kit/blob/main/assets/whl/detectron2-0.6-cp310-cp310-win_amd64.whl
 
-# 使用gpu方案时，pytorch 2.3.1版本性能比2.2.2版本提升10%左右
-# 建议安装2.3.1套装
-pip uninstall torch torchtext torchvision
-pip install torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu118
-pip install torchtext==0.18.0
+# 使用gpu方案时，需要重新安装cuda版本的pytorch
+pip install --force-reinstall torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu118
 ```
 
 ### 3.修改config, 使用cuda推理
