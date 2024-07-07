@@ -1,0 +1,5 @@
+matplotlib
+PyMuPDF
+ultralytics
+paddlepaddle
+paddleocr==2.7.3
