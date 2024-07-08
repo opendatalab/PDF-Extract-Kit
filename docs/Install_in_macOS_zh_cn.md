@@ -1,3 +1,4 @@
+Version:1.0 StartHTML:0000000128 EndHTML:0000007541 StartFragment:0000000128 EndFragment:0000007541 SourceURL:about:blank
 # 在macOS系统使用PDF-Extract-Kit
 
 ## 概述
@@ -16,8 +17,8 @@
     ```python
     dataloader = DataLoader(dataset, batch_size=128, num_workers=0)
     ```
-    
-## 在cpu环境使用
+
+## 安装流程
 
 ### 1.创建一个虚拟环境
 
@@ -34,7 +35,9 @@ pip install -r requirements-macos.txt
 pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-macosx_10_9_universal2.whl
 ```
 
-### 3.修改config, 使用cpu推理
+### 3.修改配置，适配设备类型
+
+- #### intel cpu机器, 使用cpu推理
 
 PDF-Extract-Kit/configs/model_configs.yaml:2
 ```yaml
@@ -43,6 +46,17 @@ device: cpu
 PDF-Extract-Kit/modules/layoutlmv3/layoutlmv3_base_inference.yaml:72
 ```yaml
 DEVICE: cpu
+```
+
+- #### 使用 M 系列芯片加速
+
+PDF-Extract-Kit/configs/model_configs.yaml:2
+```yaml
+device: mps
+```
+PDF-Extract-Kit/modules/layoutlmv3/layoutlmv3_base_inference.yaml:72
+```yaml
+DEVICE: mps
 ```
 
 ### 4.运行

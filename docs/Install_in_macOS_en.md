@@ -1,3 +1,4 @@
+Version:1.0 StartHTML:0000000128 EndHTML:0000005767 StartFragment:0000000128 EndFragment:0000005767 SourceURL:about:blank
 # Using PDF-Extract-Kit on macOS
 
 ## Overview
@@ -17,7 +18,7 @@ To run the project smoothly on macOS, perform the following preparations:
     dataloader = DataLoader(dataset, batch_size=128, num_workers=0)
     ```
     
-## Using in CPU Environment
+## Installation Process
 
 ### 1.Create a Virtual Environment
 
@@ -34,7 +35,9 @@ pip install -r requirements-macos.txt
 pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-macosx_10_9_universal2.whl
 ```
 
-### 3.Modify Configurations for CPU Inference
+### 3.Modify Configuration to Adapt to Device Type
+
+- #### For Intel CPU Machines, Use CPU for Inference
 
 PDF-Extract-Kit/configs/model_configs.yaml:2
 ```yaml
@@ -43,6 +46,17 @@ device: cpu
 PDF-Extract-Kit/modules/layoutlmv3/layoutlmv3_base_inference.yaml:72
 ```yaml
 DEVICE: cpu
+```
+
+- #### Acceleration Using M Series Chips
+
+PDF-Extract-Kit/configs/model_configs.yaml:2
+```yaml
+device: mps
+```
+PDF-Extract-Kit/modules/layoutlmv3/layoutlmv3_base_inference.yaml:72
+```yaml
+DEVICE: mps
 ```
 
 ### 4.Run the Application
