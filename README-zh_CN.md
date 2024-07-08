@@ -216,9 +216,9 @@ pip uninstall nvidia-cusparse-cu12
 如需要在Windows上运行本项目，请参考[在Windows环境下使用PDF-Extract-Kit](docs/Install_in_Windows_zh_cn.md)。
 
 
-## 在MacOS上运行
+## 在macOS上运行
 
-如需要在MacOS上运行本项目，请参考[在MacOS系统使用PDF-Extract-Kit](docs/Install_in_MacOS_zh_cn.md)。
+如需要在macOS上运行本项目，请参考[在macOS系统使用PDF-Extract-Kit](docs/Install_in_macOS_zh_cn)。
 
 
 ## 运行提取脚本

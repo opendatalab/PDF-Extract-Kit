@@ -1,14 +1,14 @@
-# Using PDF-Extract-Kit on Macos
+# Using PDF-Extract-Kit on macOS
 
 ## Overview
 
-The project was initially developed with a default environment of Linux servers, so running it directly on a Macos machine can be challenging.
-After encountering some issues, we have compiled a list of problems that might arise on Macos and documented them in this guide. Not all solutions provided here may apply to your specific setup. If you have any questions, please raise them in an issue.
+The project was initially developed with a default environment of Linux servers, so running it directly on a macOS machine can be challenging.
+After encountering some issues, we have compiled a list of problems that might arise on macOS and documented them in this guide. Not all solutions provided here may apply to your specific setup. If you have any questions, please raise them in an issue.
 
 
 ## Preprocessing
 
-To run the project smoothly on Windows, perform the following preparations:
+To run the project smoothly on macOS, perform the following preparations:
 - Install ImageMagick:
   - https://docs.wand-py.org/en/latest/guide/install.html#install-imagemagick-on-mac
 - Modify configurations:
