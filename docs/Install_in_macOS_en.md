@@ -1,4 +1,3 @@
-Version:1.0 StartHTML:0000000128 EndHTML:0000005767 StartFragment:0000000128 EndFragment:0000005767 SourceURL:about:blank
 # Using PDF-Extract-Kit on macOS
 
 ## Overview
