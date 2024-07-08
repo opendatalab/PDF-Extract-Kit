@@ -213,7 +213,7 @@ If you intend to run this project on Windows, please refer to [Using PDF-Extract
 
 ## Running on macOS
 
-If you intend to run this project on macOS, please refer to [Using PDF-Extract-Kit on macOS](docs/Install_in_macOS_en).
+If you intend to run this project on macOS, please refer to [Using PDF-Extract-Kit on macOS](docs/Install_in_macOS_en.md).
 
 
 ## Run Extraction Script
