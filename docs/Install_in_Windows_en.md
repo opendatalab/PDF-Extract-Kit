@@ -27,7 +27,7 @@ Use either venv or conda, with Python version recommended as 3.10.
 ### 2.Install Dependencies
 
 ```bash
-pip install -r requirements-windows.txt
+pip install -r requirements+cpu.txt
 
 # For detectron2, compile it yourself as per https://github.com/facebookresearch/detectron2/issues/5114
 # Or use our precompiled wheel
@@ -72,7 +72,7 @@ Use either venv or conda, with Python version recommended as 3.10.
 ### 3.Install Dependencies
 
 ```bash
-pip install -r requirements-windows.txt
+pip install -r requirements+cpu.txt
 
 # For detectron2, compile it yourself as per https://github.com/facebookresearch/detectron2/issues/5114
 # Or use our precompiled wheel

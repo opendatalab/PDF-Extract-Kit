@@ -28,7 +28,7 @@
 ### 2.安装依赖
 
 ```bash
-pip install -r requirements-windows.txt
+pip install -r requirements+cpu.txt
 
 # detectron2需要编译安装,自行编译安装可以参考https://github.com/facebookresearch/detectron2/issues/5114
 # 或直接使用我们编译好的的whl包
@@ -72,7 +72,7 @@ python pdf_extract.py --pdf demo/demo1.pdf
 ### 3.安装依赖
 
 ```bash
-pip install -r requirements-windows.txt
+pip install -r requirements+cpu.txt
 
 # detectron2需要编译安装,自行编译安装可以参考https://github.com/facebookresearch/detectron2/issues/5114
 # 或直接使用我们编译好的的whl包
