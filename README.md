@@ -78,6 +78,8 @@ By annotating a variety of PDF documents, we have trained robust models for `lay
 
 Existing open-source models are often trained on data from Arxiv papers and fall short when facing diverse PDF documents. In contrast, our models, trained on diverse data, are capable of adapting to various document types for extraction.
 
+The introduction of Validation process can be seen [here](./assets/validation/README.md).
+
 <span id="layout-anchor"></span>
 ### Layout Detection
 

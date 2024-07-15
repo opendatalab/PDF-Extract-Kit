@@ -1,0 +1,15 @@
+# CDLA
+
+# train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
+train: 
+  - ./yolo_data/CnMFD_Dataset/train.txt
+  - ./yolo_data/IBEM/train.txt
+val: 
+  - ./yolo_data/CnMFD_Dataset/val.txt
+  - ./yolo_data/IBEM/val.txt
+
+# number of classes
+nc: 2
+
+# class names
+names: ['embedding', 'isolated']
