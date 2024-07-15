@@ -181,7 +181,7 @@ We have compared our model with the open-source formula detection model [Pix2Tex
 
 ### Formula Recognition
 
-The formula recognition we used is based on the weights downloaded from [Unimernet](https://github.com/opendatalab/UniMERNet), without any further SFT training, and the accuracy validation results can be obtained on its GitHub page.
+The formula recognition we used is based on the weights downloaded from [UniMERNet](https://github.com/opendatalab/UniMERNet), without any further SFT training, and the accuracy validation results can be obtained on its GitHub page.
 
 ## Installation Guide
 
