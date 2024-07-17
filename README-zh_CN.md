@@ -10,7 +10,6 @@ PDF文档中包含大量知识信息，然而提取高质量的PDF内容并非�
 
 > **注意：** *由于文档类型的多样性，现有开源的布局检测和公式检测很难处理多样性的PDF文档，为此我们内容采集多样性数据进行标注和训练，使得在各类文档上取得精准的检测效果，细节参考[布局检测](#layout-anchor)和[公式检测](#mfd-anchor)部分。对于公式识别，UniMERNet方法可以媲美商业软件，在各种类型公式识别上均匀很高的质量。对于OCR，我们采用PaddleOCR，对中英文OCR效果不错。*
 
-
 PDF内容提取框架如下图所示
 
 ![](assets/demo/pipeline_v2.png)
@@ -183,12 +182,14 @@ PDF内容提取框架如下图所示
 
 ### 公式识别
 
-公式识别我们使用的是[Unimernet](https://github.com/opendatalab/UniMERNet)的权重，没有进一步的SFT训练，其精度验证结果可以在其GitHub页面获取。
+![BLEU](https://github.com/opendatalab/VIGC/assets/69186975/ec8eb3e2-4ccc-4152-b18c-e86b442e2dcc)
+
+公式识别我们使用的是[UniMERNet](https://github.com/opendatalab/UniMERNet)的权重，没有进一步的SFT训练，其精度验证结果可以在其GitHub页面获取。
 
 
 ## 使用教程
 
-### 环境安装
+### 环境安装 (Linux)
 
 ```bash
 conda create -n pipeline python=3.10
@@ -234,6 +235,8 @@ python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
 - `--output` 处理结果保存的路径，默认是"output"
 - `--vis` 是否对结果可视化，是则会把检测的结果可视化出来，主要是检测框和类别
 - `--render` 是否把识别得的结果渲染出来，包括公式的latex代码，以及普通文本，都会渲染出来放在检测框中。注意：此过程非常耗时，另外也需要提前安装`xelatex`和`imagemagic`。
+
+> 本项目专注使用模型对`多样性`文档进行`高质量`内容提取，不涉及提取后内容拼接成新文档，如PDF转Markdown。如果有此类需求，请参考我们另一个Github项目: [MinerU](https://github.com/opendatalab/MinerU)
 
 
 ## 协议

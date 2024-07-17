@@ -180,6 +180,7 @@ We have compared our model with the open-source formula detection model [Pix2Tex
 </table>
 
 ### Formula Recognition
+![BLEU](https://github.com/opendatalab/VIGC/assets/69186975/ec8eb3e2-4ccc-4152-b18c-e86b442e2dcc)
 
 The formula recognition we used is based on the weights downloaded from [UniMERNet](https://github.com/opendatalab/UniMERNet), without any further SFT training, and the accuracy validation results can be obtained on its GitHub page.
 
@@ -229,6 +230,8 @@ Parameter explanations:
 - `--output`: Path where the results are saved, default is "output".
 - `--vis`: Whether to visualize the results; if yes, detection results including bounding boxes and categories will be visualized.
 - `--render`: Whether to render the recognized results, including LaTeX code for formulas and plain text, which will be rendered and placed in the detection boxes. Note: This process is very time-consuming, and also requires prior installation of `xelatex` and `imagemagic`.
+
+> This project is dedicated to using models for high-quality content extraction from documents on diversity. It does not involve reassembling the extracted content into new documents, such as converting PDFs to Markdown. For those needs, please refer to our other GitHub project: [MinerU](https://github.com/opendatalab/MinerU)
 
 ## License
 
