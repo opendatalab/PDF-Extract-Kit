@@ -88,3 +88,14 @@ DEVICE: mps
 ```bash
 python pdf_extract.py --pdf demo/demo1.pdf
 ```
+
+### 5.FAQ
+
+- On some newer M chip devices, MPS acceleration fails to activate.
+  - Uninstall torch and torchvision, then reinstall the nightly build versions of torch and torchvision.
+  - ```bash
+    pip uninstall torch torchvision 
+    pip install --pre torch torchvision --index-url https://download.pytorch.org/whl/nightly/cpu
+    ```
+  - Reference source: https://github.com/opendatalab/PDF-Extract-Kit/issues/23
+
