@@ -253,6 +253,15 @@ Parameter explanations:
 
 > This project is dedicated to using models for high-quality content extraction from documents on diversity. It does not involve reassembling the extracted content into new documents, such as converting PDFs to Markdown. For those needs, please refer to our other GitHub project: [MinerU](https://github.com/opendatalab/MinerU)
 
+## TODO List
+
+- [ ] **Table Parsing**: Develop a feature to convert table images into corresponding LaTeX/Markdown format source code.
+- [ ] **Chemical Equation Detection**: Implement automatic detection of chemical equations.
+- [ ] **Chemical Equation/Diagram Recognition**: Develop a model to recognize and parse chemical equations and diagrams.
+- [ ] **Reading Order Sorting Model**: Build a model to determine the correct reading order of text in documents.
+
+**PDF-Extract-Kit** aims to provide high-quality PDF extraction capabilities. We encourage the community to propose specific and valuable requirements and welcome everyone to participate in continuously improving the PDF-Extract-Kit tool to advance scientific research and industrial development.
+
 ## License
 
 This repository is licensed under the [Apache-2.0 License](LICENSE).
