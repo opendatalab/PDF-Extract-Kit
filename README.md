@@ -1,7 +1,7 @@
 
 <p align="center">
   <img src="assets/images/datalab_logo.png" width="160px" style="vertical-align:middle;">
-  <span style="font-size: 24px; vertical-align: middle;">PDF-Extract-Kit</span>
+  <span style="font-size: 28px; vertical-align: middle;">PDF-Extract-Kit</span>
 </p>
 
 <div align="center">
@@ -15,7 +15,7 @@ English | [简体中文](./README-zh_CN.md)
 </div>
 
 <p align="center">
-    👋 join us on <a href="https://xxx" target="_blank">Discord</a> and <a href="https://xxx" target="_blank">WeChat</a>
+    👋 join us on <a href=" https://discord.gg/AsQMhuMN" target="_blank">Discord</a> and <a href="https://r.vansin.top/?r=MinerU" target="_blank">WeChat</a>
 </p>
 
 
