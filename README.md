@@ -1,19 +1,17 @@
 
 <p align="center">
-    <img src="./assets/images/datalab_logo.png" width="220"/>
-</p>
-<p align="center">
     <b><font size="5">PDF-Extract-Kit</font></b>
 </p>
 
-
 <div align="center">
-    [[Models (🤗Hugging Face)]](https://huggingface.co/wanderkid/PDF-Extract-Kit) | [[Models(<img src="./assets/images/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/wanderkid/PDF-Extract-Kit) 
+
+[[Models (🤗Hugging Face)]](https://huggingface.co/wanderkid/PDF-Extract-Kit) | [[Models(<img src="./assets/images/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/wanderkid/PDF-Extract-Kit) 
  
 English | [简体中文](./README-zh_CN.md)
 
-</div>
+🔥🔥🔥 [MinerU](https://github.com/opendatalab/MinerU): 基于PDF-Extract-Kit的高效文档内容提取工具
 
+</div>
 
 <p align="center">
     👋 join us on <a href="https://xxx" target="_blank">Discord</a> and <a href="https://xxx" target="_blank">WeChat</a>
