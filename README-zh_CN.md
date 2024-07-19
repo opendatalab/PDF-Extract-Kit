@@ -1,13 +1,17 @@
 
 <p align="center">
-    <b><font size="5">PDF-Extract-Kit</font></b>
+  <img src="assets/images/datalab_logo.png" width="160px" style="vertical-align:middle;">
+  <span style="font-size: 24px; vertical-align: middle;">PDF-Extract-Kit</span>
 </p>
+
+
 
 <div align="center">
 
+[English](./README.md) | 简体中文
+
 [[Models (🤗Hugging Face)]](https://huggingface.co/wanderkid/PDF-Extract-Kit) | [[Models(<img src="./assets/images/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/wanderkid/PDF-Extract-Kit) 
  
-[English](./README.md) | 简体中文
 
 🔥🔥🔥 [MinerU](https://github.com/opendatalab/MinerU): Efficient Document Content Extraction Tool Based on PDF-Extract-Kit
 
