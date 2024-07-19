@@ -285,3 +285,8 @@ python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date" />
  </picture>
 </a>
+
+## 友情链接
+- [LabelU(轻量级多模态标注工具）](https://github.com/opendatalab/labelU)
+- [LabelLLM（开源LLM对话标注平台）](https://github.com/opendatalab/LabelLLM)
+- [Miner U（一站式高质量数据提取工具）](https://github.com/opendatalab/MinerU)
