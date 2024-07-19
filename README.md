@@ -1,4 +1,24 @@
+
+<p align="center">
+  <img src="assets/images/datalab_logo.png" width="160px" style="vertical-align:middle;">
+  <span style="font-size: 28px; vertical-align: middle;">PDF-Extract-Kit</span>
+</p>
+
+<div align="center">
+
 English | [简体中文](./README-zh_CN.md)
+
+[[Models (🤗Hugging Face)]](https://huggingface.co/wanderkid/PDF-Extract-Kit) | [[Models(<img src="./assets/images/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/wanderkid/PDF-Extract-Kit) 
+ 
+🔥🔥🔥 [MinerU](https://github.com/opendatalab/MinerU): 基于PDF-Extract-Kit的高效文档内容提取工具
+
+</div>
+
+<p align="center">
+    👋 join us on <a href=" https://discord.gg/AsQMhuMN" target="_blank">Discord</a> and <a href="https://r.vansin.top/?r=MinerU" target="_blank">WeChat</a>
+</p>
+
+
 
 ## Overview
 
@@ -246,3 +266,13 @@ Please follow the model licenses to use the corresponding model weights: [Layout
    - [UniMERNet](https://github.com/opendatalab/UniMERNet): Formula recognition model
    - [YOLOv8](https://github.com/ultralytics/ultralytics): Formula detection model
    - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR model
+
+## Star History
+
+<a>
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date" />
+ </picture>
+</a>

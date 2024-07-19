@@ -1,4 +1,26 @@
+
+<p align="center">
+  <img src="assets/images/datalab_logo.png" width="160px" style="vertical-align:middle;">
+  <span style="font-size: 28px; vertical-align: middle;">PDF-Extract-Kit</span>
+</p>
+
+
+
+<div align="center">
+
 [English](./README.md) | 简体中文
+
+[[Models (🤗Hugging Face)]](https://huggingface.co/wanderkid/PDF-Extract-Kit) | [[Models(<img src="./assets/images/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/wanderkid/PDF-Extract-Kit) 
+ 
+
+🔥🔥🔥 [MinerU](https://github.com/opendatalab/MinerU): Efficient Document Content Extraction Tool Based on PDF-Extract-Kit
+
+</div>
+
+<p align="center">
+    👋 join us on <a href="https://discord.gg/AsQMhuMN" target="_blank">Discord</a> and <a href="https://r.vansin.top/?r=MinerU" target="_blank">WeChat</a>
+</p>
+
 
 ## 整体介绍
 
@@ -252,3 +274,14 @@ python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
    - [UniMERNet](https://github.com/opendatalab/UniMERNet): 公式识别模型
    - [YOLOv8](https://github.com/ultralytics/ultralytics): 公式检测模型
    - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR模型
+
+
+## Star历史
+
+<a>
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date" />
+ </picture>
+</a>
