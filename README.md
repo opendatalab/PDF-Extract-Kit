@@ -276,3 +276,8 @@ Please follow the model licenses to use the corresponding model weights: [Layout
    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date" />
  </picture>
 </a>
+
+## Links
+- [LabelU (A Lightweight Multi-modal Data Annotation Tool)](https://github.com/opendatalab/labelU)
+- [LabelLLM (An Open-source LLM Dialogue Annotation Platform)](https://github.com/opendatalab/LabelLLM)
+- [Miner U (A One-stop Open-source High-quality Data Extraction Tool)](https://github.com/opendatalab/MinerU)
