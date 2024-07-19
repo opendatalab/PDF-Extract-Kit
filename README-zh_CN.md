@@ -1,4 +1,23 @@
+
+<p align="center">
+    <img src="./assets/images/datalab_logo.png" width="220"/>
+</p>
+<p align="center">
+    <b><font size="5">PDF-Extract-Kit</font></b>
+</p>
+
+
+<div align="center">
+    [[Models (🤗Hugging Face)]](https://huggingface.co/wanderkid/PDF-Extract-Kit) | [[Models(<img src="./assets/images/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/wanderkid/PDF-Extract-Kit) 
+ 
 [English](./README.md) | 简体中文
+
+</div>
+
+<p align="center">
+    👋 join us on <a href="https://xxx" target="_blank">Discord</a> and <a href="https://xxx" target="_blank">WeChat</a>
+</p>
+
 
 ## 整体介绍
 
@@ -252,3 +271,14 @@ python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
    - [UniMERNet](https://github.com/opendatalab/UniMERNet): 公式识别模型
    - [YOLOv8](https://github.com/ultralytics/ultralytics): 公式检测模型
    - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR模型
+
+
+## Star历史
+
+<a>
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date" />
+ </picture>
+</a>

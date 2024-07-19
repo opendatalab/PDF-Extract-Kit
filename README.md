@@ -1,4 +1,25 @@
+
+<p align="center">
+    <img src="./assets/images/datalab_logo.png" width="220"/>
+</p>
+<p align="center">
+    <b><font size="5">PDF-Extract-Kit</font></b>
+</p>
+
+
+<div align="center">
+    [[Models (🤗Hugging Face)]](https://huggingface.co/wanderkid/PDF-Extract-Kit) | [[Models(<img src="./assets/images/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/wanderkid/PDF-Extract-Kit) 
+ 
 English | [简体中文](./README-zh_CN.md)
+
+</div>
+
+
+<p align="center">
+    👋 join us on <a href="https://xxx" target="_blank">Discord</a> and <a href="https://xxx" target="_blank">WeChat</a>
+</p>
+
+
 
 ## Overview
 
@@ -246,3 +267,13 @@ Please follow the model licenses to use the corresponding model weights: [Layout
    - [UniMERNet](https://github.com/opendatalab/UniMERNet): Formula recognition model
    - [YOLOv8](https://github.com/ultralytics/ultralytics): Formula detection model
    - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR model
+
+## Star History
+
+<a>
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date" />
+ </picture>
+</a>
