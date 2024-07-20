@@ -276,6 +276,19 @@ Please follow the model licenses to use the corresponding model weights: [Layout
    - [YOLOv8](https://github.com/ultralytics/ultralytics): Formula detection model
    - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR model
 
+## Citation
+If you find our models / code / papers useful in your research, please consider giving ⭐ and citations 📝, thx :)  
+```bibtex
+@misc{wang2024unimernet,
+      title={UniMERNet: A Universal Network for Real-World Mathematical Expression Recognition}, 
+      author={Bin Wang and Zhuangcheng Gu and Chao Xu and Bo Zhang and Botian Shi and Conghui He},
+      year={2024},
+      eprint={2404.15254},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+```
+
 ## Star History
 
 <a>

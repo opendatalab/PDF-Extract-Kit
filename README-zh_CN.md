@@ -285,6 +285,20 @@ python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
    - [YOLOv8](https://github.com/ultralytics/ultralytics): 公式检测模型
    - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR模型
 
+## Citation
+
+如果你觉得我们模型/代码/技术报告对你有帮助，请给我们⭐和引用📝,谢谢 :)  
+```bibtex
+@misc{wang2024unimernet,
+      title={UniMERNet: A Universal Network for Real-World Mathematical Expression Recognition}, 
+      author={Bin Wang and Zhuangcheng Gu and Chao Xu and Bo Zhang and Botian Shi and Conghui He},
+      year={2024},
+      eprint={2404.15254},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+```
+
 
 ## Star历史
 
