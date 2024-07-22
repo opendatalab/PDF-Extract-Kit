@@ -238,6 +238,9 @@ If you intend to run this project on Windows, please refer to [Using PDF-Extract
 
 If you intend to run this project on macOS, please refer to [Using PDF-Extract-Kit on macOS](docs/Install_in_macOS_en.md).
 
+## Running in Google Colab
+
+If you intend to experience this project on Google Colab, please <a href="https://colab.research.google.com/gist/zhchbin/f7ca974b3594befe59893241d6ad6374/pdf-extract-kit.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
 ## Run Extraction Script
 

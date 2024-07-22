@@ -245,6 +245,10 @@ pip uninstall nvidia-cusparse-cu12
 
 如需要在macOS上运行本项目，请参考[在macOS系统使用PDF-Extract-Kit](docs/Install_in_macOS_zh_cn.md)。
 
+## 在Google Colab上体验
+
+如果你想在Google Colab上体验本项目，请<a href="https://colab.research.google.com/gist/zhchbin/f7ca974b3594befe59893241d6ad6374/pdf-extract-kit.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+
 
 ## 运行提取脚本
 
