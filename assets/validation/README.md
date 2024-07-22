@@ -21,6 +21,101 @@ python train_net.py --config-file config.yaml --eval-only --num-gpus 8 \
         OUTPUT_DIR /path/to/save/dir
 ```
 
+For validation of other open-source models, we directly used the inference code provided in each model's GitHub repository without any special settings. For details, please refer to:
+    - [Surya](https://github.com/VikParuchuri/surya?tab=readme-ov-file#layout-analysis)
+    - [360LayoutAnalysis](https://github.com/360AILAB-NLP/360LayoutAnalysis/blob/main/README_EN.md)
+
+The evaluation matrix is provided by mmeval using [COCODetection](https://mmeval.readthedocs.io/zh-cn/latest/api/generated/mmeval.metrics.COCODetection.html).
+
+Due to the fact that the category labels of each model are not completely consistent, we implement the category mapping for alignment before the validation process.
+
+### Surya
+
+```python
+# Participated categories in the validation
+label_classes = ["title", "plain text", "abandon", "figure", "caption", "table", "isolate_formula"] 
+
+# Ground Truth Category Mapping (original categories aligned with the LayoutLmv3-SFT fine-tuned in this repository)
+anno_class_change_dict = {
+    'formula_caption': 'caption',
+    'table_caption': 'caption',
+    'table_footnote': 'plain text'
+}
+
+# Surya Category Mapping
+class_dict = {
+    'Caption': 'caption',
+    'Section-header' : 'title',
+    'Title': 'title',
+    'Figure': 'figure',
+    'Picture': 'figure',
+    'Footnote': 'abandon',
+    'Page-footer': 'abandon',
+    'Page-header': 'abandon',
+    'Table': 'table',
+    'Text': 'plain text',
+    'List-item': 'plain text',
+    'Formula': 'isolate_formula',
+}
+```
+
+### 360LayoutAnalysis-Paper
+
+```python
+# Participated categories in the validation
+label_classes = ["title", "plain text", "abandon", "figure", "figure_caption", "table", "table_caption", "isolate_formula"]
+
+# Ground Truth Category Mapping
+anno_class_change_dict = {
+    'formula_caption': 'plain text',
+    'table_footnote': 'plain text'
+}
+
+# 360LayoutAnalysis Category Mapping
+class_change_dict = {
+    'Text': 'plain text',  
+    'Title': 'title', 
+    'Figure': 'figure', 
+    'Figure caption': 'figure_caption',    
+    'Table': 'table',      
+    'Table caption': 'table_caption',  
+    'Header': 'abandon', 
+    'Footer': 'abandon',     
+    'Reference': 'plain text',   
+    'Equation': 'isolate_formula',
+    'Toc': 'plain text'   
+}
+```
+
+### 360LayoutAnalysis-Report
+
+```python
+# Participated categories in the validation
+label_classes = ["title", "plain text", "abandon", "figure", "figure_caption", "table", "table_caption"]
+
+# Ground Truth Category Mapping
+anno_class_change_dict = {
+    'formula_caption': 'plain text',
+    'table_footnote': 'plain text',
+    'isolate_formula': 'plain text',
+}
+
+# 360LayoutAnalysis Category Mapping
+class_change_dict = {
+    'Text': 'plain text',  
+    'Title': 'title', 
+    'Figure': 'figure', 
+    'Figure caption': 'figure_caption',    
+    'Table': 'table',      
+    'Table caption': 'table_caption',  
+    'Header': 'abandon', 
+    'Footer': 'abandon',     
+    'Reference': 'plain text',   
+    'Equation': 'isolate_formula',
+    'Toc': 'plain text'   
+}
+```
+
 ## Formula Detection
 
 For Formula Detection, we have developed validation process based on [YOLOv8](https://github.com/ultralytics/ultralytics).

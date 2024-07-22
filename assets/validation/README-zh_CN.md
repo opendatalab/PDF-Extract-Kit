@@ -21,6 +21,101 @@ python train_net.py --config-file config.yaml --eval-only --num-gpus 8 \
         OUTPUT_DIR /path/to/save/dir
 ```
 
+与其他开源模型的对比部分，我们没有对其模型做特殊参数设置，评测时候用每个模型repo里提供的代码直接进行推理，详情请参考：
+    - [Surya](https://github.com/VikParuchuri/surya?tab=readme-ov-file#layout-analysis)
+    - [360LayoutAnalysis](https://github.com/360AILAB-NLP/360LayoutAnalysis/blob/main/README_EN.md)
+
+评测结果输出依赖于mmeval的[COCODetection](https://mmeval.readthedocs.io/zh-cn/latest/api/generated/mmeval.metrics.COCODetection.html)。
+
+由于每个模型的类别标签不完全一致，我们在验证的时候对标签进行了映射对齐，具体如下：
+
+### Surya
+
+```python
+# 参与验证的类别
+label_classes = ["title", "plain text", "abandon", "figure", "caption", "table", "isolate_formula"] 
+
+# GT的类别映射 (原本的类别与本repo微调的LayoutLmv3-SFT对齐)
+anno_class_change_dict = {
+    'formula_caption': 'caption',
+    'table_caption': 'caption',
+    'table_footnote': 'plain text'
+}
+
+# Surya的类别映射
+class_dict = {
+    'Caption': 'caption',
+    'Section-header' : 'title',
+    'Title': 'title',
+    'Figure': 'figure',
+    'Picture': 'figure',
+    'Footnote': 'abandon',
+    'Page-footer': 'abandon',
+    'Page-header': 'abandon',
+    'Table': 'table',
+    'Text': 'plain text',
+    'List-item': 'plain text',
+    'Formula': 'isolate_formula',
+}
+```
+
+### 360LayoutAnalysis-Paper
+
+```python
+# 参与验证的类别
+label_classes = ["title", "plain text", "abandon", "figure", "figure_caption", "table", "table_caption", "isolate_formula"]
+
+# GT的类别映射表
+anno_class_change_dict = {
+    'formula_caption': 'plain text',
+    'table_footnote': 'plain text'
+}
+
+# 360LayoutAnalysis的类别映射
+class_change_dict = {
+    'Text': 'plain text',  
+    'Title': 'title', 
+    'Figure': 'figure', 
+    'Figure caption': 'figure_caption',    
+    'Table': 'table',      
+    'Table caption': 'table_caption',  
+    'Header': 'abandon', 
+    'Footer': 'abandon',     
+    'Reference': 'plain text',   
+    'Equation': 'isolate_formula',
+    'Toc': 'plain text'   
+}
+```
+
+### 360LayoutAnalysis-Report
+
+```python
+# 参与验证的类别
+label_classes = ["title", "plain text", "abandon", "figure", "figure_caption", "table", "table_caption"]
+
+# GT的类别映射表
+anno_class_change_dict = {
+    'formula_caption': 'plain text',
+    'table_footnote': 'plain text',
+    'isolate_formula': 'plain text',
+}
+
+# 360LayoutAnalysis的类别映射
+class_change_dict = {
+    'Text': 'plain text',  
+    'Title': 'title', 
+    'Figure': 'figure', 
+    'Figure caption': 'figure_caption',    
+    'Table': 'table',      
+    'Table caption': 'table_caption',  
+    'Header': 'abandon', 
+    'Footer': 'abandon',     
+    'Reference': 'plain text',   
+    'Equation': 'isolate_formula',
+    'Toc': 'plain text'   
+}
+```
+
 ## 公式检测
 
 公式检测的部分，我们在[YOLOv8](https://github.com/ultralytics/ultralytics)的基础上新增了验证代码。
