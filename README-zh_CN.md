@@ -98,7 +98,7 @@ PDF内容提取框架如下图所示
 
 ## 评测指标
 
-现有开源模型多基于Arxiv论文类型数据进行训练，面对多样性的PDF文档，提前质量远不能达到实用需求。相比之下，我们的模型经过多样化数据训练，可以适应各种类型文档提取。
+现有开源模型多基于Arxiv论文类型数据进行训练，面对多样性的PDF文档，提取质量远不能达到实用需求。相比之下，我们的模型经过多样化数据训练，可以适应各种类型文档提取。
 
 评测代码及详细信息请看[这里](./assets/validation/README-zh_CN.md)。
 
@@ -244,10 +244,6 @@ pip uninstall nvidia-cusparse-cu12
 ## 在macOS上运行
 
 如需要在macOS上运行本项目，请参考[在macOS系统使用PDF-Extract-Kit](docs/Install_in_macOS_zh_cn.md)。
-
-## 在Google Colab上体验
-
-如果你想在Google Colab上体验本项目，请<a href="https://colab.research.google.com/gist/zhchbin/f7ca974b3594befe59893241d6ad6374/pdf-extract-kit.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
 
 ## 运行提取脚本
