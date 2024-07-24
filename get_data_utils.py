@@ -4,6 +4,7 @@ import requests
 import io
 import os
 import fitz 
+fitz.TOOLS.mupdf_display_errors(on=False)
 def read_json_from_path(path, client):
     if "s3" in path:
         buffer = client.get(path).replace(b'\x00', b'\n')
@@ -47,6 +48,18 @@ def read_json_from_path(path, client):
         else:
             raise NotImplementedError("please use json or jsonl file")
 
+def write_jsonj_to_path(data, path, client):
+    if "s3" in path:
+        byte_object = json.dumps(data).encode('utf-8')
+        with io.BytesIO(byte_object) as f:
+            client.put(path, f)
+    else:
+        assert not path.startswith('http'), "why you want to save the file to a online path?"
+        thedir = os.path.dirname(path)
+        os.makedirs(thedir, exist_ok=True)
+        with open(path,'w') as f:
+            json.dump(data, f)
+
 def write_json_to_path(data, path, client):
     if "s3" in path:
         byte_object = json.dumps(data).encode('utf-8')
@@ -60,10 +73,10 @@ def write_json_to_path(data, path, client):
             json.dump(data, f)
 
 def build_client():
-    print(f"we will building ceph client...................")
+    #print(f"we will building ceph client...................")
     from petrel_client.client import Client  # 安装完成后才可导入
     client = Client(conf_path="~/petreloss.conf") # 实例化Petrel Client，然后就可以调用下面的APIs   
-    print(f"done..................")
+    #print(f"done..................")
     return client
 
 def check_path_exists(path,client):

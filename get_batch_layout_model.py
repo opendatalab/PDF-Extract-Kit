@@ -1,3 +1,5 @@
+from detectron2.utils.logger import setup_logger
+setup_logger()
 from modules.layoutlmv3.model_init import *
 
 import time, math
