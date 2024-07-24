@@ -87,7 +87,7 @@ def fine_grained_layout(image, layout_res, config:FineGrainedConfig):
     mfd_res            = mfd_model.predict(image, imgsz=img_size, conf=config.conf_thres, iou=config.iou_thres, verbose=config.verbose)[0]
     for xyxy, conf, cla in zip(mfd_res.boxes.xyxy.cpu(), 
                                mfd_res.boxes.conf.cpu(), 
-                               mfd_res.boxes.cls.cpu()):
+                               mfd_res.boxes.cls.cpu() ):
         xmin, ymin, xmax, ymax = [int(p.item()) for p in xyxy]
         new_item = {
             'category_id': 13 + int(cla.item()),
