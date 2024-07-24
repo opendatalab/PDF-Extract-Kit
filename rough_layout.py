@@ -200,13 +200,14 @@ def clean_layout_dets(layout_dets):
         
     return rows
 from ultralytics.utils import ops
+import copy
 def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model, inner_batch_size=4, batch_size=32,num_workers=8):
     dataset    = PDFImageDataset(pdf_path,layout_model.predictor.aug,layout_model.predictor.input_format,
                                 mfd_pre_transform=mfd_process(mfd_model.predictor.args.imgsz,mfd_model.predictor.model.stride,mfd_model.predictor.model.pt))
 
     dataloader = DataLoader(dataset, batch_size=batch_size,collate_fn=None, num_workers=num_workers)        
     featcher   = DataPrefetcher(dataloader,device='cuda')
-    data_to_save = []
+    data_to_save = {}
     inner_batch_size = inner_batch_size
     pbar  = tqdm(total=len(dataset.metadata),position=1,leave=True,desc="PDF Pages")
     pdf_passed = set()
@@ -236,7 +237,8 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model, inner_
                 real_input_height = int(real_input_height)
                 real_input_width  = int(real_input_width)
                 pdf_path = dataset.metadata[pdf_id]['path']
-        
+                if pdf_path not in data_to_save:
+                    data_to_save[pdf_path] = {'height':real_input_height, 'width':real_input_width}
                 layout_dets = clean_layout_dets(layout_det['layout_dets'])
                 for xyxy, conf, cla in zip(mfd_det.boxes.xyxy.cpu(), 
                                         mfd_det.boxes.conf.cpu(), 
@@ -250,23 +252,30 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model, inner_
                         'latex': '',
                     }
                     layout_dets.append(new_item)
-
-            
-                this_row = {
-                    "pdf_source":pdf_path,
-                    "page_id": page_id,
-                    'height':real_input_height, 'width':real_input_width,
-                    "layout_dets":layout_dets,
-                }
-                
-                data_to_save.append(this_row)
+                data_to_save[pdf_path][page_id] = layout_dets
         pbar.update(len(new_pdf_processed))
         batch = featcher.next()
 
-    write_json_to_path
-    with open(result_path,'w') as f:
-        for row in data_to_save:
-            f.write(json.dumps(row)+'\n')
+    ### next, we construct each result for each pdf in pdf wise and remove the page_id by the list position 
+    pdf_to_metadata = {t['path']:t for t in dataset.metadata}
+
+    new_data_to_save = []
+    for pdf_path, layout_dets_per_page in data_to_save.items():
+        new_pdf_dict = copy.deepcopy(pdf_to_metadata[pdf_path])
+        new_pdf_dict['height'] = layout_dets_per_page.pop('height')
+        new_pdf_dict['width'] = layout_dets_per_page.pop('width')
+        pages = [t for t in layout_dets_per_page.keys()]
+        pages.sort()
+        new_pdf_dict["doc_layout_result"]=[]
+        for page_id in range(max(pages)):
+            if page_id not in layout_dets_per_page:
+                print(f"WARNING: page {page_id} of PDF: {pdf_path} fail to parser!!! ")
+                now_row = {"page_id": page_id, "layout_dets":[]}
+            else:
+                now_row = {"page_id": page_id, "layout_dets":layout_dets_per_page[page_id]}
+            new_pdf_dict["doc_layout_result"].append(now_row)
+        new_data_to_save.append(new_pdf_dict)
+    write_jsonl_to_path(new_data_to_save, result_path, dataset.client)
 
 if __name__ == "__main__":
 
@@ -284,7 +293,7 @@ if __name__ == "__main__":
     mfd_model    = get_batch_YOLO_model(model_configs) 
     deal_with_one_dataset("debug.jsonl", 
                           "debug.stage_1.jsonl", 
-                          layout_model, mfd_model, inner_batch_size=16, batch_size=64,num_workers=16)
+                          layout_model, mfd_model, inner_batch_size=3, batch_size=3,num_workers=0)
     # dataset    = PDFImageDataset("part-66210c190659-000035.jsonl",layout_model.predictor.aug,layout_model.predictor.input_format,mfd_pre_transform=None)
     # dataloader = DataLoader(dataset, batch_size=8,collate_fn=custom_collate_fn)  
 

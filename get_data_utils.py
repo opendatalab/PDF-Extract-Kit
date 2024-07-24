@@ -71,6 +71,20 @@ def write_json_to_path(data, path, client):
         os.makedirs(thedir, exist_ok=True)
         with open(path,'w') as f:
             json.dump(data, f)
+def write_jsonl_to_path(data, path, client):
+    byte_object = "\n".join([json.dumps(d) for d in data])
+    if "s3" in path:
+        with io.BytesIO(byte_object.encode('utf-8')) as f:
+            client.put(path, f)
+    else:
+        assert not path.startswith('http'), "why you want to save the file to a online path?"
+        thedir = os.path.dirname(path)
+        if thedir:
+            os.makedirs(thedir, exist_ok=True)
+        with open(path,'w') as f:
+            f.write(byte_object)
+
+
 
 def build_client():
     #print(f"we will building ceph client...................")
