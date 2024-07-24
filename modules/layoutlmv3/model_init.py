@@ -139,3 +139,4 @@ class Layoutlmv3_Predictor(object):
                 "score": scores[bbox_idx]
             })
         return page_layout_result
+    

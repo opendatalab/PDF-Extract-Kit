@@ -122,6 +122,7 @@ if __name__ == '__main__':
     with open('configs/model_configs.yaml') as f:
         model_configs = yaml.load(f, Loader=yaml.FullLoader)
     img_size = model_configs['model_args']['img_size']
+
     conf_thres = model_configs['model_args']['conf_thres']
     iou_thres = model_configs['model_args']['iou_thres']
     device = model_configs['model_args']['device']
@@ -157,6 +158,8 @@ if __name__ == '__main__':
         for idx, image in tqdm(enumerate(img_list)):
             img_H, img_W = image.shape[0], image.shape[1]
             layout_res = rough_layout(layout_model, image)
+            print(image.shape)
+            raise
             latex_filling_list_new, mf_image_list_new = fine_grained_layout(image, layout_res)
             latex_filling_list.extend(latex_filling_list_new)
             mf_image_list.extend(mf_image_list_new)   
