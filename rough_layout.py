@@ -15,8 +15,8 @@ import yaml
 from dataaccelerate import DataPrefetcher 
 from torch.utils.data import IterableDataset, get_worker_info
 
-UNIFIED_WIDTH  = 1650
-UNIFIED_HEIGHT = 2150
+UNIFIED_WIDTH  = 800
+UNIFIED_HEIGHT = 1042
 def pad_image_to_ratio(image, target_ratio):
     """
     Pads the given PIL.Image object to fit the specified width-height ratio
@@ -228,7 +228,7 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model, inner_
             widths  = widths_batch[j:j+inner_batch_size]
 
             layout_res = layout_model((images,heights, widths), ignore_catids=[])
-            mfd_res    = mfd_model.predict(mfd_images, imgsz=img_size, conf=0.3, iou=0.5, verbose=False)
+            mfd_res    = mfd_model.predict(mfd_images, imgsz=(1888,1472), conf=0.3, iou=0.5, verbose=False)
             
             for pdf_id, page_id, layout_det, mfd_det, real_input_height, real_input_width in zip(pdf_index, page_ids, layout_res, mfd_res, heights, widths):
                 mfd_height,mfd_width = mfd_det.orig_shape
