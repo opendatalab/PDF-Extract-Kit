@@ -283,6 +283,7 @@ Please follow the model licenses to use the corresponding model weights: [Layout
    - [UniMERNet](https://github.com/opendatalab/UniMERNet): Formula recognition model
    - [YOLOv8](https://github.com/ultralytics/ultralytics): Formula detection model
    - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR model
+   - [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy): Table Extractor
 
 ## Citation
 If you find our models / code / papers useful in your research, please consider giving ⭐ and citations 📝, thx :)  

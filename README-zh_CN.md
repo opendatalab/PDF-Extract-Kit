@@ -288,6 +288,7 @@ python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
    - [UniMERNet](https://github.com/opendatalab/UniMERNet): 公式识别模型
    - [YOLOv8](https://github.com/ultralytics/ultralytics): 公式检测模型
    - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR模型
+   - [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy): Table提取器
 
 ## Citation
 
