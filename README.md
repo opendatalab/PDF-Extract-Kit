@@ -205,6 +205,8 @@ We have compared our model with the open-source formula detection model [Pix2Tex
 The formula recognition we used is based on the weights downloaded from [UniMERNet](https://github.com/opendatalab/UniMERNet), without any further SFT training, and the accuracy validation results can be obtained on its GitHub page.
 
 ### Table Recognition
+![StructEqTable](assets/demo/table_expamle.png)
+
 The table recognition we used is based on the weights downloaded from [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy), a solution that converts images of Table into LaTeX.
 
 ## Installation Guide

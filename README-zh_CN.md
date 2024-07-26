@@ -209,6 +209,7 @@ PDF内容提取框架如下图所示
 公式识别我们使用的是[UniMERNet](https://github.com/opendatalab/UniMERNet)的权重，没有进一步的SFT训练，其精度验证结果可以在其GitHub页面获取。
 
 ### 表格识别
+![StructEqTable](assets/demo/table_expamle.png)
 
 表格识别我们使用的是[StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy)的权重，用于将表格转换为LaTeX。
 
