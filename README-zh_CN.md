@@ -1,7 +1,6 @@
 
 <p align="center">
-  <img src="assets/images/datalab_logo.png" width="160px" style="vertical-align:middle;">
-  <span style="font-size: 28px; vertical-align: middle;">PDF-Extract-Kit</span>
+  <img src="assets/images/pdf-extract-kit_logo.png" width="180px" style="vertical-align:middle;">
 </p>
 
 
