@@ -289,6 +289,12 @@ If you find our models / code / papers useful in your research, please consider 
       archivePrefix={arXiv},
       primaryClass={cs.CV}
 }
+@article{he2024opendatalab,
+  title={Opendatalab: Empowering general artificial intelligence with open datasets},
+  author={He, Conghui and Li, Wei and Jin, Zhenjiang and Xu, Chao and Wang, Bin and Lin, Dahua},
+  journal={arXiv preprint arXiv:2407.13773},
+  year={2024}
+}
 ```
 
 ## Star History
