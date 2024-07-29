@@ -264,7 +264,7 @@ Parameter explanations:
 
 ## TODO List
 
-- [√] **Table Parsing**: Develop a feature to convert table images into corresponding LaTeX/Markdown format source code.
+- [x] **Table Parsing**: Develop a feature to convert table images into corresponding LaTeX/Markdown format source code.
 - [ ] **Chemical Equation Detection**: Implement automatic detection of chemical equations.
 - [ ] **Chemical Equation/Diagram Recognition**: Develop a model to recognize and parse chemical equations and diagrams.
 - [ ] **Reading Order Sorting Model**: Build a model to determine the correct reading order of text in documents.
@@ -285,7 +285,6 @@ Please follow the model licenses to use the corresponding model weights: [Layout
    - [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy): Table recognition model
    - [YOLOv8](https://github.com/ultralytics/ultralytics): Formula detection model
    - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR model
-   - [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy): Table Extractor
 
 ## Citation
 If you find our models / code / papers useful in your research, please consider giving ⭐ and citations 📝, thx :)  

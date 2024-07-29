@@ -7,5 +7,5 @@ model_args:
   layout_weight: models/Layout/model_final.pth
   mfd_weight: models/MFD/weights.pt
   mfr_weight: models/MFR/UniMERNet
-  tr_weight: U4R/StructTable-base
+  tr_weight: models/TR/StructEqTable
   table_max_time: 60
