@@ -160,7 +160,7 @@ if __name__ == '__main__':
             img_H, img_W = image.shape[0], image.shape[1]
             layout_res = rough_layout(layout_model, image)
 
-            latex_filling_list_new, mf_image_list_new = fine_grained_layout(image, layout_res,fineconfig)
+            latex_filling_list_new, mf_image_list_new = fine_grained_layout(image, layout_res)
             latex_filling_list.extend(latex_filling_list_new)
             mf_image_list.extend(mf_image_list_new)   
             layout_res['page_info'] = dict(
@@ -169,6 +169,7 @@ if __name__ == '__main__':
                 width = img_W
             )
             doc_layout_result.append(layout_res)
+        # ================  公式识别，因为识别速度较慢，为了提速，把单个pdf的所有公式裁剪完，一起批量做识别。  ====================================
         # ================  公式识别，因为识别速度较慢，为了提速，把单个pdf的所有公式裁剪完，一起批量做识别。  ====================================  
         a = time.time()  
         dataset = MathDataset(mf_image_list, transform=mfr_transform)

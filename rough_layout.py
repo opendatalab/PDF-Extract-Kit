@@ -131,7 +131,24 @@ class PDFImageDataset(IterableDataset):
         if len(self.last_read_pdf_buffer)==0:return None
         return list(self.last_read_pdf_buffer.values())[0]
 
-    def __next__(self):
+    def read_data_based_on_current_state(self):
+        page  = self.get_pdf_by_index(self.current_pdf_index).load_page(self.current_page_index)
+        oimage = process_pdf_page_to_image(page, self.dpi)
+        original_image = oimage[:, :, ::-1] if self.input_format == "RGB" else oimage
+        height, width = original_image.shape[:2]
+        layout_image = self.aug.get_transform(original_image).apply_image(original_image)
+        layout_image = torch.as_tensor(layout_image.astype("float32").transpose(2, 0, 1))[:,:1042,:800]
+        ## lets make sure the image has correct size 
+        if layout_image.size(1) < 1042:
+            layout_image = torch.nn.functional.pad(layout_image, (0, 0, 0, 1042-layout_image.size(1)))
+        mfd_image=self.prepare_for_mfd_model(oimage)
+        #print(self.current_pdf_index, self.current_page_index)
+        if self.return_original_image:
+            return self.current_pdf_index, self.current_page_index, mfd_image, layout_image, height, width, oimage
+        else:
+            return self.current_pdf_index, self.current_page_index, mfd_image, layout_image, height, width
+
+    def check_should_skip(self):
         if self.current_pdf_index >= len(self.metadata):
             raise StopIteration
         
@@ -144,22 +161,25 @@ class PDFImageDataset(IterableDataset):
             if self.current_pdf_index >= len(self.metadata):
                 raise StopIteration
 
-        page  = self.get_pdf_by_index(self.current_pdf_index).load_page(self.current_page_index)
-        current_page_index = self.current_page_index
-        current_pdf_index  = self.current_pdf_index
-        self.current_page_index += 1
-        oimage = process_pdf_page_to_image(page, self.dpi)
-        original_image = oimage[:, :, ::-1] if self.input_format == "RGB" else oimage
-        height, width = original_image.shape[:2]
-        image = self.aug.get_transform(original_image).apply_image(original_image)
-        image = torch.as_tensor(image.astype("float32").transpose(2, 0, 1))[:,:1042,:800]
-        mfd_image=self.prepare_for_mfd_model(oimage)
-        #print(self.current_pdf_index, self.current_page_index)
-        if self.return_original_image:
-            return current_pdf_index, current_page_index, mfd_image, image, height, width, oimage
-        else:
-            return current_pdf_index, current_page_index, mfd_image, image, height, width
+    def __next__(self):
+        fail_times = 0
+        try:
+            self.check_should_skip()
+            output = self.read_data_based_on_current_state()
+            self.current_page_index += 1
+            fail_times = 0
+        except StopIteration:
+            raise StopIteration
+        except:
+            fail_times +=1
+            if fail_times>10:
+                raise StopIteration
+        return output
+        
     
+
+       
+
     def prepare_for_mfd_model(self, im:np.ndarray):
         if self.mfd_pre_transform is None :return im
         assert im.ndim==3
@@ -209,59 +229,55 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model, inner_
     featcher   = DataPrefetcher(dataloader,device='cuda')
     data_to_save = {}
     inner_batch_size = inner_batch_size
-    pbar  = tqdm(total=len(dataset.metadata),position=1,leave=True,desc="PDF Pages")
+    pbar  = tqdm(total=len(dataset.metadata),position=2,desc="PDF Pages",leave=False)
     pdf_passed = set()
     batch = featcher.next()
     while batch is not None:
-        pdf_index_batch,page_ids_batch, mfd_images_batch,images_batch,heights_batch, widths_batch = batch
-    #for pdf_index,mfd_images_batch,images_batch,heights_batch, widths_batch in dataloader:
-        pdf_index = set([t.item() for t in pdf_index_batch])
-        new_pdf_processed = pdf_index - pdf_passed
-        pdf_passed        = pdf_passed|pdf_index
-        
-        for j in tqdm(range(0, len(mfd_images_batch), inner_batch_size),position=2,leave=False,desc="mini-Batch"):
-            pdf_index  = pdf_index_batch[j:j+inner_batch_size]
-            page_ids   = page_ids_batch[j:j+inner_batch_size]
-            mfd_images = mfd_images_batch[j:j+inner_batch_size]
-            images     = images_batch[j:j+inner_batch_size]
-            heights    = heights_batch[j:j+inner_batch_size]
-            widths     = widths_batch[j:j+inner_batch_size]
-
-            ### the dataset will return the normlized image data in images.
-            ### if your set the return_oimage=True, it will also return the oimage append in each batch.
-            ### Currently,  the oimage will pad the resize unitil match the layout model ratio which is UNIFIED_WIDTH / UNIFIED_HEIGHT =800/1042
-            ### please take it note that the oimage always hold the ratio as 800/1042. # we will right white pad and bottom white pad so the bbox in pixel is not effected.
-            ### for mfd model, it will always be processed into the mfd_model.predictor.args.imgsz size such as (1888,1472) 
-            ### in the later processing the mfd result will be `ops.scale_boxes` into original image size. which is the oimage size. which must be the ratio UNIFIED_WIDTH / UNIFIED_HEIGHT =800/1042. (Notice it may not be the origin pdf size)
-            layout_res = layout_model((images, heights, widths), ignore_catids=[]) 
-            mfd_res    = mfd_model.predict(mfd_images, imgsz=mfd_model.predictor.args.imgsz, conf=0.3, iou=0.5, verbose=False)
+        try:
+            pdf_index_batch,page_ids_batch, mfd_images_batch,images_batch,heights_batch, widths_batch = batch
+        #for pdf_index,mfd_images_batch,images_batch,heights_batch, widths_batch in dataloader:
+            pdf_index = set([t.item() for t in pdf_index_batch])
+            new_pdf_processed = pdf_index - pdf_passed
+            pdf_passed        = pdf_passed|pdf_index
             
+            for j in tqdm(range(0, len(mfd_images_batch), inner_batch_size),position=3,leave=False,desc="mini-Batch"):
+                pdf_index = pdf_index_batch[j:j+inner_batch_size]
+                page_ids  = page_ids_batch[j:j+inner_batch_size]
+                mfd_images = mfd_images_batch[j:j+inner_batch_size]
+                images  = images_batch[j:j+inner_batch_size]
+                heights = heights_batch[j:j+inner_batch_size]
+                widths  = widths_batch[j:j+inner_batch_size]
 
+                layout_res = layout_model((images,heights, widths), ignore_catids=[])
+                mfd_res    = mfd_model.predict(mfd_images, imgsz=(1888,1472), conf=0.3, iou=0.5, verbose=False)
+                
+                for pdf_id, page_id, layout_det, mfd_det, real_input_height, real_input_width in zip(pdf_index, page_ids, layout_res, mfd_res, heights, widths):
+                    mfd_height,mfd_width = mfd_det.orig_shape
+                    pdf_id = int(pdf_id)
+                    page_id= int(page_id)
+                    real_input_height = int(real_input_height)
+                    real_input_width  = int(real_input_width)
+                    pdf_path = dataset.metadata[pdf_id]['path']
+                    if pdf_path not in data_to_save:
+                        data_to_save[pdf_path] = {'height':real_input_height, 'width':real_input_width}
+                    layout_dets = clean_layout_dets(layout_det['layout_dets'])
+                    for xyxy, conf, cla in zip(mfd_det.boxes.xyxy.cpu(), 
+                                            mfd_det.boxes.conf.cpu(), 
+                                            mfd_det.boxes.cls.cpu()):
+                        xyxy =  ops.scale_boxes(mfd_images.shape[2:], xyxy, (real_input_height, real_input_width))
+                        xmin, ymin, xmax, ymax = [int(p.item()) for p in xyxy]
+                        new_item = {
+                            'category_id': 13 + int(cla.item()),
+                            'poly': [xmin, ymin, xmax, ymin, xmax, ymax, xmin, ymax],
+                            'score': round(float(conf.item()), 2),
+                            'latex': '',
+                        }
+                        layout_dets.append(new_item)
+                    data_to_save[pdf_path][page_id] = layout_dets
+            pbar.update(len(new_pdf_processed))
+        except:
+            print("ERROR: Fail to process batch")
 
-            for pdf_id, page_id, layout_det, mfd_det, real_input_height, real_input_width in zip(pdf_index, page_ids, layout_res, mfd_res, heights, widths):
-                mfd_height,mfd_width = mfd_det.orig_shape
-                pdf_id = int(pdf_id)
-                page_id= int(page_id)
-                real_input_height = int(real_input_height)
-                real_input_width  = int(real_input_width)
-                pdf_path = dataset.metadata[pdf_id]['path']
-                if pdf_path not in data_to_save:
-                    data_to_save[pdf_path] = {'height':real_input_height, 'width':real_input_width}
-                layout_dets = clean_layout_dets(layout_det['layout_dets'])
-                for xyxy, conf, cla in zip(mfd_det.boxes.xyxy.cpu(), 
-                                        mfd_det.boxes.conf.cpu(), 
-                                        mfd_det.boxes.cls.cpu()):
-                    xyxy =  ops.scale_boxes(mfd_images.shape[2:], xyxy, (real_input_height, real_input_width))
-                    xmin, ymin, xmax, ymax = [int(p.item()) for p in xyxy]
-                    new_item = {
-                        'category_id': 13 + int(cla.item()),
-                        'poly': [xmin, ymin, xmax, ymin, xmax, ymax, xmin, ymax],
-                        'score': round(float(conf.item()), 2),
-                        'latex': '',
-                    }
-                    layout_dets.append(new_item)
-                data_to_save[pdf_path][page_id] = layout_dets
-        pbar.update(len(new_pdf_processed))
         batch = featcher.next()
 
     ### next, we construct each result for each pdf in pdf wise and remove the page_id by the list position 
@@ -278,11 +294,12 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model, inner_
         for page_id in range(max(pages)):
             if page_id not in layout_dets_per_page:
                 print(f"WARNING: page {page_id} of PDF: {pdf_path} fail to parser!!! ")
-                now_row = {"page_id": page_id, "layout_dets":[]}
+                now_row = {"page_id": page_id, "status": "fail", "layout_dets":[]}
             else:
                 now_row = {"page_id": page_id, "layout_dets":layout_dets_per_page[page_id]}
             new_pdf_dict["doc_layout_result"].append(now_row)
         new_data_to_save.append(new_pdf_dict)
+    if dataset.client is None:dataset.client=build_client()
     write_jsonl_to_path(new_data_to_save, result_path, dataset.client)
 
 if __name__ == "__main__":
