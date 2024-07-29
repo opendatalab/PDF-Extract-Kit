@@ -220,16 +220,24 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model, inner_
         pdf_passed        = pdf_passed|pdf_index
         
         for j in tqdm(range(0, len(mfd_images_batch), inner_batch_size),position=2,leave=False,desc="mini-Batch"):
-            pdf_index = pdf_index_batch[j:j+inner_batch_size]
-            page_ids  = page_ids_batch[j:j+inner_batch_size]
+            pdf_index  = pdf_index_batch[j:j+inner_batch_size]
+            page_ids   = page_ids_batch[j:j+inner_batch_size]
             mfd_images = mfd_images_batch[j:j+inner_batch_size]
-            images  = images_batch[j:j+inner_batch_size]
-            heights = heights_batch[j:j+inner_batch_size]
-            widths  = widths_batch[j:j+inner_batch_size]
+            images     = images_batch[j:j+inner_batch_size]
+            heights    = heights_batch[j:j+inner_batch_size]
+            widths     = widths_batch[j:j+inner_batch_size]
 
-            layout_res = layout_model((images,heights, widths), ignore_catids=[])
-            mfd_res    = mfd_model.predict(mfd_images, imgsz=(1888,1472), conf=0.3, iou=0.5, verbose=False)
+            ### the dataset will return the normlized image data in images.
+            ### if your set the return_oimage=True, it will also return the oimage append in each batch.
+            ### Currently,  the oimage will pad the resize unitil match the layout model ratio which is UNIFIED_WIDTH / UNIFIED_HEIGHT =800/1042
+            ### please take it note that the oimage always hold the ratio as 800/1042. # we will right white pad and bottom white pad so the bbox in pixel is not effected.
+            ### for mfd model, it will always be processed into the mfd_model.predictor.args.imgsz size such as (1888,1472) 
+            ### in the later processing the mfd result will be `ops.scale_boxes` into original image size. which is the oimage size. which must be the ratio UNIFIED_WIDTH / UNIFIED_HEIGHT =800/1042. (Notice it may not be the origin pdf size)
+            layout_res = layout_model((images, heights, widths), ignore_catids=[]) 
+            mfd_res    = mfd_model.predict(mfd_images, imgsz=mfd_model.predictor.args.imgsz, conf=0.3, iou=0.5, verbose=False)
             
+
+
             for pdf_id, page_id, layout_det, mfd_det, real_input_height, real_input_width in zip(pdf_index, page_ids, layout_res, mfd_res, heights, widths):
                 mfd_height,mfd_width = mfd_det.orig_shape
                 pdf_id = int(pdf_id)

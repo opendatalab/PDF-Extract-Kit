@@ -11,6 +11,7 @@ from paddleocr import PaddleOCR
 from ppocr.utils.logging import get_logger
 from ppocr.utils.utility import check_and_read, alpha_to_color, binarize_img
 from tools.infer.utility import draw_ocr_box_txt, get_rotate_crop_image, get_minarea_rect_crop
+from .batch_text_detector import BatchTextDetector
 logger = get_logger()
 
 def img_decode(content: bytes):
@@ -120,6 +121,67 @@ def update_det_boxes(dt_boxes, mfdetrec_res):
     return new_dt_boxes
 
 class ModifiedPaddleOCR(PaddleOCR):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.batch_det_model = BatchTextDetector()
+    
+    def batch_detect(self, img_list, mfd_res_list, ori_im_list, cls=True):
+        time_dict = {'det': 0, 'rec': 0, 'cls': 0, 'all': 0}
+        start = time.time()
+        
+        dt_boxes_list, elapse = self.batch_det_model(img_list)
+        time_dict['det'] = elapse
+
+        dt_boxes_list_new = []
+        for mfd_res in mfd_res_list:
+            if mfd_res:
+                bef = time.time()
+                dt_boxes = update_det_boxes(dt_boxes, mfd_res)
+                aft = time.time()
+                logger.debug("split text box by formula, new dt_boxes num : {}, elapsed : {}".format(len(dt_boxes), aft-bef))
+            dt_boxes_list_new.append(dt_boxes)
+        dt_boxes_list = dt_boxes_list_new 
+
+        img_crop_list  = []
+        boxes_partition= [0]
+        for dt_boxes, ori_im in zip(dt_boxes_list, ori_im_list):
+            for bno in range(len(dt_boxes)):
+                tmp_box = copy.deepcopy(dt_boxes[bno])
+                if self.args.det_box_type == "quad":
+                    img_crop = get_rotate_crop_image(ori_im, tmp_box)
+                else:
+                    img_crop = get_minarea_rect_crop(ori_im, tmp_box)
+                img_crop_list.append(img_crop)
+            boxes_partition.append(len(img_crop_list))
+
+        if self.use_angle_cls and cls:
+            img_crop_list, angle_list, elapse = self.text_classifier(img_crop_list)
+            time_dict['cls'] = elapse
+            logger.debug("cls num  : {}, elapsed : {}".format(len(img_crop_list), elapse))
+
+        rec_res, elapse = self.text_recognizer(img_crop_list)
+        time_dict['rec'] = elapse
+        logger.debug("rec_res num  : {}, elapsed : {}".format(len(rec_res), elapse))
+        # if self.args.save_crop_res:self.draw_crop_rec_res(self.args.crop_res_save_dir, img_crop_list,rec_res)
+        
+        filter_boxes_list  =[]
+        filter_rec_res_list=[]
+        for partition,(dt_boxes, ori_im) in enumerate(zip(dt_boxes_list, ori_im_list)):
+            filter_boxes, filter_rec_res = [], []
+            rec_res = rec_res[boxes_partition[partition]:boxes_partition[partition+1]]
+            for box, rec_result in zip(dt_boxes, rec_res):
+                text, score = rec_result
+                if score >= self.drop_score:
+                    filter_boxes.append(box)
+                    filter_rec_res.append(rec_result)
+            filter_boxes_list.append(filter_boxes)
+            filter_rec_res_list.append(filter_rec_res)
+        
+        end = time.time()
+        time_dict['all'] = end - start
+        return filter_boxes, filter_rec_res, time_dict
+
+
     def ocr(self, img, det=True, rec=True, cls=True, bin=False, inv=False, mfd_res=None, alpha_color=(255, 255, 255)):
         """
         OCR with PaddleOCR
@@ -235,6 +297,7 @@ class ModifiedPaddleOCR(PaddleOCR):
             else:
                 img_crop = get_minarea_rect_crop(ori_im, tmp_box)
             img_crop_list.append(img_crop)
+        
         if self.use_angle_cls and cls:
             img_crop_list, angle_list, elapse = self.text_classifier(
                 img_crop_list)
@@ -244,8 +307,7 @@ class ModifiedPaddleOCR(PaddleOCR):
 
         rec_res, elapse = self.text_recognizer(img_crop_list)
         time_dict['rec'] = elapse
-        logger.debug("rec_res num  : {}, elapsed : {}".format(
-            len(rec_res), elapse))
+        logger.debug("rec_res num  : {}, elapsed : {}".format(len(rec_res), elapse))
         if self.args.save_crop_res:
             self.draw_crop_rec_res(self.args.crop_res_save_dir, img_crop_list,
                                    rec_res)

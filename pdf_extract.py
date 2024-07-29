@@ -81,7 +81,7 @@ class FineGrainedConfig:
     iou_thres: float = 0.5
     verbose: bool = False
 
-def fine_grained_layout(image, layout_res, config:FineGrainedConfig):
+def fine_grained_layout(mfd_model,image, layout_res, config:FineGrainedConfig):
     latex_filling_list = []
     mf_image_list      = []
     mfd_res            = mfd_model.predict(image, imgsz=img_size, conf=config.conf_thres, iou=config.iou_thres, verbose=config.verbose)[0]
@@ -142,6 +142,7 @@ if __name__ == '__main__':
     else:
         all_pdfs = [args.pdf]
     print("total files:", len(all_pdfs))
+    fineconfig = FineGrainedConfig()
     for idx, single_pdf in enumerate(all_pdfs):
         try:
             img_list = load_pdf_fitz(single_pdf, dpi=dpi)
@@ -158,9 +159,8 @@ if __name__ == '__main__':
         for idx, image in tqdm(enumerate(img_list)):
             img_H, img_W = image.shape[0], image.shape[1]
             layout_res = rough_layout(layout_model, image)
-            print(image.shape)
-            raise
-            latex_filling_list_new, mf_image_list_new = fine_grained_layout(image, layout_res)
+
+            latex_filling_list_new, mf_image_list_new = fine_grained_layout(image, layout_res,fineconfig)
             latex_filling_list.extend(latex_filling_list_new)
             mf_image_list.extend(mf_image_list_new)   
             layout_res['page_info'] = dict(
@@ -169,110 +169,110 @@ if __name__ == '__main__':
                 width = img_W
             )
             doc_layout_result.append(layout_res)
-        # ================  公式识别，因为识别速度较慢，为了提速，把单个pdf的所有公式裁剪完，一起批量做识别。  ====================================
-    #     # ================  公式识别，因为识别速度较慢，为了提速，把单个pdf的所有公式裁剪完，一起批量做识别。  ====================================  
-    #     a = time.time()  
-    #     dataset = MathDataset(mf_image_list, transform=mfr_transform)
-    #     dataloader = DataLoader(dataset, batch_size=128, num_workers=32)
-    #     mfr_res = []
-    #     for imgs in dataloader:
-    #         imgs = imgs.to(device)
-    #         output = mfr_model.generate({'image': imgs})
-    #         mfr_res.extend(output['pred_str'])
-    #     for res, latex in zip(latex_filling_list, mfr_res):
-    #         res['latex'] = latex_rm_whitespace(latex)
-    #     b = time.time()
-    #     print("formula nums:", len(mf_image_list), "mfr time:", round(b-a, 2))
+        # ================  公式识别，因为识别速度较慢，为了提速，把单个pdf的所有公式裁剪完，一起批量做识别。  ====================================  
+        a = time.time()  
+        dataset = MathDataset(mf_image_list, transform=mfr_transform)
+        dataloader = DataLoader(dataset, batch_size=128, num_workers=32)
+        mfr_res = []
+        for imgs in dataloader:
+            imgs = imgs.to(device)
+            output = mfr_model.generate({'image': imgs})
+            mfr_res.extend(output['pred_str'])
+        for res, latex in zip(latex_filling_list, mfr_res):
+            res['latex'] = latex_rm_whitespace(latex)
+        b = time.time()
+        print("formula nums:", len(mf_image_list), "mfr time:", round(b-a, 2))
         
-    #     # ================  ocr识别  ====================================  
-    #     # 
-    #     for idx, image in enumerate(img_list):
-    #         pil_img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-    #         single_page_res = doc_layout_result[idx]['layout_dets']
-    #         single_page_mfdetrec_res = []
-    #         for res in single_page_res:
-    #             if int(res['category_id']) in [13, 14]:
-    #                 xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
-    #                 xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
-    #                 single_page_mfdetrec_res.append({
-    #                     "bbox": [xmin, ymin, xmax, ymax],
-    #                 })
-    #         for res in single_page_res:
-    #             if int(res['category_id']) in [0, 1, 2, 4, 6, 7]:  #需要进行ocr的类别
-    #                 xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
-    #                 xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
-    #                 crop_box = [xmin, ymin, xmax, ymax]
-    #                 cropped_img = Image.new('RGB', pil_img.size, 'white')
-    #                 cropped_img.paste(pil_img.crop(crop_box), crop_box)
-    #                 cropped_img = cv2.cvtColor(np.asarray(cropped_img), cv2.COLOR_RGB2BGR)
-    #                 ocr_res = ocr_model.ocr(cropped_img, mfd_res=single_page_mfdetrec_res)[0]
-    #                 if ocr_res:
-    #                     for box_ocr_res in ocr_res:
-    #                         p1, p2, p3, p4 = box_ocr_res[0]
-    #                         text, score = box_ocr_res[1]
-    #                         doc_layout_result[idx]['layout_dets'].append({
-    #                             'category_id': 15,
-    #                             'poly': p1 + p2 + p3 + p4,
-    #                             'score': round(score, 2),
-    #                             'text': text,
-    #                         })
+        # ================  ocr识别  ====================================  
+        # 
+        for idx, image in enumerate(img_list):
+            pil_img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+            single_page_res = doc_layout_result[idx]['layout_dets']
+            single_page_mfdetrec_res = []
+            for res in single_page_res:
+                if int(res['category_id']) in [13, 14]:
+                    xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
+                    xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
+                    single_page_mfdetrec_res.append({
+                        "bbox": [xmin, ymin, xmax, ymax],
+                    })
+            for res in single_page_res:
+                if int(res['category_id']) in [0, 1, 2, 4, 6, 7]:  #需要进行ocr的类别
+                    xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
+                    xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
+                    crop_box = [xmin, ymin, xmax, ymax]
+                    cropped_img = Image.new('RGB', pil_img.size, 'white')
+                    cropped_img.paste(pil_img.crop(crop_box), crop_box)
+                    cropped_img = cv2.cvtColor(np.asarray(cropped_img), cv2.COLOR_RGB2BGR)
+                    print(cropped_img.shape)
+                    ocr_res = ocr_model.ocr(cropped_img, mfd_res=single_page_mfdetrec_res)[0]
+                    if ocr_res:
+                        for box_ocr_res in ocr_res:
+                            p1, p2, p3, p4 = box_ocr_res[0]
+                            text, score = box_ocr_res[1]
+                            doc_layout_result[idx]['layout_dets'].append({
+                                'category_id': 15,
+                                'poly': p1 + p2 + p3 + p4,
+                                'score': round(score, 2),
+                                'text': text,
+                            })
 
-    #     output_dir = args.output
-    #     os.makedirs(output_dir, exist_ok=True)
-    #     basename = os.path.basename(single_pdf)[0:-4]
-    #     with open(os.path.join(output_dir, f'{basename}.json'), 'w') as f:
-    #         json.dump(doc_layout_result, f)
+        output_dir = args.output
+        os.makedirs(output_dir, exist_ok=True)
+        basename = os.path.basename(single_pdf)[0:-4]
+        with open(os.path.join(output_dir, f'{basename}.json'), 'w') as f:
+            json.dump(doc_layout_result, f)
         
-    #     if args.vis:
-    #         color_palette = [
-    #             (255,64,255),(255,255,0),(0,255,255),(255,215,135),(215,0,95),(100,0,48),(0,175,0),(95,0,95),(175,95,0),(95,95,0),
-    #             (95,95,255),(95,175,135),(215,95,0),(0,0,255),(0,255,0),(255,0,0),(0,95,215),(0,0,0),(0,0,0),(0,0,0)
-    #         ]
-    #         id2names = ["title", "plain_text", "abandon", "figure", "figure_caption", "table", "table_caption", "table_footnote", 
-    #                     "isolate_formula", "formula_caption", " ", " ", " ", "inline_formula", "isolated_formula", "ocr_text"]
-    #         vis_pdf_result = []
-    #         for idx, image in enumerate(img_list):
-    #             single_page_res = doc_layout_result[idx]['layout_dets']
-    #             vis_img = Image.new('RGB', Image.fromarray(image).size, 'white') if args.render else Image.fromarray(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-    #             draw = ImageDraw.Draw(vis_img)
-    #             for res in single_page_res:
-    #                 label = int(res['category_id'])
-    #                 if label > 15:     # 筛选要可视化的类别
-    #                     continue
-    #                 label_name = id2names[label]
-    #                 x_min, y_min = int(res['poly'][0]), int(res['poly'][1])
-    #                 x_max, y_max = int(res['poly'][4]), int(res['poly'][5])
-    #                 if args.render and label in [13, 14, 15]:
-    #                     try:
-    #                         if label in [13, 14]:  # 渲染公式
-    #                             window_img = tex2pil(res['latex'])[0]
-    #                         else:
-    #                             if True:           # 渲染中文
-    #                                 window_img = zhtext2pil(res['text'])
-    #                             else:              # 渲染英文
-    #                                 window_img = tex2pil([res['text']], tex_type="text")[0]
-    #                         ratio = min((x_max - x_min) / window_img.width, (y_max - y_min) / window_img.height) - 0.05
-    #                         window_img = window_img.resize((int(window_img.width * ratio), int(window_img.height * ratio)))
-    #                         vis_img.paste(window_img, (int(x_min + (x_max-x_min-window_img.width) / 2), int(y_min + (y_max-y_min-window_img.height) / 2)))
-    #                     except Exception as e:
-    #                         print(f"got exception on {text}, error info: {e}")
-    #                 draw.rectangle([x_min, y_min, x_max, y_max], fill=None, outline=color_palette[label], width=1)
-    #                 fontText = ImageFont.truetype("assets/fonts/simhei.ttf", 15, encoding="utf-8")
-    #                 draw.text((x_min, y_min), label_name, color_palette[label], font=fontText)
+        if args.vis:
+            color_palette = [
+                (255,64,255),(255,255,0),(0,255,255),(255,215,135),(215,0,95),(100,0,48),(0,175,0),(95,0,95),(175,95,0),(95,95,0),
+                (95,95,255),(95,175,135),(215,95,0),(0,0,255),(0,255,0),(255,0,0),(0,95,215),(0,0,0),(0,0,0),(0,0,0)
+            ]
+            id2names = ["title", "plain_text", "abandon", "figure", "figure_caption", "table", "table_caption", "table_footnote", 
+                        "isolate_formula", "formula_caption", " ", " ", " ", "inline_formula", "isolated_formula", "ocr_text"]
+            vis_pdf_result = []
+            for idx, image in enumerate(img_list):
+                single_page_res = doc_layout_result[idx]['layout_dets']
+                vis_img = Image.new('RGB', Image.fromarray(image).size, 'white') if args.render else Image.fromarray(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+                draw = ImageDraw.Draw(vis_img)
+                for res in single_page_res:
+                    label = int(res['category_id'])
+                    if label > 15:     # 筛选要可视化的类别
+                        continue
+                    label_name = id2names[label]
+                    x_min, y_min = int(res['poly'][0]), int(res['poly'][1])
+                    x_max, y_max = int(res['poly'][4]), int(res['poly'][5])
+                    if args.render and label in [13, 14, 15]:
+                        try:
+                            if label in [13, 14]:  # 渲染公式
+                                window_img = tex2pil(res['latex'])[0]
+                            else:
+                                if True:           # 渲染中文
+                                    window_img = zhtext2pil(res['text'])
+                                else:              # 渲染英文
+                                    window_img = tex2pil([res['text']], tex_type="text")[0]
+                            ratio = min((x_max - x_min) / window_img.width, (y_max - y_min) / window_img.height) - 0.05
+                            window_img = window_img.resize((int(window_img.width * ratio), int(window_img.height * ratio)))
+                            vis_img.paste(window_img, (int(x_min + (x_max-x_min-window_img.width) / 2), int(y_min + (y_max-y_min-window_img.height) / 2)))
+                        except Exception as e:
+                            print(f"got exception on {text}, error info: {e}")
+                    draw.rectangle([x_min, y_min, x_max, y_max], fill=None, outline=color_palette[label], width=1)
+                    fontText = ImageFont.truetype("assets/fonts/simhei.ttf", 15, encoding="utf-8")
+                    draw.text((x_min, y_min), label_name, color_palette[label], font=fontText)
                 
-    #             width, height = vis_img.size
-    #             width, height = int(0.75*width), int(0.75*height)
-    #             vis_img = vis_img.resize((width, height))
-    #             vis_pdf_result.append(vis_img)
+                width, height = vis_img.size
+                width, height = int(0.75*width), int(0.75*height)
+                vis_img = vis_img.resize((width, height))
+                vis_pdf_result.append(vis_img)
             
-    #         first_page = vis_pdf_result.pop(0)
-    #         first_page.save(os.path.join(output_dir, f'{basename}.pdf'), 'PDF', resolution=100, save_all=True, append_images=vis_pdf_result)
-    #         try:
-    #             shutil.rmtree('./temp')
-    #         except:
-    #             pass
+            first_page = vis_pdf_result.pop(0)
+            first_page.save(os.path.join(output_dir, f'{basename}.pdf'), 'PDF', resolution=100, save_all=True, append_images=vis_pdf_result)
+            try:
+                shutil.rmtree('./temp')
+            except:
+                pass
             
-    # now = datetime.datetime.now(tz)
-    # end = time.time()
-    # print(now.strftime('%Y-%m-%d %H:%M:%S'))
-    # print('Finished! time cost:', int(end-start), 's')
+    now = datetime.datetime.now(tz)
+    end = time.time()
+    print(now.strftime('%Y-%m-%d %H:%M:%S'))
+    print('Finished! time cost:', int(end-start), 's')
