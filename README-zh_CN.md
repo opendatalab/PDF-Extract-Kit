@@ -28,6 +28,7 @@ PDF文档中包含大量知识信息，然而提取高质量的PDF内容并非�
 - 布局检测：使用[LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3)模型进行区域检测，如`图像`，`表格`,`标题`,`文本`等；
 - 公式检测：使用[YOLOv8](https://github.com/ultralytics/ultralytics)进行公式检测，包含`行内公式`和`行间公式`；
 - 公式识别：使用[UniMERNet](https://github.com/opendatalab/UniMERNet)进行公式识别；
+- 表格识别：使用[StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy)进行表格识别；
 - 光学字符识别：使用[PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)进行文本识别；
 
 > **注意：** *由于文档类型的多样性，现有开源的布局检测和公式检测很难处理多样性的PDF文档，为此我们内容采集多样性数据进行标注和训练，使得在各类文档上取得精准的检测效果，细节参考[布局检测](#layout-anchor)和[公式检测](#mfd-anchor)部分。对于公式识别，UniMERNet方法可以媲美商业软件，在各种类型公式识别上均匀很高的质量。对于OCR，我们采用PaddleOCR，对中英文OCR效果不错。*
@@ -267,7 +268,7 @@ python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
 
 ## 待办事项
 
-- [ ] **表格解析**：开发能够将表格图像转换成对应的LaTeX/Markdown格式源码的功能。  
+- [√] **表格解析**：开发能够将表格图像转换成对应的LaTeX/Markdown格式源码的功能。  
 - [ ] **化学方程式检测**：实现对化学方程式的自动检测。  
 - [ ] **化学方程式/图解识别**：开发识别并解析化学方程式的模型。  
 - [ ] **阅读顺序排序模型**：构建模型以确定文档中文本的正确阅读顺序。  
@@ -279,16 +280,17 @@ python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
 
 本仓库的代码依照 [Apache-2.0](LICENSE) 协议开源。
 
-使用模型权重时，请遵循对应的模型协议：[LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3) / [UniMERNet](https://github.com/opendatalab/UniMERNet) / [YOLOv8](https://github.com/ultralytics/ultralytics) / [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR).
+使用模型权重时，请遵循对应的模型协议：[LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3) / [UniMERNet](https://github.com/opendatalab/UniMERNet) / [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy) / [YOLOv8](https://github.com/ultralytics/ultralytics) / [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR).
 
 
 ## 致谢
 
    - [LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3): 布局检测模型
    - [UniMERNet](https://github.com/opendatalab/UniMERNet): 公式识别模型
+   - [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy): 表格识别模型
    - [YOLOv8](https://github.com/ultralytics/ultralytics): 公式检测模型
    - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR模型
-   - [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy): Table提取器
+
 
 ## Citation
 
