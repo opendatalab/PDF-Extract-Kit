@@ -122,6 +122,31 @@ def check_lock_exists(path, client):
         raise NotImplementedError("please donot use lock lock")
         return os.path.exists(path)
 
+def check_lock_and_last_start_time(path, client):
+    if "s3" in path:
+        raise NotImplementedError("s3 lock not implemented")
+    elif path.startswith('http'):
+        assert 'checklocktime' in path, "please use `checklocktime` flag for data path"
+        response = requests.get(path)
+        if response.status_code == 200:
+            content = response.json()
+            if not content["status"]:return False
+            return content['start_time']
+        else:
+            return False
+    else:
+        raise NotImplementedError("s3 lock not implemented")
+
+def create_last_start_time_lock(path, client):
+    if "s3" in path:
+        raise NotImplementedError("s3 lock not implemented")
+    elif path.startswith('http'):
+        assert 'createlocktime' in path, "please use `createlocktime` flag for data path"
+        response = requests.get(path)
+    else:
+        raise NotImplementedError("s3 lock not implemented")
+
+
 def read_pdf_from_path(path, client):
     if "s3" in path:
         buffer = client.get(path)

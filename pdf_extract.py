@@ -158,8 +158,7 @@ if __name__ == '__main__':
         for idx, image in tqdm(enumerate(img_list)):
             img_H, img_W = image.shape[0], image.shape[1]
             layout_res = rough_layout(layout_model, image)
-            print(image.shape)
-            raise
+
             latex_filling_list_new, mf_image_list_new = fine_grained_layout(image, layout_res)
             latex_filling_list.extend(latex_filling_list_new)
             mf_image_list.extend(mf_image_list_new)   
@@ -170,52 +169,53 @@ if __name__ == '__main__':
             )
             doc_layout_result.append(layout_res)
         # ================  公式识别，因为识别速度较慢，为了提速，把单个pdf的所有公式裁剪完，一起批量做识别。  ====================================
-    #     # ================  公式识别，因为识别速度较慢，为了提速，把单个pdf的所有公式裁剪完，一起批量做识别。  ====================================  
-    #     a = time.time()  
-    #     dataset = MathDataset(mf_image_list, transform=mfr_transform)
-    #     dataloader = DataLoader(dataset, batch_size=128, num_workers=32)
-    #     mfr_res = []
-    #     for imgs in dataloader:
-    #         imgs = imgs.to(device)
-    #         output = mfr_model.generate({'image': imgs})
-    #         mfr_res.extend(output['pred_str'])
-    #     for res, latex in zip(latex_filling_list, mfr_res):
-    #         res['latex'] = latex_rm_whitespace(latex)
-    #     b = time.time()
-    #     print("formula nums:", len(mf_image_list), "mfr time:", round(b-a, 2))
+        # ================  公式识别，因为识别速度较慢，为了提速，把单个pdf的所有公式裁剪完，一起批量做识别。  ====================================  
+        a = time.time()  
+        dataset = MathDataset(mf_image_list, transform=mfr_transform)
+        dataloader = DataLoader(dataset, batch_size=128, num_workers=32)
+        mfr_res = []
+        for imgs in dataloader:
+            imgs = imgs.to(device)
+            output = mfr_model.generate({'image': imgs})
+            mfr_res.extend(output['pred_str'])
+        for res, latex in zip(latex_filling_list, mfr_res):
+            res['latex'] = latex_rm_whitespace(latex)
+        b = time.time()
+        print("formula nums:", len(mf_image_list), "mfr time:", round(b-a, 2))
         
-    #     # ================  ocr识别  ====================================  
-    #     # 
-    #     for idx, image in enumerate(img_list):
-    #         pil_img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-    #         single_page_res = doc_layout_result[idx]['layout_dets']
-    #         single_page_mfdetrec_res = []
-    #         for res in single_page_res:
-    #             if int(res['category_id']) in [13, 14]:
-    #                 xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
-    #                 xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
-    #                 single_page_mfdetrec_res.append({
-    #                     "bbox": [xmin, ymin, xmax, ymax],
-    #                 })
-    #         for res in single_page_res:
-    #             if int(res['category_id']) in [0, 1, 2, 4, 6, 7]:  #需要进行ocr的类别
-    #                 xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
-    #                 xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
-    #                 crop_box = [xmin, ymin, xmax, ymax]
-    #                 cropped_img = Image.new('RGB', pil_img.size, 'white')
-    #                 cropped_img.paste(pil_img.crop(crop_box), crop_box)
-    #                 cropped_img = cv2.cvtColor(np.asarray(cropped_img), cv2.COLOR_RGB2BGR)
-    #                 ocr_res = ocr_model.ocr(cropped_img, mfd_res=single_page_mfdetrec_res)[0]
-    #                 if ocr_res:
-    #                     for box_ocr_res in ocr_res:
-    #                         p1, p2, p3, p4 = box_ocr_res[0]
-    #                         text, score = box_ocr_res[1]
-    #                         doc_layout_result[idx]['layout_dets'].append({
-    #                             'category_id': 15,
-    #                             'poly': p1 + p2 + p3 + p4,
-    #                             'score': round(score, 2),
-    #                             'text': text,
-    #                         })
+        # ================  ocr识别  ====================================  
+        # 
+        for idx, image in enumerate(img_list):
+            pil_img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+            single_page_res = doc_layout_result[idx]['layout_dets']
+            single_page_mfdetrec_res = []
+            for res in single_page_res:
+                if int(res['category_id']) in [13, 14]:
+                    xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
+                    xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
+                    single_page_mfdetrec_res.append({
+                        "bbox": [xmin, ymin, xmax, ymax],
+                    })
+            for res in single_page_res:
+                if int(res['category_id']) in [0, 1, 2, 4, 6, 7]:  #需要进行ocr的类别
+                    xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
+                    xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
+                    crop_box = [xmin, ymin, xmax, ymax]
+                    cropped_img = Image.new('RGB', pil_img.size, 'white')
+                    cropped_img.paste(pil_img.crop(crop_box), crop_box)
+                    cropped_img = cv2.cvtColor(np.asarray(cropped_img), cv2.COLOR_RGB2BGR)
+                    print(cropped_img.shape)
+                    ocr_res = ocr_model.ocr(cropped_img, mfd_res=single_page_mfdetrec_res)[0]
+                    if ocr_res:
+                        for box_ocr_res in ocr_res:
+                            p1, p2, p3, p4 = box_ocr_res[0]
+                            text, score = box_ocr_res[1]
+                            doc_layout_result[idx]['layout_dets'].append({
+                                'category_id': 15,
+                                'poly': p1 + p2 + p3 + p4,
+                                'score': round(score, 2),
+                                'text': text,
+                            })
 
     #     output_dir = args.output
     #     os.makedirs(output_dir, exist_ok=True)
