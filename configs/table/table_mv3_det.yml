@@ -1,0 +1,15 @@
+Architecture:
+  model_type: det
+  algorithm: DB
+  Transform:
+  Backbone:
+    name: MobileNetV3
+    scale: 0.5
+    model_name: large
+    disable_se: true
+  Neck:
+    name: DBFPN
+    out_channels: 96
+  Head:
+    name: DBHead
+    k: 50

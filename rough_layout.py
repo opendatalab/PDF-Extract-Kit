@@ -241,7 +241,10 @@ from utils import *
 
 def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model, ocrmodel=None, inner_batch_size=4, batch_size=32,num_workers=8,timer=Timers(False)):
     dataset    = PDFImageDataset(pdf_path,layout_model.predictor.aug,layout_model.predictor.input_format,
-                                mfd_pre_transform=mfd_process(mfd_model.predictor.args.imgsz,mfd_model.predictor.model.stride,mfd_model.predictor.model.pt))
+                                 
+                                 mfd_pre_transform=mfd_process(mfd_model.predictor.args.imgsz,mfd_model.predictor.model.stride,mfd_model.predictor.model.pt),
+                                 det_pre_transform=ocrmodel.batch
+                                 )
 
     dataloader = DataLoader(dataset, batch_size=batch_size,collate_fn=custom_collate_fn, num_workers=num_workers)        
     featcher   = DataPrefetcher(dataloader,device='cuda')
