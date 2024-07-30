@@ -1,76 +1,7 @@
 from detectron2.utils.logger import setup_logger
 setup_logger()
 from modules.layoutlmv3.model_init import *
-
-import time, math
-class _DummyTimer:
-    """A dummy timer that does nothing."""
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        pass
-
-class _Timer:
-    """Timer."""
-
-    def __init__(self, name):
-        self.name = name
-        self.count = 0
-        self.mean = 0.0
-        self.sum_squares = 0.0
-        self.start_time = None
-
-    def __enter__(self):
-        self.start_time = time.time()
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        elapsed_time = time.time() - self.start_time
-        self.update(elapsed_time)
-        self.start_time = None
-
-    def update(self, elapsed_time):
-        self.count += 1
-        delta = elapsed_time - self.mean
-        self.mean += delta / self.count
-        delta2 = elapsed_time - self.mean
-        self.sum_squares += delta * delta2
-
-    def mean_elapsed(self):
-        return self.mean
-
-    def std_elapsed(self):
-        if self.count > 1:
-            variance = self.sum_squares / (self.count - 1)
-            return math.sqrt(variance)
-        else:
-            return 0.0
-
-class Timers:
-    """Group of timers."""
-
-    def __init__(self, activate=False):
-        self.timers = {}
-        self.activate = activate
-    def __call__(self, name):
-        if not self.activate:return _DummyTimer()
-        if name not in self.timers:
-            self.timers[name] = _Timer(name)
-        return self.timers[name]
-
-    def log(self, names=None, normalizer=1.0):
-        """Log a group of timers."""
-        assert normalizer > 0.0
-        if names is None:
-            names = self.timers.keys()
-        print("Timer Results:")
-        for name in names:
-            mean_elapsed = self.timers[name].mean_elapsed() * 1000.0 / normalizer
-            std_elapsed = self.timers[name].std_elapsed() * 1000.0 / normalizer
-            space_num = " "*name.count('/')
-            print(f"{space_num}{name}: {mean_elapsed:.2f}±{std_elapsed:.2f} ms")
-
+from utils import Timers
 def inference(
         self,
         batched_inputs: List[Dict[str, torch.Tensor]],

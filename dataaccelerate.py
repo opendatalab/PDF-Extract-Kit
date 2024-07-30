@@ -11,7 +11,7 @@ def sendall2gpu(listinlist,device):
     elif isinstance(listinlist, (dict)):
         return dict([(key,sendall2gpu(val,device)) for key,val in listinlist.items()])
     elif isinstance(listinlist, np.ndarray):
-        return torch.from_numpy(listinlist).to(device=device, non_blocking=True)
+        return listinlist
     else:
         return listinlist.to(device=device, non_blocking=True)
 try:
