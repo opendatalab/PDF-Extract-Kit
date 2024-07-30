@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img src="assets/images/pdf-extract-kit_logo.png" width="180px" style="vertical-align:middle;">
+  <img src="assets/images/pdf-extract-kit_logo.png" width="220px" style="vertical-align:middle;">
 </p>
 
 <div align="center">
