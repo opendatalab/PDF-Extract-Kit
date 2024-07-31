@@ -200,7 +200,7 @@ if __name__ == '__main__':
                     cropped_img = pil_img.convert("RGB").crop(crop_box)
                     with torch.no_grad():
                         output = tr_model(cropped_img)
-                    res["latex"] = output
+                    res["latex"] = output[0]
 
 
         output_dir = args.output
