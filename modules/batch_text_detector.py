@@ -153,6 +153,12 @@ class TextDetector(BaseOCRV20):
             points[pno, 1] = int(min(max(points[pno, 1], 0), img_height - 1))
         return points
 
+    def clip_det_res_batch(self, points, img_height, img_width):
+        # Clip the points to the image borders
+        points[:, :, 0] = np.clip(points[:, :, 0], 0, img_width - 1)
+        points[:, :, 1] = np.clip(points[:, :, 1], 0, img_height - 1)
+        return points
+
     def filter_tag_det_res(self, dt_boxes, image_shape):
         img_height, img_width = image_shape[0:2]
         dt_boxes_new = []
@@ -166,6 +172,55 @@ class TextDetector(BaseOCRV20):
             dt_boxes_new.append(box)
         dt_boxes = np.array(dt_boxes_new)
         return dt_boxes
+
+    def order_points_clockwise_batch(self, pts_batch):
+        """
+        Orders a batch of points in a clockwise manner.
+        
+        Args:
+            pts_batch (numpy.ndarray): Array of shape (N, 4, 2) containing N sets of four points.
+            
+        Returns:
+            numpy.ndarray: Array of shape (N, 4, 2) with points ordered as top-left, top-right, 
+                           bottom-right, bottom-left.
+        """
+        # Sort points in each set by x-coordinates
+        xSorted = np.sort(pts_batch, axis=1, order=['x'])
+
+        # Separate left-most and right-most points
+        leftMost = xSorted[:, :2, :]
+        rightMost = xSorted[:, 2:, :]
+
+        # Sort left-most points by y-coordinates
+        leftMost = leftMost[np.argsort(leftMost[:, :, 1], axis=1)]
+        tl = leftMost[:, 0, :]
+        bl = leftMost[:, 1, :]
+
+        # Sort right-most points by y-coordinates
+        rightMost = rightMost[np.argsort(rightMost[:, :, 1], axis=1)]
+        tr = rightMost[:, 0, :]
+        br = rightMost[:, 1, :]
+
+        # Combine the points into the ordered rectangle
+        rect = np.stack((tl, tr, br, bl), axis=1)
+        return rect
+
+    def filter_tag_det_res_new(self, dt_boxes, image_shape):
+        img_height, img_width = image_shape[0:2]
+        
+        # Order points clockwise and clip them
+        ordered_boxes = self.order_points_clockwise_batch(dt_boxes)
+        clipped_boxes = self.clip_det_res_batch(ordered_boxes,img_height, img_width)
+        
+        # Calculate widths and heights
+        widths  = np.linalg.norm(clipped_boxes[:, 0] - clipped_boxes[:, 1], axis=1).astype(int)
+        heights = np.linalg.norm(clipped_boxes[:, 0] - clipped_boxes[:, 3], axis=1).astype(int)
+        
+        # Filter out boxes with width or height <= 3
+        valid_indices = (widths > 3) & (heights > 3)
+        dt_boxes_new = clipped_boxes[valid_indices]
+
+        return dt_boxes_new
 
     def filter_tag_det_res_only_clip(self, dt_boxes, image_shape):
         img_height, img_width = image_shape[0:2]
@@ -312,6 +367,12 @@ class BatchTextDetector(TextDetector):
         args = Namespace(**fast_config)
         super().__init__(args, **kwargs)
 
+    def batch_forward(self, _input_image_batch,shape_list_batch,ori_shape_list):
+        with torch.no_grad():
+            dt_boxaes_batch = self.net(_input_image_batch)
+            pred_batch  = self.discard_batch(dt_boxaes_batch)
+            dt_boxes_list=self.batch_postprocess(pred_batch, shape_list_batch,ori_shape_list)
+        return dt_boxes_list
     def batch_process(self, img_batch, ori_shape_list):
         _input_image_batch = []
         shape_list_batch   = []
@@ -321,11 +382,7 @@ class BatchTextDetector(TextDetector):
             shape_list_batch.append(shape_list)
         _input_image_batch = torch.cat(_input_image_batch)
         shape_list_batch   = np.stack(shape_list_batch)
-        with torch.no_grad():
-            dt_boxaes_batch = self.net(_input_image_batch)
-            pred_batch  = self.discard_batch(dt_boxaes_batch)
-            dt_boxes_list=self.batch_postprocess(pred_batch, shape_list_batch,ori_shape_list)
-        return dt_boxes_list
+        return self.batch_forward(self, _input_image_batch,shape_list_batch,ori_shape_list)
     
     def discard_batch(self, outputs):
         preds = {}
@@ -348,16 +405,235 @@ class BatchTextDetector(TextDetector):
             raise NotImplementedError
         return preds
     
+    def fast_postprocess(self,preds, shape_list ):
+        #return fast_torch_postprocess(self.postprocess_op,preds, shape_list)
+        if len(shape_list) == 1:
+            return fast_torch_postprocess(self.postprocess_op,preds, shape_list)
+        else:
+            return fast_torch_postprocess_multiprocess(self.postprocess_op,preds, shape_list)
+        
+
     def batch_postprocess(self, preds_list, shape_list_list,ori_shape_list):
         dt_boxes_list=[]
         for preds, shape_list,ori_shape in zip(preds_list, shape_list_list,ori_shape_list):
-            post_result = self.postprocess_op(preds, shape_list)
+            post_result = self.fast_postprocess(preds, shape_list)
             dt_boxes = post_result[0]['points']
-            if (self.det_algorithm == "SAST" and
-                self.det_sast_polygon) or (self.det_algorithm in ["PSE", "FCE"] and
-                                        self.postprocess_op.box_type == 'poly'):
+            if (self.det_algorithm == "SAST" and self.det_sast_polygon) or (self.det_algorithm in ["PSE", "FCE"] and self.postprocess_op.box_type == 'poly'):
+                raise NotImplementedError
                 dt_boxes = self.filter_tag_det_res_only_clip(dt_boxes, ori_shape)
             else:
                 dt_boxes = self.filter_tag_det_res(dt_boxes, ori_shape)
             dt_boxes_list.append(dt_boxes)
         return dt_boxes_list
+
+def fast_torch_postprocess(self, outs_dict, shape_list):
+    """
+    Accelerate below 
+    def __call__(self, outs_dict, shape_list):
+        pred = outs_dict['maps']
+        pred = pred[:, 0, :, :]
+        segmentation = pred > self.thresh
+        if isinstance(segmentation, torch.Tensor):
+            segmentation = segmentation.cpu().numpy()
+    
+
+        boxes_batch = []
+        for batch_index in range(pred.shape[0]):
+            src_h, src_w, ratio_h, ratio_w = shape_list[batch_index]
+            if self.dilation_kernel is not None:
+                mask = cv2.dilate(np.array(segmentation[batch_index]).astype(np.uint8),self.dilation_kernel)
+            else:
+                mask = segmentation[batch_index]
+            boxes, scores = self.boxes_from_bitmap(pred[batch_index], mask,src_w, src_h)
+
+            boxes_batch.append({'points': boxes})
+        return boxes_batch
+    """
+    pred_batch = outs_dict['maps']
+    pred_batch = pred_batch[:, 0, :, :]
+    segmentation_batch = pred_batch > self.thresh
+    if isinstance(segmentation_batch, torch.Tensor):segmentation_batch = segmentation_batch.cpu().numpy()
+    boxes_batch = []
+    for batch_index in range(pred_batch.shape[0]):
+        src_h, src_w, ratio_h, ratio_w = shape_list[batch_index]
+        boxes, scores = boxes_from_bitmap(self,pred_batch[batch_index], segmentation_batch[batch_index],src_w, src_h)
+        #boxes = boxes_from_bitmap_without_score(self,segmentation_batch[batch_index],src_w, src_h)
+        boxes_batch.append({'points': boxes})
+    return boxes_batch
+
+def get_contours_multiprocess(segmentation_mask):
+    """Process a single segmentation batch and find contours."""
+    outs= cv2.findContours((segmentation_mask * 255).astype(np.uint8), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    if len(outs) == 3:
+        img, contours, _ = outs[0], outs[1], outs[2]
+    elif len(outs) == 2:
+        contours, _ = outs[0], outs[1]
+    return contours
+from concurrent.futures import ThreadPoolExecutor
+def fast_torch_postprocess_multiprocess(self, outs_dict, shape_list):
+    """
+    Accelerate below 
+    def __call__(self, outs_dict, shape_list):
+        pred = outs_dict['maps']
+        pred = pred[:, 0, :, :]
+        segmentation = pred > self.thresh
+        if isinstance(segmentation, torch.Tensor):
+            segmentation = segmentation.cpu().numpy()
+    
+
+        boxes_batch = []
+        for batch_index in range(pred.shape[0]):
+            src_h, src_w, ratio_h, ratio_w = shape_list[batch_index]
+            if self.dilation_kernel is not None:
+                mask = cv2.dilate(np.array(segmentation[batch_index]).astype(np.uint8),self.dilation_kernel)
+            else:
+                mask = segmentation[batch_index]
+            boxes, scores = self.boxes_from_bitmap(pred[batch_index], mask,src_w, src_h)
+
+            boxes_batch.append({'points': boxes})
+        return boxes_batch
+    """
+    pred_batch = outs_dict['maps']
+    pred_batch = pred_batch[:, 0, :, :]
+    segmentation_batch = pred_batch > self.thresh
+    if isinstance(segmentation_batch, torch.Tensor):segmentation_batch = segmentation_batch.cpu().numpy()
+    
+    num_threads = min(8, len(segmentation_batch))
+    
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        contours_batch = list(executor.map(get_contours_multiprocess, segmentation_batch))
+
+    boxes_batch = []
+    for batch_index in range(pred_batch.shape[0]):
+        src_h, src_w, ratio_h, ratio_w = shape_list[batch_index]
+        #boxes, scores = boxes_from_bitmap(self,pred_batch[batch_index], segmentation_batch[batch_index],src_w, src_h)
+        boxes = boxes_from_contours(self,pred_batch[batch_index],contours_batch[batch_index],src_w, src_h)
+        boxes_batch.append({'points': boxes})
+
+    # def boxes_from_bitmap_without_score_wrapper(args):
+    #     return boxes_from_bitmap_without_score(self, *args)
+    # with ThreadPoolExecutor(max_workers=num_threads) as executor:
+    #     src_h_list=[src_h for src_h, src_w, ratio_h, ratio_w in shape_list]
+    #     src_w_list=[src_w for src_h, src_w, ratio_h, ratio_w in shape_list]
+    #     boxes_batch = list(executor.map(boxes_from_bitmap_without_score_wrapper, zip(segmentation_batch,src_w_list,src_h_list)))
+    return boxes_batch
+
+def boxes_from_contours(self, pred, contours, dest_width, dest_height):
+    '''
+    _bitmap: single map with shape (1, H, W),
+            whose values are binarized as {0, 1}
+    '''
+
+    height, width = pred.shape
+    num_contours = min(len(contours), self.max_candidates)
+
+    boxes = []
+    scores = []
+    for index in range(num_contours):
+        contour = contours[index]
+        points, sside = self.get_mini_boxes(contour)
+        if sside < self.min_size:continue
+        points = np.array(points)
+        score  = box_score_fast(pred, points.reshape(-1, 2))
+        if self.box_thresh > score:continue
+        box = self.unclip(points).reshape(-1, 1, 2)
+        box, sside = self.get_mini_boxes(box)
+        if sside < self.min_size + 2:continue
+        box = np.array(box)
+        box[:, 0] = np.clip(np.round(box[:, 0] / width * dest_width), 0, dest_width)
+        box[:, 1] = np.clip(np.round(box[:, 1] / height * dest_height), 0, dest_height)
+        boxes.append(box)
+        scores.append(score)
+    return np.array(boxes), scores
+
+def boxes_from_bitmap(self, pred, _bitmap, dest_width, dest_height):
+    '''
+    _bitmap: single map with shape (1, H, W),
+            whose values are binarized as {0, 1}
+    '''
+
+    bitmap = _bitmap
+    height, width = bitmap.shape
+
+    outs = cv2.findContours((bitmap * 255).astype(np.uint8), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    if len(outs) == 3:
+        img, contours, _ = outs[0], outs[1], outs[2]
+    elif len(outs) == 2:
+        contours, _ = outs[0], outs[1]
+    num_contours = min(len(contours), self.max_candidates)
+
+    boxes = []
+    scores = []
+    for index in range(num_contours):
+        contour = contours[index]
+        points, sside = self.get_mini_boxes(contour)
+        if sside < self.min_size:continue
+        points =np.array(points)
+        score  = box_score_fast(pred, points.reshape(-1, 2))
+        if self.box_thresh > score:continue
+        box = self.unclip(points).reshape(-1, 1, 2)
+        box, sside = self.get_mini_boxes(box)
+        if sside < self.min_size + 2:continue
+        box = np.array(box)
+        box[:, 0] = np.clip(np.round(box[:, 0] / width * dest_width), 0, dest_width)
+        box[:, 1] = np.clip(np.round(box[:, 1] / height * dest_height), 0, dest_height)
+        boxes.append(box)
+        scores.append(score)
+    return np.array(boxes), scores
+
+def boxes_from_bitmap_without_score(self, _bitmap, dest_width, dest_height):
+    '''
+    _bitmap: single map with shape (1, H, W),
+            whose values are binarized as {0, 1}
+    '''
+
+    bitmap = _bitmap
+    height, width = bitmap.shape
+
+    outs = cv2.findContours((bitmap * 255).astype(np.uint8), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    if len(outs) == 3:
+        img, contours, _ = outs[0], outs[1], outs[2]
+    elif len(outs) == 2:
+        contours, _ = outs[0], outs[1]
+
+    num_contours = min(len(contours), self.max_candidates)
+
+    boxes = []
+    for index in range(num_contours):
+        contour = contours[index]
+        points, sside = self.get_mini_boxes(contour)
+        if sside < self.min_size:continue
+        points =np.array(points)
+        box = self.unclip(points).reshape(-1, 1, 2)
+        box, sside = self.get_mini_boxes(box)
+        if sside < self.min_size + 2:continue
+        box = np.array(box)
+        box[:, 0] = np.clip(np.round(box[:, 0] / width * dest_width), 0, dest_width)
+        box[:, 1] = np.clip(np.round(box[:, 1] / height * dest_height), 0, dest_height)
+        boxes.append(box.astype(np.int16))
+    return np.array(boxes, dtype=np.int16)
+
+def obtain_score_mask(_box, h, w):
+    #h, w = bitmap.shape[:2]
+    box = _box.copy()
+    xmin = np.clip(np.floor(box[:, 0].min()).astype(np.int32), 0, w - 1)
+    xmax = np.clip(np.ceil(box[:, 0].max()).astype(np.int32), 0, w - 1)
+    ymin = np.clip(np.floor(box[:, 1].min()).astype(np.int32), 0, h - 1)
+    ymax = np.clip(np.ceil(box[:, 1].max()).astype(np.int32), 0, h - 1)
+
+    mask = np.zeros((ymax - ymin + 1, xmax - xmin + 1), dtype=np.uint8)
+    box[:, 0] = box[:, 0] - xmin
+    box[:, 1] = box[:, 1] - ymin
+    cv2.fillPoly(mask, box.reshape(1, -1, 2).astype(np.int32), 1)
+    return xmin, xmax, ymin, ymax, mask
+
+def box_score_fast(bitmap, _box):
+    '''
+    box_score_fast: use bbox mean score as the mean score
+    '''
+    h, w = bitmap.shape[:2]
+    xmin, xmax, ymin, ymax, mask = obtain_score_mask(_box,h, w)
+    crop = bitmap[ymin:ymax + 1, xmin:xmax + 1]
+    mask = torch.BoolTensor(mask)
+    return crop[mask].mean().item()
+    

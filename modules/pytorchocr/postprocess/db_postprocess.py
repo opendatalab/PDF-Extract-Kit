@@ -48,8 +48,7 @@ class DBPostProcess(object):
         bitmap = _bitmap
         height, width = bitmap.shape
 
-        outs = cv2.findContours((bitmap * 255).astype(np.uint8), cv2.RETR_LIST,
-                                cv2.CHAIN_APPROX_SIMPLE)
+        outs = cv2.findContours((bitmap * 255).astype(np.uint8), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         if len(outs) == 3:
             img, contours, _ = outs[0], outs[1], outs[2]
         elif len(outs) == 2:
@@ -69,19 +68,15 @@ class DBPostProcess(object):
                 score = self.box_score_fast(pred, points.reshape(-1, 2))
             else:
                 score = self.box_score_slow(pred, contour)
-            if self.box_thresh > score:
-                continue
+            if self.box_thresh > score:continue
 
             box = self.unclip(points).reshape(-1, 1, 2)
             box, sside = self.get_mini_boxes(box)
-            if sside < self.min_size + 2:
-                continue
+            if sside < self.min_size + 2:continue
             box = np.array(box)
 
-            box[:, 0] = np.clip(
-                np.round(box[:, 0] / width * dest_width), 0, dest_width)
-            box[:, 1] = np.clip(
-                np.round(box[:, 1] / height * dest_height), 0, dest_height)
+            box[:, 0] = np.clip(np.round(box[:, 0] / width * dest_width), 0, dest_width)
+            box[:, 1] = np.clip(np.round(box[:, 1] / height * dest_height), 0, dest_height)
             boxes.append(box.astype(np.int16))
             scores.append(score)
         return np.array(boxes, dtype=np.int16), scores
@@ -158,22 +153,20 @@ class DBPostProcess(object):
 
     def __call__(self, outs_dict, shape_list):
         pred = outs_dict['maps']
-        if isinstance(pred, torch.Tensor):
-            pred = pred.cpu().numpy()
         pred = pred[:, 0, :, :]
         segmentation = pred > self.thresh
+        if isinstance(segmentation, torch.Tensor):
+            segmentation = segmentation.cpu().numpy()
+       
 
         boxes_batch = []
         for batch_index in range(pred.shape[0]):
             src_h, src_w, ratio_h, ratio_w = shape_list[batch_index]
             if self.dilation_kernel is not None:
-                mask = cv2.dilate(
-                    np.array(segmentation[batch_index]).astype(np.uint8),
-                    self.dilation_kernel)
+                mask = cv2.dilate(np.array(segmentation[batch_index]).astype(np.uint8),self.dilation_kernel)
             else:
                 mask = segmentation[batch_index]
-            boxes, scores = self.boxes_from_bitmap(pred[batch_index], mask,
-                                                   src_w, src_h)
+            boxes, scores = self.boxes_from_bitmap(pred[batch_index], mask,src_w, src_h)
 
             boxes_batch.append({'points': boxes})
         return boxes_batch
