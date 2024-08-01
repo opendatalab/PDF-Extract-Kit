@@ -19,4 +19,4 @@ test*
 models/Layout/*
 models/MFD/*
 models/MFR/*
-models/TR/*
+models/TabRec/*
