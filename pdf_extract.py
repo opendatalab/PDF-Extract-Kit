@@ -48,9 +48,9 @@ def layout_model_init(weight):
     model = Layoutlmv3_Predictor(weight)
     return model
 
-def tr_model_init(weight, max_time, device='cpu'):
+def tr_model_init(weight, max_time, device='cuda'):
     tr_model = build_model(weight, max_new_tokens=4096, max_time=max_time)
-    if device != 'cpu':
+    if device == 'cuda':
         tr_model = tr_model.cuda()
     return tr_model
 
@@ -198,8 +198,12 @@ if __name__ == '__main__':
                     xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
                     crop_box = [xmin, ymin, xmax, ymax]
                     cropped_img = pil_img.convert("RGB").crop(crop_box)
+                    start = time.time()
                     with torch.no_grad():
                         output = tr_model(cropped_img)
+                    end = time.time()
+                    if (end-start) > model_configs['model_args']['table_max_time']:
+                        res["timeout"] = True
                     res["latex"] = output[0]
 
 

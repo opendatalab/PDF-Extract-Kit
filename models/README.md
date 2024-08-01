@@ -56,7 +56,7 @@ Put [model files]() here:
 │       ├── README.md
 │       ├── tokenizer_config.json
 │       └── tokenizer.json
-├── TR
+├── TableRec
 │   └── StructEqTable
 │       ├── config.json
 │       ├──generation_config.json

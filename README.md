@@ -208,7 +208,8 @@ The formula recognition we used is based on the weights downloaded from [UniMERN
 ### Table Recognition
 ![StructEqTable](assets/demo/table_expamle.png)
 
-The table recognition we used is based on the weights downloaded from [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy), a solution that converts images of Table into LaTeX.
+The table recognition we used is based on the weights downloaded from [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy), a solution that converts images of Table into LaTeX. Compared to the table recognition capability of PP-StructureV2, StructEqTable demonstrates stronger recognition performance, delivering good results even with complex tables, which may currently be best suited for data within research papers. There is also significant room for improvement in terms of speed, and we are continuously iterating and optimizing. Within a week, we will update the table recognition capability to [MinerU](https://github.com/opendatalab/MinerU).
+
 
 ## Installation Guide
 

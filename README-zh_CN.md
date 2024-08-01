@@ -212,7 +212,7 @@ PDF内容提取框架如下图所示
 ### 表格识别
 ![StructEqTable](assets/demo/table_expamle.png)
 
-表格识别我们使用的是[StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy)的权重，用于将表格转换为LaTeX。
+表格识别我们使用的是[StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy)的权重，用于将表格转换为LaTeX。相比于PP-StructureV2的表格识别，StructEqTable的识别能力更强，针对复杂表格也能够有不错的效果，但目前可能主要适用于学术论文中的数据，速度也有较大的提升空间，我们仍在不断迭代优化中。在一周内我们会将表格识别的功能同步更新到[MinerU](https://github.com/opendatalab/MinerU)中。
 
 ## 使用教程
 
