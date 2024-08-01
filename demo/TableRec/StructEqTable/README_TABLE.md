@@ -32,7 +32,7 @@ Put model files here:
 │       ├── README.md
 │       ├── tokenizer_config.json
 │       └── tokenizer.json
-├── TableRec
+├── TabRec
 │   └── StructEqTable
 │       ├── config.json
 │       ├──generation_config.json
