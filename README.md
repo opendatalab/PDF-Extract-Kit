@@ -25,6 +25,7 @@ PDF documents contain a wealth of knowledge, yet extracting high-quality content
 - **Layout Detection**: Using the [LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3) model for region detection, such as `images`, `tables`, `titles`, `text`, etc.;
 - **Formula Detection**: Using [YOLOv8](https://github.com/ultralytics/ultralytics) for detecting formulas, including `inline formulas` and `isolated formulas`;
 - **Formula Recognition**: Using [UniMERNet](https://github.com/opendatalab/UniMERNet) for formula recognition;
+- **Table Recognition**: Using [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy) for table recognition;
 - **Optical Character Recognition**: Using [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) for text recognition;
 
 > **Note:** *Due to the diversity of document types, existing open-source layout and formula detection models struggle with diverse PDF documents. Therefore, we have collected diverse data for annotation and training to achieve precise detection effects on various types of documents. For details, refer to the sections on [Layout Detection](#layout-anchor) and [Formula Detection](#mfd-anchor). For formula recognition, the UniMERNet method rivals commercial software in quality across various types of formulas. For OCR, we use PaddleOCR, which performs well for both Chinese and English.*
@@ -203,6 +204,12 @@ We have compared our model with the open-source formula detection model [Pix2Tex
 
 The formula recognition we used is based on the weights downloaded from [UniMERNet](https://github.com/opendatalab/UniMERNet), without any further SFT training, and the accuracy validation results can be obtained on its GitHub page.
 
+### Table Recognition
+![StructEqTable](assets/demo/table_expamle.png)
+
+The table recognition we used is based on the weights downloaded from [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy), a solution that converts images of Table into LaTeX. Compared to the table recognition capability of PP-StructureV2, StructEqTable demonstrates stronger recognition performance, delivering good results even with complex tables, which may currently be best suited for data within research papers. There is also significant room for improvement in terms of speed, and we are continuously iterating and optimizing. Within a week, we will update the table recognition capability to [MinerU](https://github.com/opendatalab/MinerU).
+
+
 ## Installation Guide
 
 ```bash
@@ -257,7 +264,7 @@ Parameter explanations:
 
 ## TODO List
 
-- [ ] **Table Parsing**: Develop a feature to convert table images into corresponding LaTeX/Markdown format source code.
+- [x] **Table Parsing**: Develop a feature to convert table images into corresponding LaTeX/Markdown format source code.
 - [ ] **Chemical Equation Detection**: Implement automatic detection of chemical equations.
 - [ ] **Chemical Equation/Diagram Recognition**: Develop a model to recognize and parse chemical equations and diagrams.
 - [ ] **Reading Order Sorting Model**: Build a model to determine the correct reading order of text in documents.
@@ -268,13 +275,14 @@ Parameter explanations:
 
 This repository is licensed under the [Apache-2.0 License](LICENSE).
 
-Please follow the model licenses to use the corresponding model weights: [LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3) / [UniMERNet](https://github.com/opendatalab/UniMERNet) / [YOLOv8](https://github.com/ultralytics/ultralytics) / [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR).
+Please follow the model licenses to use the corresponding model weights: [LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3) / [UniMERNet](https://github.com/opendatalab/UniMERNet) / [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy) / [YOLOv8](https://github.com/ultralytics/ultralytics) / [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR).
 
 
 ## Acknowledgement
 
    - [LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3): Layout detection model
    - [UniMERNet](https://github.com/opendatalab/UniMERNet): Formula recognition model
+   - [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy): Table recognition model
    - [YOLOv8](https://github.com/ultralytics/ultralytics): Formula detection model
    - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR model
 
