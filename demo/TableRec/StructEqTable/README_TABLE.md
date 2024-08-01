@@ -3,7 +3,7 @@
 
 🔥🔥🔥 [StructEqTable: A High-efficiency Open-source Toolkit for Table-to-Latex Transformation](https://github.com/UniModal4Reasoning/StructEqTable-Deploy/)
 
-We use [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy) for table recognition, which is a very powerful end-to-end table recognition model in **research papers**. In the future, we will also expand more domains to improve the generalization ability of the model.
+We use [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy) for table recognition, which is a very powerful end-to-end table recognition model. Currently it applies mainly to tables in **academic papers**. In the future, we will also expand more domains to improve the generalization ability of the model.
 
 Here is a simple example where you can convert a given **table image to LaTeX** using the **StructEqTable** model, and then convert it to markdown or html using the convert_text function from 'pypandoc'. **Note** that the markdown format does not support merging cells, so there are cases where the LaTeX format is correct, but the markdown format does not merge cells. 
 
