@@ -56,5 +56,15 @@ Put [model files]() here:
 │       ├── README.md
 │       ├── tokenizer_config.json
 │       └── tokenizer.json
+├── TableRec
+│   └── StructEqTable
+│       ├── config.json
+│       ├──generation_config.json
+│       ├──model.safetensors
+│       ├──preprocessor_config.json
+│       ├──special_tokens_map.json
+│       ├──spiece.model
+│       ├──tokenizer_config.json
+│       └──tokenizer.json
 └── README.md
 ```

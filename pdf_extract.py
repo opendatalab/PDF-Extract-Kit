@@ -18,6 +18,7 @@ from ultralytics import YOLO
 from unimernet.common.config import Config
 import unimernet.tasks as tasks
 from unimernet.processors import load_processor
+from struct_eqtable import build_model
 
 from modules.latex2png import tex2pil, zhtext2pil
 from modules.extract_pdf import load_pdf_fitz
@@ -47,6 +48,11 @@ def layout_model_init(weight):
     model = Layoutlmv3_Predictor(weight)
     return model
 
+def tr_model_init(weight, max_time, device='cuda'):
+    tr_model = build_model(weight, max_new_tokens=4096, max_time=max_time)
+    if device == 'cuda':
+        tr_model = tr_model.cuda()
+    return tr_model
 
 class MathDataset(Dataset):
     def __init__(self, image_paths, transform=None):
@@ -92,6 +98,7 @@ if __name__ == '__main__':
     mfd_model = mfd_model_init(model_configs['model_args']['mfd_weight'])
     mfr_model, mfr_vis_processors = mfr_model_init(model_configs['model_args']['mfr_weight'], device=device)
     mfr_transform = transforms.Compose([mfr_vis_processors, ])
+    tr_model = tr_model_init(model_configs['model_args']['tr_weight'], max_time=model_configs['model_args']['table_max_time'], device=device)
     layout_model = layout_model_init(model_configs['model_args']['layout_weight'])
     ocr_model = ModifiedPaddleOCR(show_log=True)
     print(now.strftime('%Y-%m-%d %H:%M:%S'))
@@ -155,7 +162,7 @@ if __name__ == '__main__':
         b = time.time()
         print("formula nums:", len(mf_image_list), "mfr time:", round(b-a, 2))
             
-        # ocr
+        # ocr and table recognition
         for idx, image in enumerate(img_list):
             pil_img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
             single_page_res = doc_layout_result[idx]['layout_dets']
@@ -186,6 +193,19 @@ if __name__ == '__main__':
                                 'score': round(score, 2),
                                 'text': text,
                             })
+                elif int(res['category_id']) == 5: # do table recognition
+                    xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
+                    xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
+                    crop_box = [xmin, ymin, xmax, ymax]
+                    cropped_img = pil_img.convert("RGB").crop(crop_box)
+                    start = time.time()
+                    with torch.no_grad():
+                        output = tr_model(cropped_img)
+                    end = time.time()
+                    if (end-start) > model_configs['model_args']['table_max_time']:
+                        res["timeout"] = True
+                    res["latex"] = output[0]
+
 
         output_dir = args.output
         os.makedirs(output_dir, exist_ok=True)
