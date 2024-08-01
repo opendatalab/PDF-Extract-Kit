@@ -87,7 +87,7 @@ The types included in `category_id` are as follows:
 </details>
 
 ## News and Update
-- `2024.08.01` 🎉🎉🎉 Added the [StructEqTable](https://github.com/opendatalab/PDF-Extract-Kit/blob/main/demo/TableRec/StructEqTable/README_TABLE.md) module for table content extraction. Welcome to use it!
+- `2024.08.01` 🎉🎉🎉 Added the [StructEqTable](demo/TabRec/StructEqTable/README_TABLE.md) module for table content extraction. Welcome to use it!
 - `2024.07.01` 🎉🎉🎉 We released `PDF-Extract-Kit`, a comprehensive toolkit for high-quality PDF content extraction, including `layout detection`, `formula detection`, `formula recognition`, and `OCR`.
 
 
