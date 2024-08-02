@@ -214,6 +214,7 @@ class Timers:
         return self.timers[name]
 
     def log(self, names=None, normalizer=1.0):
+        if not self.activate:return
         """Log a group of timers."""
         assert normalizer > 0.0
         if names is None:
