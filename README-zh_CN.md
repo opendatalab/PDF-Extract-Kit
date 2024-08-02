@@ -17,7 +17,7 @@
 </div>
 
 <p align="center">
-    👋 join us on <a href="https://discord.gg/AsQMhuMN" target="_blank">Discord</a> and <a href="https://r.vansin.top/?r=MinerU" target="_blank">WeChat</a>
+    👋 join us on <a href="https://discord.gg/JYsXDXXN" target="_blank">Discord</a> and <a href="https://r.vansin.top/?r=MinerU" target="_blank">WeChat</a>
 </p>
 
 
