@@ -17,63 +17,14 @@ import yaml
 from dataaccelerate import DataPrefetcher 
 from torch.utils.data import IterableDataset, get_worker_info
 
-UNIFIED_WIDTH  = 1472  # lets always make the oimage in such size
-UNIFIED_HEIGHT = 1920  # lets always make the oimage in such size
-def pad_image_to_ratio(image, output_width = UNIFIED_WIDTH,output_height=UNIFIED_HEIGHT, ):
-    """
-    Pads the given PIL.Image object to fit the specified width-height ratio
-    by adding padding only to the bottom and right sides.
 
-    :param image: PIL.Image object
-    :param target_ratio: Desired width/height ratio (e.g., 16/9)
-    :return: New PIL.Image object with the padding applied
-    """
-    # Original dimensions
-    input_width, input_height = image.size
-    height = min(input_height, output_height)
-    width  = min(input_width,   output_width)
-
-    if output_height == input_height and output_width == input_width:
-        return image
-
-    if input_height / output_height > input_width / output_width:
-        # Resize to match height, width will be smaller than output_width
-        height = output_height
-        width = int(input_width * output_height / input_height)
-    else:
-        # Resize to match width, height will be smaller than output_height
-        width = output_width
-        height = int(input_height * output_width / input_width)
-    image= image.resize((width, height), resample=3)
-    # Create new image with target dimensions and a white background
-    new_image = Image.new("RGB", (output_width, output_height), (255, 255, 255))
-    new_image.paste(image, (0, 0))
-
-    return new_image
-
-def process_pdf_page_to_image(page, dpi):
-    pix = page.get_pixmap(matrix=fitz.Matrix(dpi/72, dpi/72))
-    if pix.width > 3000 or pix.height > 3000:
-        pix = page.get_pixmap(matrix=fitz.Matrix(1, 1), alpha=False)
-        image = Image.frombytes('RGB', (pix.width, pix.height), pix.samples)
-    else:
-        image = Image.frombytes('RGB', (pix.width, pix.height), pix.samples)
-
-    image = pad_image_to_ratio(image, output_width = UNIFIED_WIDTH,output_height=UNIFIED_HEIGHT)
-    
-    image = np.array(image)[:,:,::-1]
-    return image.copy()
-
-class PDFImageDataset(IterableDataset):
-    client = None
+class PDFImageDataset(IterableDataset,DatasetUtils):
     #client = build_client()
     def __init__(self, metadata_filepath, aug, input_format, 
                  mfd_pre_transform, det_pre_transform=None,
                  return_original_image=False,timer=Timers(False)):
         super().__init__()
         self.metadata= self.smart_read_json(metadata_filepath)
-        #self.pathlist= [t['path'] for t in self.metadata]
-        self.last_read_pdf_buffer = {}
         self.dpi = 200
         self.aug = aug
         self.input_format = input_format
@@ -81,43 +32,11 @@ class PDFImageDataset(IterableDataset):
         self.return_original_image = return_original_image
         self.det_pre_transform = det_pre_transform
         self.timer = timer
-    def smart_read_json(self, json_path):
-        if "s3" in json_path and self.client is None: self.client = build_client()
-        if json_path.startswith("s3"): json_path = "opendata:"+ json_path
-        return read_json_from_path(json_path, self.client)
-    
-    def smart_write_json(self, data, targetpath):
-        if "s3" in targetpath and self.client is None: self.client = build_client()
-        if json_path.startswith("s3"): json_path = "opendata:"+ json_path
-        write_json_to_path(data, targetpath, self.client)
-    
-    def smart_load_pdf(self, pdf_path):
-        if "s3" in pdf_path and self.client is None: self.client = build_client()
-        if pdf_path.startswith("s3"): pdf_path = "opendata:"+ pdf_path
-        with self.timer("smart_load_pdf"):
-            pdf_buffer = read_pdf_from_path(pdf_path, self.client)
-        return pdf_buffer
-    
-    def clean_pdf_buffer(self):
-        keys = list(self.last_read_pdf_buffer.keys())
-        for key in keys:
-            self.last_read_pdf_buffer[key].close()
-            del self.last_read_pdf_buffer[key]
-
-    def get_pdf_buffer(self,path):
-        if "s3" in path and self.client is None: self.client = build_client()
-        if path.startswith("s3"): path = "opendata:"+ path
-        if path not in self.last_read_pdf_buffer:
-            self.clean_pdf_buffer()
-            self.last_read_pdf_buffer[path] = self.smart_load_pdf(path)
-        pdf_buffer = self.last_read_pdf_buffer[path]
-        return pdf_buffer
     
     def get_pdf_by_index(self,index):
         pdf_path  = self.metadata[index]['path']
         return self.get_pdf_buffer(pdf_path)
 
-    
     def __iter__(self):
         worker_info = get_worker_info()
         if worker_info is None:  # single-process data loading, return the full iterator

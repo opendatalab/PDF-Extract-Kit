@@ -10,7 +10,7 @@ from .pytorchocr.base_ocr_v20 import BaseOCRV20
 from .pytorchocr.utils.utility import get_image_file_list, check_and_read_gif
 from .pytorchocr.data import create_operators, transform
 from .pytorchocr.postprocess import build_post_process
-import pytorchocr.pytorchocr_utility as utility
+from .pytorchocr import pytorchocr_utility as utility
 
 class TextDetector(BaseOCRV20):
     def __init__(self, args, **kwargs):
