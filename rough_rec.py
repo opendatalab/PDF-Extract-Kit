@@ -235,7 +235,7 @@ def postprocess(self,preds, label=None):
 if __name__ == "__main__":
     batch_size = 128
     #dataset    = RecImageDataset("debug.jsonl",tex_recognizer)
-    metadata_filepath = "debug.jsonl"
+    metadata_filepath = "part-66210c190659-012553.jsonl"
     metadatas = read_json_from_path(metadata_filepath, client)
     print("we are going to processing only the text recognition")
     processes_num = min(64, len(metadatas))
