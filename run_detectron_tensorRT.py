@@ -16,9 +16,10 @@ batched_inputs = torch.load("convension/detectron2/batched_inputs.pt")
 import torch_tensorrt
 
 model = layout_model.predictor.model.eval()
-x = batched_inputs[:1]
+x = batched_inputs[0]['image'][None]
+
 inputs = [x]
-trt_gm = torch_tensorrt.compile(model, ir="dynamo", inputs)
+trt_gm = torch_tensorrt.compile(model, ir="dynamo", inputs=inputs)
 import os
 os.makedirs("models/layout/",exist_ok=True)
 torch_tensorrt.save(trt_gm, "models/layout//trt.ep", inputs=inputs) # PyTorch only supports Python runtime for an ExportedProgram. For C++ deployment, use a TorchScript file

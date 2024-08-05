@@ -28,7 +28,7 @@ class VLGeneralizedRCNN(GeneralizedRCNN):
     3. Per-region feature extraction and prediction
     """
 
-    def forward(self,batched_inputs: List[Dict[str, torch.Tensor]]):
+    def forward_fast(self,images):
         """
         Run inference on the given inputs.
 
@@ -48,14 +48,22 @@ class VLGeneralizedRCNN(GeneralizedRCNN):
         """
         assert not self.training
         
-        images = self.preprocess_image(batched_inputs)
-        input = self.get_batch(batched_inputs, images)
-        features = self.backbone(input)
+        images       = self.preprocess_image_batch(images)
+        features     = self.backbone({'images':images.tensor})
         proposals, _ = self.proposal_generator(images, features, None)
-        results, _ = self.roi_heads(images, features, proposals, None)
+        results, _   = self.roi_heads(images, features, proposals, None)
         return results
 
-    def forward_old(self, batched_inputs: List[Dict[str, torch.Tensor]]):
+    def preprocess_image_batch(self, images:torch.Tensor)->ImageList:
+        """
+        Normalize, pad and batch the input images.
+        """
+        images = [(x - self.pixel_mean) / self.pixel_std for x in images]
+        images = ImageList.from_tensors(list(images), 32)
+        return images
+
+
+    def forward(self, batched_inputs: List[Dict[str, torch.Tensor]]):
         """
         Args:
             batched_inputs: a list, batched outputs of :class:`DatasetMapper` .
@@ -79,7 +87,9 @@ class VLGeneralizedRCNN(GeneralizedRCNN):
                 "pred_boxes", "pred_classes", "scores", "pred_masks", "pred_keypoints"
         """
         if not self.training:
-            return self.inference(batched_inputs)
+            with torch.inference_mode():
+                out = self.inference(batched_inputs)
+            return out
 
         images = self.preprocess_image(batched_inputs)
         if "instances" in batched_inputs[0]:

@@ -116,7 +116,7 @@ class Layoutlmv3_Predictor(object):
         self.mapping = ["title", "plain text", "abandon", "figure", "figure_caption", "table", "table_caption", "table_footnote", "isolate_formula", "formula_caption"]
         MetadataCatalog.get(cfg.DATASETS.TRAIN[0]).thing_classes = self.mapping
         self.predictor = DefaultPredictor(cfg)
-        
+    
     def __call__(self, image, ignore_catids=[]):
         page_layout_result = {
             "layout_dets": []
