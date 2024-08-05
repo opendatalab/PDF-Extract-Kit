@@ -54,6 +54,8 @@ def inference(
                 results =  GeneralizedRCNN._postprocess(results, batched_inputs, images.image_sizes)
         return results
 
+
+
 class Layoutlmv3_BatchPredictor(Layoutlmv3_Predictor):
 
     timers = Timers(False)

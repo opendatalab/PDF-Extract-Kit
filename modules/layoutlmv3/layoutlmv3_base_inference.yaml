@@ -68,7 +68,6 @@ MODEL:
   BACKBONE:
     FREEZE_AT: 2
     NAME: build_vit_fpn_backbone
-  CONFIG_PATH: ''
   DEVICE: cuda
   FPN:
     FUSE_TYPE: sum
