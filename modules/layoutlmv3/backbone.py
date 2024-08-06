@@ -86,7 +86,8 @@ class VIT_Backbone(Backbone):
             config.has_spatial_attention_bias = False
             config.has_relative_attention_bias = False
             self.backbone = LayoutLMv3Model(config, detection=True,
-                                               out_features=out_features, image_only=image_only)
+                                               out_features=out_features, 
+                                               image_only=image_only)
         else:
             self.backbone = model_func(img_size=img_size,
                                        out_features=out_features,

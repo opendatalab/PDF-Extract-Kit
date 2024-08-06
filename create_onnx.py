@@ -430,12 +430,12 @@ class DET2GraphSurgeon:
             box_pooler_reshape = self.graph.op_with_const("Reshape", "box_pooler/reshape", box_pooler_output, box_pooler_shape)
 
             # Get first Gemm op of box head and connect box pooler to it.
-            first_box_head_gemm = self.graph.find_node_by_op_name("Gemm", "/roi_heads/box_head/fc1/Gemm")
+            first_box_head_gemm = self.graph.find_node_by_op_name("Gemm", "/roi_heads/box_head.0/fc1/Gemm")
             first_box_head_gemm.inputs[0] = box_pooler_reshape[0]
 
             # Get final two nodes of box predictor. Softmax op for cls_score, Gemm op for bbox_pred.
             cls_score = self.graph.find_node_by_op_name("Softmax", "/roi_heads/Softmax")
-            bbox_pred = self.graph.find_node_by_op_name("Gemm", "/roi_heads/box_predictor/bbox_pred/Gemm")
+            bbox_pred = self.graph.find_node_by_op_name("Gemm", "/roi_heads/box_predictor.0/bbox_pred/Gemm")
 
             # Linear transformation to convert box coordinates from (TopLeft, BottomRight) Corner encoding
             # to CenterSize encoding. 1st NMS boxes are multiplied by transformation matrix in order to
@@ -515,6 +515,7 @@ class DET2GraphSurgeon:
         p2, p3, p4, p5 = backbone()
         rpn_outputs = proposal_generator(anchors, first_nms_threshold)
         box_head_outputs, mask_head_output = roi_heads(rpn_outputs, p2, p3, p4, p5, second_nms_threshold)
+        print(box_head_outputs)
         # Append segmentation head output.
         box_head_outputs.append(mask_head_output)
         # Set graph outputs, both bbox and segmentation heads.
@@ -525,7 +526,8 @@ class DET2GraphSurgeon:
 def main(args):
     det2_gs = DET2GraphSurgeon(args.exported_onnx, args.det2_config, args.det2_weights)
     det2_gs.update_preprocessor(args.batch_size)
-    anchors = det2_gs.get_anchors(args.sample_image)
+    anchors = np.load("final_anchors.npy")
+    #anchors = det2_gs.get_anchors(args.sample_image)
     det2_gs.process_graph(anchors, args.first_nms_threshold, args.second_nms_threshold)
     det2_gs.save(args.onnx)
 
