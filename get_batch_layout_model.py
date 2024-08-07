@@ -177,4 +177,5 @@ class Layoutlmv3_BatchPredictor(Layoutlmv3_Predictor):
 
 def get_layout_model(model_configs):
     model = Layoutlmv3_BatchPredictor(model_configs['model_args']['layout_weight'])
+    #model.compile()
     return model

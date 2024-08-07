@@ -1,6 +1,7 @@
 
 
-
+import os 
+os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
 from get_batch_yolo import mfd_process, get_batch_YOLO_model
 from get_batch_layout_model import get_layout_model
 from utils import *
@@ -219,11 +220,15 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                 widths     = widths_batch[j:j+inner_batch_size]
                 oimages    = oimage_list[j:j+inner_batch_size] if oimage_list is not None else None
                 detimages  = det_layout_images_batch[j:j+inner_batch_size]
+    
                 with timer('get_layout'):
                     layout_res = layout_model((images,heights, widths), ignore_catids=[],dtype=torch.float16)
                 with timer('get_mfd'):
+                    if len(mfd_images)<dataloader.batch_size:
+                        mfd_images = torch.nn.functional.pad(mfd_images, (0, 0, 0, dataloader.batch_size-len(mfd_images)))
+                        print(mfd_images.shape)
                     mfd_res    = mfd_model.predict(mfd_images, imgsz=(1888,1472), conf=0.3, iou=0.5, verbose=False)
-                
+                    mfd_res = mfd_res[:len(images)]
                 with timer('combine_layout_mfd_result'):
                     rough_layout_this_batch =[]
                     ori_shape_list = []
@@ -352,7 +357,9 @@ def test_dataset(pdf_path, layout_model, mfd_model, ocrmodel):
     timer = Timers(True)
     dataset    = PDFImageDataset(pdf_path,layout_model.predictor.aug,layout_model.predictor.input_format,
                                  
-                                 mfd_pre_transform=mfd_process(mfd_model.predictor.args.imgsz,mfd_model.predictor.model.stride,mfd_model.predictor.model.pt),
+                                 mfd_pre_transform=mfd_process(mfd_model.predictor.args.imgsz,
+                                                               mfd_model.predictor.model.stride,
+                                                               mfd_model.predictor.model.pt),
                                  det_pre_transform=ocrmodel.batch_det_model.prepare_image,
                                  return_original_image=True, timer=timer,
                                  )
@@ -393,7 +400,6 @@ if __name__ == "__main__":
 
         
     layout_model = get_layout_model(model_configs)
-    #layout_model.compile()
     mfd_model    = get_batch_YOLO_model(model_configs) 
     ocrmodel = None
     ocrmodel = ocr_model = ModifiedPaddleOCR(show_log=True)
@@ -402,7 +408,7 @@ if __name__ == "__main__":
     deal_with_one_dataset("debug.jsonl", 
                           "debug.stage_1.jsonl", 
                           layout_model, mfd_model, ocrmodel=ocrmodel, 
-                          inner_batch_size=2, batch_size=4,num_workers=4,
+                          inner_batch_size=16, batch_size=16,num_workers=4,
                           do_text_det = True,
                           do_text_rec = False,
                           timer=timer)
