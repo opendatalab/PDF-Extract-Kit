@@ -191,7 +191,7 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
     featcher   = DataPrefetcher(dataloader,device='cuda')
     data_to_save = {}
     inner_batch_size = inner_batch_size
-    pbar  = tqdm(total=len(dataset.metadata),position=2,desc="PDF Pages",leave=False)
+    pbar  = tqdm(total=len(dataset.metadata),position=2,desc="PDF Pages",leave=True)
     pdf_passed = set()
     batch = featcher.next()
     data_loading = []
@@ -319,6 +319,7 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
             pbar.update(len(new_pdf_processed))
 
         except:
+            raise
             print("ERROR: Fail to process batch")
         timer.log()
         model_train.append(time.time() - last_record_time);last_record_time =time.time()
@@ -358,6 +359,27 @@ def test_dataset(pdf_path, layout_model, mfd_model, ocrmodel):
     print("======================================================")
     for _ in dataset:
         timer.log()
+
+import threading
+from flask import Flask, request, jsonify
+import requests
+from modules.batch_text_detector import fast_torch_postprocess_multiprocess, PostProcessConfig
+app = Flask(__name__)
+
+@app.route('/postprocess', methods=['POST'])
+def postprocess():
+    data = request.json
+    preds_list       = data['preds_list']
+    shape_list_batch = data['shape_list_batch']
+    ori_shape_list   = data['ori_shape_list']
+    
+    post_result = fast_torch_postprocess_multiprocess(preds_list, shape_list_batch)
+    dt_boxes_list = [
+        ocrmodel.batch_det_model.filter_tag_det_res(dt_boxes['points'][0], ori_shape)
+        for dt_boxes, ori_shape in zip(post_result, ori_shape_list)
+    ]
+    return jsonify(dt_boxes_list)
+
 if __name__ == "__main__":
 
     with open('configs/model_configs.yaml') as f:
@@ -371,7 +393,7 @@ if __name__ == "__main__":
 
         
     layout_model = get_layout_model(model_configs)
-    layout_model.compile()
+    #layout_model.compile()
     mfd_model    = get_batch_YOLO_model(model_configs) 
     ocrmodel = None
     ocrmodel = ocr_model = ModifiedPaddleOCR(show_log=True)
@@ -382,7 +404,7 @@ if __name__ == "__main__":
                           layout_model, mfd_model, ocrmodel=ocrmodel, 
                           inner_batch_size=2, batch_size=4,num_workers=4,
                           do_text_det = True,
-                          do_text_rec = True,
+                          do_text_rec = False,
                           timer=timer)
     
     

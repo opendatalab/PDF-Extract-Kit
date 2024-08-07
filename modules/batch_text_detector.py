@@ -14,6 +14,8 @@ from .pytorchocr.utils.utility import get_image_file_list, check_and_read_gif
 from .pytorchocr.data import create_operators, transform
 from .pytorchocr.postprocess import build_post_process
 from .pytorchocr import pytorchocr_utility as utility
+from dataclasses import dataclass 
+
 
 class TextDetector(BaseOCRV20):
     def __init__(self, args, **kwargs):
@@ -365,6 +367,15 @@ fast_config = {'use_gpu': True,
  'save_log_path': './log_output/',
  'show_log': True}
 from argparse import Namespace
+@dataclass
+class PostProcessConfig:
+    thresh:float
+    unclip_ratio:float 
+    max_candidates:int 
+    min_size:int 
+    box_thresh:float 
+
+
 class BatchTextDetector(TextDetector):
     def __init__(self, **kwargs):
         args = Namespace(**fast_config)
@@ -410,10 +421,16 @@ class BatchTextDetector(TextDetector):
     
     def fast_postprocess(self,preds, shape_list ):
         #return fast_torch_postprocess(self.postprocess_op,preds, shape_list)
+        config = PostProcessConfig(thresh=self.postprocess_op.thresh, 
+                                   unclip_ratio=self.postprocess_op.unclip_ratio, 
+                                   max_candidates=self.postprocess_op.max_candidates, 
+                                   min_size=self.postprocess_op.min_size, 
+                                   box_thresh=self.postprocess_op.box_thresh)
+    
         if len(shape_list) == 1:
-            return fast_torch_postprocess(self.postprocess_op,preds, shape_list)
+            return fast_torch_postprocess(preds, shape_list,config)
         else:
-            return fast_torch_postprocess_multiprocess(self.postprocess_op,preds, shape_list)
+            return fast_torch_postprocess_multiprocess(preds, shape_list,config)
         
 
     def batch_postprocess(self, preds_list, shape_list_list,ori_shape_list):
@@ -452,14 +469,17 @@ def fast_torch_postprocess(self, outs_dict, shape_list):
             boxes_batch.append({'points': boxes})
         return boxes_batch
     """
-    pred_batch = outs_dict['maps']
-    pred_batch = pred_batch[:, 0, :, :]
+    pred_batch = outs_dict['maps'][:, 0, :, :]
+    pred_batch = pred_batch
+    if isinstance(pred_batch, torch.Tensor):pred_batch= pred_batch.cpu().numpy()
     segmentation_batch = pred_batch > self.thresh
     if isinstance(segmentation_batch, torch.Tensor):segmentation_batch = segmentation_batch.cpu().numpy()
+    config = PostProcessConfig(thresh=self.thresh, unclip_ratio=self.unclip_ratio, max_candidates=self.max_candidates, min_size=self.min_size, box_thresh=self.box_thresh)
+    
     boxes_batch = []
     for batch_index in range(pred_batch.shape[0]):
         src_h, src_w, ratio_h, ratio_w = shape_list[batch_index]
-        boxes, scores = boxes_from_bitmap(self,pred_batch[batch_index], segmentation_batch[batch_index],src_w, src_h)
+        boxes, scores = boxes_from_bitmap(pred_batch[batch_index], segmentation_batch[batch_index],src_w, src_h,config)
         #boxes = boxes_from_bitmap_without_score(self,segmentation_batch[batch_index],src_w, src_h)
         boxes_batch.append({'points': boxes})
     return boxes_batch
@@ -473,7 +493,7 @@ def get_contours_multiprocess(segmentation_mask):
         contours, _ = outs[0], outs[1]
     return contours
 from concurrent.futures import ThreadPoolExecutor
-def fast_torch_postprocess_multiprocess(self, outs_dict, shape_list):
+def fast_torch_postprocess_multiprocess(outs_dict, shape_list, config):
     """
     Accelerate below 
     def __call__(self, outs_dict, shape_list):
@@ -496,68 +516,75 @@ def fast_torch_postprocess_multiprocess(self, outs_dict, shape_list):
             boxes_batch.append({'points': boxes})
         return boxes_batch
     """
-    pred_batch = outs_dict['maps']
-    pred_batch = pred_batch[:, 0, :, :]
-    segmentation_batch = pred_batch > self.thresh
+    if isinstance(outs_dict, dict):
+        pred_batch = outs_dict['maps'][:, 0, :, :]
+        pred_batch = pred_batch
+    else:
+        pred_batch = outs_dict
+    if isinstance(pred_batch, torch.Tensor):pred_batch= pred_batch.cpu().numpy()
+    segmentation_batch = pred_batch > config.thresh
     if isinstance(segmentation_batch, torch.Tensor):segmentation_batch = segmentation_batch.cpu().numpy()
+    
     
     num_threads = min(8, len(segmentation_batch))
     
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
         contours_batch = list(executor.map(get_contours_multiprocess, segmentation_batch))
 
-    unclip_ratio = self.unclip_ratio
-    max_candidates = self.max_candidates
-    min_size = self.min_size
-    box_thresh = self.box_thresh
     boxes_batch = []
     for batch_index in range(pred_batch.shape[0]):
         src_h, src_w, ratio_h, ratio_w = shape_list[batch_index]
         #boxes, scores = boxes_from_bitmap(self,pred_batch[batch_index], segmentation_batch[batch_index],src_w, src_h)
-        boxes = boxes_from_contours(pred_batch[batch_index],contours_batch[batch_index],src_w, src_h,unclip_ratio, max_candidates, min_size, box_thresh)
+        boxes = boxes_from_contours(pred_batch[batch_index],contours_batch[batch_index],src_w, src_h, config)
         boxes_batch.append({'points': boxes})
 
-    # def boxes_from_bitmap_without_score_wrapper(args):
-    #     return boxes_from_bitmap_without_score(self, *args)
+    # def boxes_from_bitmap_wrapper(args):
+    #     pred_now,segmentation_now,src_w, src_h, config = args
+    #     boxes = boxes_from_bitmap(pred_now,segmentation_now,src_w, src_h, config)
+    #     return {'points': boxes}
+    
     # with ThreadPoolExecutor(max_workers=num_threads) as executor:
     #     src_h_list=[src_h for src_h, src_w, ratio_h, ratio_w in shape_list]
     #     src_w_list=[src_w for src_h, src_w, ratio_h, ratio_w in shape_list]
-    #     boxes_batch = list(executor.map(boxes_from_bitmap_without_score_wrapper, zip(segmentation_batch,src_w_list,src_h_list)))
+    #     configlist=[config]*len(shape_list)
+    #     boxes_batch = list(executor.map(boxes_from_bitmap_wrapper, zip(pred_batch,segmentation_batch,src_w_list,src_h_list,configlist)))
     return boxes_batch
 
-def boxes_from_contours(pred, contours, dest_width, dest_height,
-                        unclip_ratio, 
-                        max_candidates, 
-                        min_size, 
-                        box_thresh):
+def boxes_from_contours(pred, contours, dest_width, dest_height,config):
     '''
     _bitmap: single map with shape (1, H, W),
             whose values are binarized as {0, 1}
     '''
 
     height, width = pred.shape
-    num_contours = min(len(contours), max_candidates)
+    num_contours = min(len(contours), config.max_candidates)
 
     boxes = []
     scores = []
     for index in range(num_contours):
         contour = contours[index]
-        points, sside = get_mini_boxes(contour)
-        if sside < min_size:continue
-        points = np.array(points)
-        score  = box_score_fast(pred, points.reshape(-1, 2))
-        if box_thresh > score:continue
-        box = unclip(points,unclip_ratio).reshape(-1, 1, 2)
-        box, sside = get_mini_boxes(box)
-        if sside < min_size + 2:continue
-        box = np.array(box)
-        box[:, 0] = np.clip(np.round(box[:, 0] / width * dest_width), 0, dest_width)
-        box[:, 1] = np.clip(np.round(box[:, 1] / height * dest_height), 0, dest_height)
+        result  = deal_with_on_contours(contour, pred, height, width, dest_height, dest_width, config)
+        if result is None:continue
+        box, score = result
         boxes.append(box)
         scores.append(score)
     return np.array(boxes), scores
 
-def boxes_from_bitmap(self, pred, _bitmap, dest_width, dest_height):
+def deal_with_on_contours(contour, score_table, height, width, dest_height, dest_width, config):
+    points, sside = get_mini_boxes(contour)
+    if sside < config.min_size:return
+    points =np.array(points)
+    score  = box_score_fast(score_table, points.reshape(-1, 2))
+    if config.box_thresh > score:return
+    box = unclip(points,config.unclip_ratio).reshape(-1, 1, 2)
+    box, sside = get_mini_boxes(box)
+    if sside < config.min_size + 2:return
+    box = np.array(box)
+    box[:, 0] = np.clip(np.round(box[:, 0] / width * dest_width), 0, dest_width)
+    box[:, 1] = np.clip(np.round(box[:, 1] / height * dest_height), 0, dest_height)
+    return box, score
+
+def boxes_from_bitmap(pred, _bitmap, dest_width, dest_height,config:PostProcessConfig):
     '''
     _bitmap: single map with shape (1, H, W),
             whose values are binarized as {0, 1}
@@ -571,23 +598,15 @@ def boxes_from_bitmap(self, pred, _bitmap, dest_width, dest_height):
         img, contours, _ = outs[0], outs[1], outs[2]
     elif len(outs) == 2:
         contours, _ = outs[0], outs[1]
-    num_contours = min(len(contours), self.max_candidates)
+    num_contours = min(len(contours), config.max_candidates)
 
     boxes = []
     scores = []
     for index in range(num_contours):
         contour = contours[index]
-        points, sside = get_mini_boxes(contour)
-        if sside < self.min_size:continue
-        points =np.array(points)
-        score  = box_score_fast(pred, points.reshape(-1, 2))
-        if self.box_thresh > score:continue
-        box = unclip(points).reshape(-1, 1, 2)
-        box, sside = get_mini_boxes(box)
-        if sside < self.min_size + 2:continue
-        box = np.array(box)
-        box[:, 0] = np.clip(np.round(box[:, 0] / width * dest_width), 0, dest_width)
-        box[:, 1] = np.clip(np.round(box[:, 1] / height * dest_height), 0, dest_height)
+        result  = deal_with_on_contours(contour, pred, height, width, dest_height, dest_width, config)
+        if result is None:continue
+        box, score = result
         boxes.append(box)
         scores.append(score)
     return np.array(boxes), scores
