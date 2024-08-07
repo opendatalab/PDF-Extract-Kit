@@ -151,7 +151,7 @@ if __name__ == '__main__':
         # Formula recognition, collect all formula images in whole pdf file, then batch infer them.
         a = time.time()  
         dataset = MathDataset(mf_image_list, transform=mfr_transform)
-        dataloader = DataLoader(dataset, batch_size=128, num_workers=32)
+        dataloader = DataLoader(dataset, batch_size=64, num_workers=0)
         mfr_res = []
         for imgs in dataloader:
             imgs = imgs.to(device)
@@ -161,51 +161,104 @@ if __name__ == '__main__':
             res['latex'] = latex_rm_whitespace(latex)
         b = time.time()
         print("formula nums:", len(mf_image_list), "mfr time:", round(b-a, 2))
+
+        def crop_img(input_res, input_pil_img):
+            crop_xmin, crop_ymin = int(input_res['poly'][0]), int(input_res['poly'][1])
+            crop_xmax, crop_ymax = int(input_res['poly'][4]), int(input_res['poly'][5])
+            crop_paste_x = 50
+            crop_paste_y = 50
+            # 创建一个宽高各多50的白色背景
+            new_width = xmax - xmin + paste_x * 2
+            new_height = ymax - ymin + paste_y * 2
+            return_image = Image.new('RGB', (new_width, new_height), 'white')
+
+            # 裁剪图像
+            crop_box = (xmin, ymin, xmax, ymax)
+            cropped_img = input_pil_img.crop(crop_box)
+            new_image.paste(cropped_img, (paste_x, paste_y))
+            return_list = [crop_paste_x, crop_paste_y, crop_xmin, crop_ymin, crop_xmax, crop_ymax]
+            return return_image, return_list
             
         # ocr and table recognition
         for idx, image in enumerate(img_list):
-            pil_img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-            single_page_res = doc_layout_result[idx]['layout_dets']
-            single_page_mfdetrec_res = []
-            for res in single_page_res:
-                if int(res['category_id']) in [13, 14]:
-                    xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
-                    xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
-                    single_page_mfdetrec_res.append({
-                        "bbox": [xmin, ymin, xmax, ymax],
-                    })
-            for res in single_page_res:
-                if int(res['category_id']) in [0, 1, 2, 4, 6, 7]:  #categories that need to do ocr
-                    xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
-                    xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
-                    crop_box = [xmin, ymin, xmax, ymax]
-                    cropped_img = Image.new('RGB', pil_img.size, 'white')
-                    cropped_img.paste(pil_img.crop(crop_box), crop_box)
-                    cropped_img = cv2.cvtColor(np.asarray(cropped_img), cv2.COLOR_RGB2BGR)
-                    ocr_res = ocr_model.ocr(cropped_img, mfd_res=single_page_mfdetrec_res)[0]
-                    if ocr_res:
-                        for box_ocr_res in ocr_res:
-                            p1, p2, p3, p4 = box_ocr_res[0]
-                            text, score = box_ocr_res[1]
-                            doc_layout_result[idx]['layout_dets'].append({
-                                'category_id': 15,
-                                'poly': p1 + p2 + p3 + p4,
-                                'score': round(score, 2),
-                                'text': text,
-                            })
-                elif int(res['category_id']) == 5: # do table recognition
-                    xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
-                    xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
-                    crop_box = [xmin, ymin, xmax, ymax]
-                    cropped_img = pil_img.convert("RGB").crop(crop_box)
-                    start = time.time()
-                    with torch.no_grad():
-                        output = tr_model(cropped_img)
-                    end = time.time()
-                    if (end-start) > model_configs['model_args']['table_max_time']:
-                        res["timeout"] = True
-                    res["latex"] = output[0]
 
+            layout_res = doc_layout_result[idx]['layout_dets']
+            pil_img = Image.fromarray(image)
+
+            ocr_res_list = []
+            table_res_list = []
+            single_page_mfdetrec_res = []
+
+            for res in layout_res:
+                if int(res['category_id']) in [13, 14]:
+                    single_page_mfdetrec_res.append({
+                        "bbox": [int(res['poly'][0]), int(res['poly'][1]),
+                                 int(res['poly'][4]), int(res['poly'][5])],
+                    })
+                elif int(res['category_id']) in [0, 1, 2, 4, 6, 7]:
+                    ocr_res_list.append(res)
+                elif int(res['category_id']) in [5]:
+                    table_res_list.append(res)
+
+            ocr_start = time.time()
+            # 对每一个需OCR处理的区域进行处理
+            for res in ocr_res_list:
+                new_image, useful_list = crop_img(res, pil_img)
+                paste_x, paste_y, xmin, ymin, xmax, ymax = useful_list
+                # 调整公式区域坐标
+                adjusted_mfdetrec_res = []
+                for mf_res in single_page_mfdetrec_res:
+                    mf_xmin, mf_ymin, mf_xmax, mf_ymax = mf_res["bbox"]
+                    # 将公式区域坐标调整为相对于裁剪区域的坐标
+                    x0 = mf_xmin - xmin + paste_x
+                    y0 = mf_ymin - ymin + paste_y
+                    x1 = mf_xmax - xmin + paste_x
+                    y1 = mf_ymax - ymin + paste_y
+                    # 过滤在图外的公式块
+                    if any([x1 < 0, y1 < 0]) or any([x0 > new_width, y0 > new_height]):
+                        continue
+                    else:
+                        adjusted_mfdetrec_res.append({
+                            "bbox": [x0, y0, x1, y1],
+                        })
+
+                # OCR识别
+                new_image = cv2.cvtColor(np.asarray(new_image), cv2.COLOR_RGB2BGR)
+                ocr_res = self.ocr_model.ocr(new_image, mfd_res=adjusted_mfdetrec_res)[0]
+
+                # 整合结果
+                if ocr_res:
+                    for box_ocr_res in ocr_res:
+                        p1, p2, p3, p4 = box_ocr_res[0]
+                        text, score = box_ocr_res[1]
+
+                        # 将坐标转换回原图坐标系
+                        p1 = [p1[0] - paste_x + xmin, p1[1] - paste_y + ymin]
+                        p2 = [p2[0] - paste_x + xmin, p2[1] - paste_y + ymin]
+                        p3 = [p3[0] - paste_x + xmin, p3[1] - paste_y + ymin]
+                        p4 = [p4[0] - paste_x + xmin, p4[1] - paste_y + ymin]
+
+                        layout_res.append({
+                            'category_id': 15,
+                            'poly': p1 + p2 + p3 + p4,
+                            'score': round(score, 2),
+                            'text': text,
+                        })
+
+            ocr_cost = round(time.time() - ocr_start, 2)
+            print(f"ocr cost: {ocr_cost}")
+
+            table_start = time.time()
+            for res in table_res_list:
+                new_image, _ = crop_img(res, pil_img)
+
+                start = time.time()
+                with torch.no_grad():
+                    output = tr_model(new_image)
+                end = time.time()
+                if (end - start) > model_configs['model_args']['table_max_time']:
+                    res["timeout"] = True
+                res["latex"] = output[0]
 
         output_dir = args.output
         os.makedirs(output_dir, exist_ok=True)
