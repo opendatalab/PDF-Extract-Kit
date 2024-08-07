@@ -408,7 +408,7 @@ if __name__ == "__main__":
     deal_with_one_dataset("debug.jsonl", 
                           "debug.stage_1.jsonl", 
                           layout_model, mfd_model, ocrmodel=ocrmodel, 
-                          inner_batch_size=16, batch_size=16,num_workers=4,
+                          inner_batch_size=4, batch_size=7,num_workers=4,
                           do_text_det = True,
                           do_text_rec = False,
                           timer=timer)
