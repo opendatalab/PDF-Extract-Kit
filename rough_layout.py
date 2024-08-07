@@ -225,8 +225,8 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                     layout_res = layout_model((images,heights, widths), ignore_catids=[],dtype=torch.float16)
                 with timer('get_mfd'):
                     if len(mfd_images)<inner_batch_size:
-                        mfd_images = torch.nn.functional.pad(mfd_images, (0, 0, 0, inner_batch_size-len(mfd_images)))
-                        print(mfd_images.shape)
+                        mfd_images = torch.nn.functional.pad(mfd_images, (0,0,0,0,0,0,0, inner_batch_size-len(mfd_images)))
+                        #print(mfd_images.shape)
                     mfd_res    = mfd_model.predict(mfd_images, imgsz=(1888,1472), conf=0.3, iou=0.5, verbose=False)
                     mfd_res = mfd_res[:len(images)]
                 with timer('combine_layout_mfd_result'):
@@ -408,7 +408,7 @@ if __name__ == "__main__":
     deal_with_one_dataset("debug.jsonl", 
                           "debug.stage_1.jsonl", 
                           layout_model, mfd_model, ocrmodel=ocrmodel, 
-                          inner_batch_size=4, batch_size=7,num_workers=4,
+                          inner_batch_size=16, batch_size=16,num_workers=4,
                           do_text_det = True,
                           do_text_rec = False,
                           timer=timer)
