@@ -90,7 +90,7 @@ def collect_text_image_and_its_coordinate(single_page_mfdetrec_res_this_batch, p
             for bno in range(len(dt_boxes)):
                 tmp_box = copy.deepcopy(dt_boxes[bno])
                 text_line_bbox.append(tmp_box)
-                img_crop = get_rotate_crop_image(ori_im, tmp_box, padding=10)
+                img_crop = get_rotate_crop_image(ori_im, copy.deepcopy(tmp_box), padding=10)
                 text_image_batch.append(img_crop)
                 text_image_position.append((partition_id,text_box_id,bno))
                 
@@ -204,13 +204,20 @@ class _Timer:
 class Timers:
     """Group of timers."""
 
-    def __init__(self, activate=False):
+    def __init__(self, activate=False,warmup=0):
         self.timers = {}
         self.activate = activate
+        self.warmup = warmup
+        self.count_per_name={}
     def __call__(self, name):
         if not self.activate:return _DummyTimer()
         if name not in self.timers:
             self.timers[name] = _Timer(name)
+            self.count_per_name[name] = -1
+        self.count_per_name[name]+=1
+        if self.count_per_name[name] < self.warmup:
+            return _DummyTimer()
+
         return self.timers[name]
 
     def log(self, names=None, normalizer=1.0):

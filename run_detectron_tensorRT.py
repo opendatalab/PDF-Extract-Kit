@@ -24,7 +24,8 @@
 # os.makedirs("models/layout/",exist_ok=True)
 # torch_tensorrt.save(trt_gm, "models/layout//trt.ep", inputs=inputs) # PyTorch only supports Python runtime for an ExportedProgram. For C++ deployment, use a TorchScript file
 # torch_tensorrt.save(trt_gm, "models/layout//trt.ts", output_format="torchscript", inputs=inputs)
-
+import os 
+os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
 from rough_layout import *
 with open('configs/model_configs.yaml') as f:
     model_configs = yaml.load(f, Loader=yaml.FullLoader)
@@ -96,25 +97,3 @@ torch.onnx.export(
     # },
     opset_version=17 # ONNX opset version (can be adjusted)
 )
-
-import tensorrt as trt
-onnx_model_path = "model.onnx"
-engine_file_path="model.egine.fp16.trt"
-# Load the ONNX model
-with open(onnx_model_path, "rb") as f:
-    onnx_model = f.read()
-
-TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
-builder = trt.Builder(TRT_LOGGER)
-network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
-
-parser = trt.OnnxParser(network, TRT_LOGGER)
-parser.parse(onnx_model)
-
-config = builder.create_builder_config()
-config.set_flag(trt.BuilderFlag.FP16)
-#config.set_memory_pool_limit(trt.MemoryPoolType.WORKSPACE, 1 << 20) # 1 MiB
-engine_bytes = builder.build_serialized_network(network, config)
-
-with open(engine_file_path, "wb") as f:
-    f.write(engine_bytes)

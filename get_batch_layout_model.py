@@ -68,9 +68,15 @@ class Layoutlmv3_BatchPredictor(Layoutlmv3_Predictor):
             predictions = inference(self.predictor.model,inputs,timers=timers)
             return predictions
 
-    def __call__(self, image, ignore_catids=[]):
+    def compile(self):
+        self.predictor.model.backbone = torch.compile(self.predictor.model.backbone)
+        # self.predictor.model.proposal_generator = torch.compile(self.predictor.model.proposal_generator)
+        # self.predictor.model.roi_heads = torch.compile(self.predictor.model.roi_heads)
+
+    def __call__(self, image, ignore_catids=[], dtype=torch.float32):
         with self.timers('inference'):
-            outputslist = self.batch_predict(image, self.timers)
+            with torch.cuda.amp.autocast(dtype=dtype):
+                outputslist = self.batch_predict(image, self.timers)
         use_old_bbox_collection = False
         if use_old_bbox_collection:
             with self.timers('wholepost'):

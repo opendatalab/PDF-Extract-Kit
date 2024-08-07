@@ -16,7 +16,8 @@ from tqdm.auto import tqdm
 import yaml
 from dataaccelerate import DataPrefetcher 
 from torch.utils.data import IterableDataset, get_worker_info
-
+import logging
+logging.getLogger('detectron2').setLevel(logging.WARNING)
 
 class PDFImageDataset(IterableDataset,DatasetUtils):
     #client = build_client()
@@ -219,7 +220,7 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                 oimages    = oimage_list[j:j+inner_batch_size] if oimage_list is not None else None
                 detimages  = det_layout_images_batch[j:j+inner_batch_size]
                 with timer('get_layout'):
-                    layout_res = layout_model((images,heights, widths), ignore_catids=[])
+                    layout_res = layout_model((images,heights, widths), ignore_catids=[],dtype=torch.float16)
                 with timer('get_mfd'):
                     mfd_res    = mfd_model.predict(mfd_images, imgsz=(1888,1472), conf=0.3, iou=0.5, verbose=False)
                 
@@ -289,6 +290,7 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                             pdf_id, page_id = pdf_and_page_id_this_batch[partition_id]
                             pdf_path = dataset.metadata[pdf_id]['path']
                             p1, p2, p3, p4 = line_box.tolist()
+                            #print(line_box)
                             data_to_save[pdf_path][page_id].append(
                                 {
                                     'category_id': 15,
@@ -369,20 +371,19 @@ if __name__ == "__main__":
 
         
     layout_model = get_layout_model(model_configs)
+    layout_model.compile()
     mfd_model    = get_batch_YOLO_model(model_configs) 
     ocrmodel = None
     ocrmodel = ocr_model = ModifiedPaddleOCR(show_log=True)
-    timer = Timers(True)
-    test_dataset("debug.jsonl", layout_model, mfd_model, ocrmodel)
-    # deal_with_one_dataset("debug.jsonl", 
-    #                       "debug.stage_1.jsonl", 
-    #                       layout_model, mfd_model, ocrmodel=ocrmodel, 
-    #                       inner_batch_size=2, batch_size=4,num_workers=4,
-    #                       do_text_det = True,
-    #                       do_text_rec = True,
-    #                       timer=timer)
-    # dataset    = PDFImageDataset("part-66210c190659-000035.jsonl",layout_model.predictor.aug,layout_model.predictor.input_format,mfd_pre_transform=None)
-    # dataloader = DataLoader(dataset, batch_size=8,collate_fn=custom_collate_fn)  
-
+    timer = Timers(False,warmup=5)
+    #test_dataset("debug.jsonl", layout_model, mfd_model, ocrmodel)
+    deal_with_one_dataset("debug.jsonl", 
+                          "debug.stage_1.jsonl", 
+                          layout_model, mfd_model, ocrmodel=ocrmodel, 
+                          inner_batch_size=2, batch_size=4,num_workers=4,
+                          do_text_det = True,
+                          do_text_rec = True,
+                          timer=timer)
+    
     
     
