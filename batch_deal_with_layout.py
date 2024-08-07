@@ -119,7 +119,7 @@ if __name__ == '__main__':
         create_last_start_time_lock(os.path.join(LOCKSERVER,"createlocktime", filename),client)
 
         if layout_model is None:layout_model = get_layout_model(model_configs)
-        if mfd_model    is None:mfd_model    = get_batch_YOLO_model(model_configs) 
+        if mfd_model    is None:mfd_model    = get_batch_YOLO_model(model_configs,batch_size=args.inner_batch_size) 
         if ocrmodel is None:ocrmodel = ModifiedPaddleOCR(show_log=True)
         print(f"now we deal with {inputs_path} to {result_path}")
         try:

@@ -67,13 +67,14 @@ def fastpostprocess(self, preds, img, orig_imgs):
 # ultralytics.models.yolo.detect.DetectionPredictor.postprocess = fastpostprocess
 from ultralytics import YOLO
 import os
-def get_batch_YOLO_model(model_configs)->YOLO:
+def get_batch_YOLO_model(model_configs, batch_size)->YOLO:
     weight_path = model_configs['model_args']['mfd_weight']
-    engine_weight= model_configs['model_args']['mfd_weight'][:-3]+'.engine'
+    engine_weight= model_configs['model_args']['mfd_weight'][:-3]+f'.b{batch_size}.engine'
     if os.path.exists(engine_weight):
         mfd_model = YOLO(engine_weight,task='detect')
     else:
         mfd_model =  YOLO(weight_path)
+    #mfd_model = YOLO(engine_weight,task='detect')
     #mfd_model =  YOLO(weight_path)
     img_size  = model_configs['model_args']['img_size']
     img_size  = (1888,1472) # <---- please fix use this, in normal YOLO assign it is automatively correct, but when using .engine file, it is not correct
