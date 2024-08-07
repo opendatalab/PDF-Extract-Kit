@@ -66,8 +66,15 @@ def fastpostprocess(self, preds, img, orig_imgs):
 # import ultralytics
 # ultralytics.models.yolo.detect.DetectionPredictor.postprocess = fastpostprocess
 from ultralytics import YOLO
+import os
 def get_batch_YOLO_model(model_configs)->YOLO:
-    mfd_model =  YOLO(model_configs['model_args']['mfd_weight'])
+    weight_path = model_configs['model_args']['mfd_weight']
+    engine_weight= model_configs['model_args']['engine_weight'][:-3]+'.engine'
+    if os.path.exists(engine_weight):
+        mfd_model = YOLO(engine_weight,task='detect')
+    else:
+        mfd_model =  YOLO(weight_path)
+    
     img_size  = model_configs['model_args']['img_size']
     conf_thres= model_configs['model_args']['conf_thres']
     iou_thres = model_configs['model_args']['iou_thres']
