@@ -25,6 +25,9 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--num_workers', type=int, default=8)
     parser.add_argument('--result_save_path', type=str, default=RESULT_SAVE_PATH)
+    parser.add_argument('--accelerated_layout',  action='store_true', help='', default=False)
+    parser.add_argument('--accelerated_mfd',  action='store_true', help='', default=False)
+
     args = parser.parse_args()
     root_path = args.root_path
     if os.path.isdir(root_path):
@@ -70,7 +73,7 @@ if __name__ == '__main__':
     device    = model_configs['model_args']['device']
     dpi       = model_configs['model_args']['pdf_dpi']
 
-    task_name = "layoutV2"
+    task_name = "layoutV3"
     layout_model = None
     mfd_model    = None
     client = None
@@ -90,9 +93,10 @@ if __name__ == '__main__':
         
         skip = False
         for result_old_path in [
+            os.path.join(args.result_save_path, "layoutV3", "result", filename),
             os.path.join(args.result_save_path, "layoutV2", "result", filename),
-            os.path.join("opendata:s3://llm-pdf-text/pdf_gpu_output/ebook_index_v4/scihub/v001/scihub/", filename),
             os.path.join(args.result_save_path, "layoutV1", "result", filename),
+            os.path.join("opendata:s3://llm-pdf-text/pdf_gpu_output/ebook_index_v4/scihub/v001/scihub/", filename),
         ]:
             
             if check_path_exists(result_old_path,client) and not args.redo:
@@ -118,8 +122,8 @@ if __name__ == '__main__':
         
         create_last_start_time_lock(os.path.join(LOCKSERVER,"createlocktime", filename),client)
 
-        if layout_model is None:layout_model = get_layout_model(model_configs)
-        if mfd_model    is None:mfd_model    = get_batch_YOLO_model(model_configs,batch_size=args.inner_batch_size) 
+        if layout_model is None:layout_model = get_layout_model(model_configs,args.accelerated_layout)
+        if mfd_model    is None:mfd_model    = get_batch_YOLO_model(model_configs,batch_size=args.inner_batch_size,use_tensorRT=args.accelerated_mfd)
         if ocrmodel is None:ocrmodel = ModifiedPaddleOCR(show_log=True)
         print(f"now we deal with {inputs_path} to {result_path}")
         try:

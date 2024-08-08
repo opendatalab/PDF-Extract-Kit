@@ -534,7 +534,6 @@ def fast_torch_postprocess_multiprocess(outs_dict, shape_list, config):
     boxes_batch = []
     for batch_index in range(pred_batch.shape[0]):
         src_h, src_w, ratio_h, ratio_w = shape_list[batch_index]
-        #boxes, scores = boxes_from_bitmap(self,pred_batch[batch_index], segmentation_batch[batch_index],src_w, src_h)
         boxes = boxes_from_contours(pred_batch[batch_index],contours_batch[batch_index],src_w, src_h, config)
         boxes_batch.append({'points': boxes})
 
