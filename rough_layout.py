@@ -166,6 +166,7 @@ def clean_layout_dets(layout_dets):
 from ultralytics.utils import ops
 import copy
 from modules.self_modify import ModifiedPaddleOCR,update_det_boxes,sorted_boxes
+import traceback
 
 def process_batch(inputs):
     preds, shape_list,ori_shape = inputs
@@ -274,24 +275,27 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                     if not do_text_det:continue
                     with timer('text_detection/collect_for_line_detect'):
                         canvas_tensor_this_batch, partition_per_batch,canvas_idxes_this_batch,single_page_mfdetrec_res_this_batch = collect_paragraph_image_and_its_coordinate(detimages, rough_layout_this_batch,2)
-                    shape_list_batch = np.array([[(1920,1472, 0.5, 0.5)]]*len(canvas_tensor_this_batch)) 
-                    ori_shape_list   = [(1920,1472)]*len(canvas_tensor_this_batch)
+
                     with torch.no_grad():
                         with timer('text_detection/stack'):
                             canvas_tensor_this_batch = torch.stack(canvas_tensor_this_batch)
                         with timer('text_detection/det_net'):
-                            dt_boxaes_batch = ocrmodel.batch_det_model.net(canvas_tensor_this_batch)
+                            ### do inner_batch_size batch forward
+                            dt_boxaes_batch_list = []
+                            for i in range(0, len(canvas_tensor_this_batch), inner_batch_size):
+                                dt_boxaes_batch = ocrmodel.batch_det_model.net(canvas_tensor_this_batch[i:i+inner_batch_size])
+                                dt_boxaes_batch = dt_boxaes_batch['maps'].cpu().numpy()[:,0]
+                                dt_boxaes_batch_list.append(dt_boxaes_batch) 
+                            dt_boxaes_batch_list= np.concatenate(dt_boxaes_batch_list, axis=0)
                         # with timer('text_detection/discard_batch'):
                         #     pred_batch  = ocrmodel.batch_det_model.discard_batch(dt_boxaes_batch)
                         with timer('text_detection/batch_postprocess'):
                             #dt_boxes_list=ocrmodel.batch_det_model.batch_postprocess(pred_batch, shape_list_batch,ori_shape_list)
-                            preds_list = dt_boxaes_batch
                             with timer('text_detection/batch_postprocess/postprocess_op'):
-                                post_result = ocrmodel.batch_det_model.fast_postprocess(preds_list, shape_list_batch[:,0])
+                                post_result = ocrmodel.batch_det_model.fast_postprocess(dt_boxaes_batch_list, np.array([(1920,1472, 0.5, 0.5)]*len(dt_boxaes_batch_list)) )
                             # dt_boxes    = post_result[0]['points']
                             with timer('text_detection/batch_postprocess/filter'):
-                                dt_boxes_list = [ocrmodel.batch_det_model.filter_tag_det_res(dt_boxes['points'][0], ori_shape)
-                                                for dt_boxes, ori_shape in zip(post_result,ori_shape_list )]
+                                dt_boxes_list = [ocrmodel.batch_det_model.filter_tag_det_res(dt_boxes['points'][0], (1920,1472)) for dt_boxes in post_result ]
             
                     if oimages is not None and do_text_rec:
                         with timer('text_detection/collect_for_text_images'):
@@ -331,8 +335,10 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                                     )
             if pbar:pbar.update(len(new_pdf_processed))
 
+        except KeyboardInterrupt:
+            raise
         except:
-            #raise
+            traceback.print_exc()
             print("ERROR: Fail to process batch")
         timer.log()
         model_train.append(time.time() - last_record_time);last_record_time =time.time()
@@ -388,7 +394,7 @@ if __name__ == "__main__":
     device    = model_configs['model_args']['device']
     dpi       = model_configs['model_args']['pdf_dpi']
 
-    accelerated = True
+    accelerated = False
     layout_model = get_layout_model(model_configs,accelerated)
     
     total_memory = get_gpu_memory()

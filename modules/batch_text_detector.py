@@ -426,7 +426,9 @@ class BatchTextDetector(TextDetector):
                                    max_candidates=self.postprocess_op.max_candidates, 
                                    min_size=self.postprocess_op.min_size, 
                                    box_thresh=self.postprocess_op.box_thresh)
-    
+        if isinstance(preds, dict):
+            preds = preds['maps'][:, 0, :, :]
+
         if len(shape_list) == 1:
             return fast_torch_postprocess(preds, shape_list,config)
         else:
@@ -446,7 +448,7 @@ class BatchTextDetector(TextDetector):
             dt_boxes_list.append(dt_boxes)
         return dt_boxes_list
 
-def fast_torch_postprocess(self, outs_dict, shape_list):
+def fast_torch_postprocess(self, pred_batch, shape_list):
     """
     Accelerate below 
     def __call__(self, outs_dict, shape_list):
@@ -469,8 +471,7 @@ def fast_torch_postprocess(self, outs_dict, shape_list):
             boxes_batch.append({'points': boxes})
         return boxes_batch
     """
-    pred_batch = outs_dict['maps'][:, 0, :, :]
-    pred_batch = pred_batch
+    
     if isinstance(pred_batch, torch.Tensor):pred_batch= pred_batch.cpu().numpy()
     segmentation_batch = pred_batch > self.thresh
     if isinstance(segmentation_batch, torch.Tensor):segmentation_batch = segmentation_batch.cpu().numpy()
@@ -493,7 +494,7 @@ def get_contours_multiprocess(segmentation_mask):
         contours, _ = outs[0], outs[1]
     return contours
 from concurrent.futures import ThreadPoolExecutor
-def fast_torch_postprocess_multiprocess(outs_dict, shape_list, config):
+def fast_torch_postprocess_multiprocess(pred_batch, shape_list, config):
     """
     Accelerate below 
     def __call__(self, outs_dict, shape_list):
@@ -516,11 +517,6 @@ def fast_torch_postprocess_multiprocess(outs_dict, shape_list, config):
             boxes_batch.append({'points': boxes})
         return boxes_batch
     """
-    if isinstance(outs_dict, dict):
-        pred_batch = outs_dict['maps'][:, 0, :, :]
-        pred_batch = pred_batch
-    else:
-        pred_batch = outs_dict
     if isinstance(pred_batch, torch.Tensor):pred_batch= pred_batch.cpu().numpy()
     segmentation_batch = pred_batch > config.thresh
     if isinstance(segmentation_batch, torch.Tensor):segmentation_batch = segmentation_batch.cpu().numpy()
