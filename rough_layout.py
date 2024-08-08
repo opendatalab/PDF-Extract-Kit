@@ -331,7 +331,7 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
             pbar.update(len(new_pdf_processed))
 
         except:
-            raise
+            #raise
             print("ERROR: Fail to process batch")
         timer.log()
         model_train.append(time.time() - last_record_time);last_record_time =time.time()
@@ -407,7 +407,10 @@ if __name__ == "__main__":
 
     accelerated = True
     layout_model = get_layout_model(model_configs,accelerated)
-    inner_batch_size= 16
+    
+    total_memory = get_gpu_memory()
+    inner_batch_size = 16 if total_memory > 60 else 2
+    print(f"totally gpu memory is {total_memory} we use inner batch size {inner_batch_size}")
     mfd_model    = get_batch_YOLO_model(model_configs,inner_batch_size) 
     ocrmodel = None
     ocrmodel = ocr_model = ModifiedPaddleOCR(show_log=True)

@@ -26,7 +26,7 @@ async def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
     featcher   = DataPrefetcher(dataloader,device='cuda')
     data_to_save = {}
     inner_batch_size = inner_batch_size
-    pbar  = tqdm(total=len(dataset.metadata),position=2,desc="PDF Pages",leave=True)
+    pbar  = None#tqdm(total=len(dataset.metadata),position=2,desc="PDF Pages",leave=True)
     pdf_passed = set()
     batch = featcher.next()
     data_loading = []
@@ -35,7 +35,7 @@ async def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
     while batch is not None:
 
         data_loading.append(time.time() - last_record_time);last_record_time =time.time() 
-        pbar.set_description(f"[Data][{np.mean(data_loading[-10:]):.2f}] [Model][{np.mean(model_train[-10:]):.2f}]")
+        if pbar:pbar.set_description(f"[Data][{np.mean(data_loading[-10:]):.2f}] [Model][{np.mean(model_train[-10:]):.2f}]")
         pdf_index_batch, page_ids_batch = batch["pdf_index"], batch["page_index"]
         mfd_layout_images_batch, layout_images_batch, det_layout_images_batch = batch["mfd_image"], batch["layout_image"], batch["det_images"]
         heights_batch, widths_batch = batch["height"], batch["width"]
@@ -64,12 +64,14 @@ async def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
             # dt_boxaes_batch = gpu_inference(layout_pair, mdf_pair, det_pair, size_pair, location_pair, timer)
             # dt_boxes_list   = cpu_postprocess(dt_boxaes_batch,ocrmodel,timer)
 
-        pbar.update(len(new_pdf_processed))
+        if pbar:pbar.update(len(new_pdf_processed))
 
         timer.log()
         model_train.append(time.time() - last_record_time);last_record_time =time.time()
-        pbar.set_description(f"[Data][{np.mean(data_loading[-10:]):.2f}] [Model][{np.mean(model_train[-10:]):.2f}]")
+        if pbar:pbar.set_description(f"[Data][{np.mean(data_loading[-10:]):.2f}] [Model][{np.mean(model_train[-10:]):.2f}]")
         batch = featcher.next()
+        if pbar is None:
+            pbar = tqdm(total=len(dataset.metadata)-1,position=2,desc="PDF Pages",leave=True)
     await queue.put(None)  # Signal the consumer to exit
     await postprocess_task  # Wait for the consumer to finish
 async def gpu_inference(layout_pair,
@@ -84,9 +86,20 @@ async def gpu_inference(layout_pair,
     heights, widths = size_pair
     pdf_paths, page_ids= location_pair
     with timer('get_layout'):
+        if len(layout_images)<inner_batch_size and layout_model.iscompiled:
+            layout_images  = torch.nn.functional.pad(layout_images,   (0,0,0,0,0,0,0, inner_batch_size-len(layout_images)))
+            
+            heights = torch.nn.functional.pad(heights,  (0, inner_batch_size-len(heights)))
+            widths  = torch.nn.functional.pad(widths,   (0, inner_batch_size-len(widths)))
+
         layout_res = layout_model((layout_images,heights, widths), ignore_catids=[],dtype=torch.float16)
+        layout_res = layout_res[:len(pdf_paths)]
     with timer('get_mfd'):
+        if len(mfd_images)<inner_batch_size:
+            mfd_images = torch.nn.functional.pad(mfd_images, (0,0,0,0,0,0,0, inner_batch_size-len(mfd_images)))
+            #print(mfd_images.shape)
         mfd_res    = mfd_model.predict(mfd_images, imgsz=(1888,1472), conf=0.3, iou=0.5, verbose=False)
+        mfd_res = mfd_res[:len(pdf_paths)]
     
     with timer('combine_layout_mfd_result'):
         rough_layout_this_batch =[]
@@ -156,9 +169,11 @@ if __name__ == "__main__":
     device    = model_configs['model_args']['device']
     dpi       = model_configs['model_args']['pdf_dpi']
 
-    layout_model = get_layout_model(model_configs,accelerated=False)
+    layout_model = get_layout_model(model_configs,accelerated=True)
     #layout_model.compile()
-    inner_batch_size = 16 if get_gpu_memory() > 60 else 2
+    total_memory = get_gpu_memory()
+    inner_batch_size = 16 if total_memory > 60 else 2
+    print(f"totally gpu memory is {total_memory} we use inner batch size {inner_batch_size}")
     mfd_model    = get_batch_YOLO_model(model_configs, inner_batch_size) 
     ocrmodel = None
     ocrmodel = ocr_model = ModifiedPaddleOCR(show_log=True)
@@ -167,7 +182,7 @@ if __name__ == "__main__":
     asyncio.run(deal_with_one_dataset("debug.jsonl", 
                           "debug.stage_1.jsonl", 
                           layout_model, mfd_model, ocrmodel=ocrmodel, 
-                          inner_batch_size=2, batch_size=4,num_workers=4,
+                          inner_batch_size=inner_batch_size, batch_size=16,num_workers=4,
                           timer=timer))
     
     
