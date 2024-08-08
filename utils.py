@@ -3,6 +3,17 @@ import copy
 from modules.self_modify import sorted_boxes, update_det_boxes
 import torch
 import cv2
+
+import torch
+
+def get_gpu_memory():
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+        total_memory = torch.cuda.get_device_properties(device).total_memory / 1024**3  # Convert bytes to MB
+        return int(total_memory)
+    return 0
+
+
 def get_rotate_crop_image(img, points, padding=10):
     """
     Extracts a rotated and cropped image patch defined by the quadrilateral `points`

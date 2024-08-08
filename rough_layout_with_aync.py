@@ -158,7 +158,7 @@ if __name__ == "__main__":
 
     layout_model = get_layout_model(model_configs,accelerated=False)
     #layout_model.compile()
-    inner_batch_size = 2
+    inner_batch_size = 16 if get_gpu_memory() > 60 else 2
     mfd_model    = get_batch_YOLO_model(model_configs, inner_batch_size) 
     ocrmodel = None
     ocrmodel = ocr_model = ModifiedPaddleOCR(show_log=True)
