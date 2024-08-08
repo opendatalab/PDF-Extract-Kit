@@ -690,7 +690,6 @@ def get_mini_boxes(contour):
     ]
     return box, min(bounding_box[1])
 
-
 def unclip(box, unclip_ratio):
     poly = Polygon(box)
     distance = poly.area * unclip_ratio / poly.length
@@ -698,3 +697,15 @@ def unclip(box, unclip_ratio):
     offset.AddPath(box, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
     expanded = np.array(offset.Execute(distance))
     return expanded
+
+def deal_with_on_contours_without_score(contour, height, width, dest_height, dest_width, config):
+    points, sside = get_mini_boxes(contour)
+    if sside < config.min_size:return
+    points =np.array(points)
+    box = unclip(points,config.unclip_ratio).reshape(-1, 1, 2)
+    box, sside = get_mini_boxes(box)
+    if sside < config.min_size + 2:return
+    box = np.array(box)
+    box[:, 0] = np.clip(np.round(box[:, 0] / width * dest_width), 0, dest_width)
+    box[:, 1] = np.clip(np.round(box[:, 1] / height * dest_height), 0, dest_height)
+    return box

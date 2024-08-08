@@ -66,11 +66,14 @@ def setup(args):
     """
     cfg = get_cfg()
     # add_coat_config(cfg)
+    
     add_vit_config(cfg)
     cfg.merge_from_file(args.config_file)
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.2  # set threshold for this model
     cfg.merge_from_list(args.opts)
+    
     cfg.freeze()
+    
     default_setup(cfg, args)
     
     register_coco_instances(
