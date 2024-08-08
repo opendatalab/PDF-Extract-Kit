@@ -21,10 +21,11 @@ async def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                             num_workers=num_workers,pin_memory=True, pin_memory_device='cuda',
                             prefetch_factor=3)        
     queue = asyncio.Queue()
-    postprocess_task = asyncio.create_task(cpu_postprocess(queue, ocrmodel))
+    data_to_save = {}
+    postprocess_task = asyncio.create_task(cpu_postprocess(queue, ocrmodel,data_to_save))
 
     featcher   = DataPrefetcher(dataloader,device='cuda')
-    data_to_save = {}
+    
     inner_batch_size = inner_batch_size
     pbar  = None#tqdm(total=len(dataset.metadata),position=2,desc="PDF Pages",leave=True)
     pdf_passed = set()
@@ -60,25 +61,49 @@ async def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
             size_pair     = (heights, widths)
             pdf_paths     = [dataset.metadata[pdf_index]['path'] for pdf_index in pdf_index]
             location_pair = (pdf_paths, page_ids)
-            await process_image(queue, layout_pair, mdf_pair, det_pair, size_pair, location_pair, timer)
-            # dt_boxaes_batch = gpu_inference(layout_pair, mdf_pair, det_pair, size_pair, location_pair, timer)
-            # dt_boxes_list   = cpu_postprocess(dt_boxaes_batch,ocrmodel,timer)
+            await gpu_inference(queue, layout_pair, mdf_pair, det_pair, size_pair, location_pair, data_to_save, timer)
 
-        if pbar:pbar.update(len(new_pdf_processed))
+        update_seq = len(new_pdf_processed)
+        if pbar:pbar.update(update_seq)
 
         timer.log()
         model_train.append(time.time() - last_record_time);last_record_time =time.time()
         if pbar:pbar.set_description(f"[Data][{np.mean(data_loading[-10:]):.2f}] [Model][{np.mean(model_train[-10:]):.2f}]")
         batch = featcher.next()
         if pbar is None:
-            pbar = tqdm(total=len(dataset.metadata)-1,position=2,desc="PDF Pages",leave=True)
+            pbar = tqdm(total=len(dataset.metadata)-update_seq,position=2,desc="PDF Pages",leave=True)
     await queue.put(None)  # Signal the consumer to exit
     await postprocess_task  # Wait for the consumer to finish
-async def gpu_inference(layout_pair,
+
+    print("we finish generate data, lets collect and save it")
+    ### next, we construct each result for each pdf in pdf wise and remove the page_id by the list position 
+    pdf_to_metadata = {t['path']:t for t in dataset.metadata}
+    new_data_to_save = []
+    for pdf_path, layout_dets_per_page in data_to_save.items():
+        new_pdf_dict = copy.deepcopy(pdf_to_metadata[pdf_path])
+        new_pdf_dict['height'] = layout_dets_per_page.pop('height')
+        new_pdf_dict['width'] = layout_dets_per_page.pop('width')
+        pages = [t for t in layout_dets_per_page.keys()]
+        pages.sort()
+        new_pdf_dict["doc_layout_result"]=[]
+        for page_id in range(max(pages)):
+            if page_id not in layout_dets_per_page:
+                print(f"WARNING: page {page_id} of PDF: {pdf_path} fail to parser!!! ")
+                now_row = {"page_id": page_id, "status": "fail", "layout_dets":[]}
+            else:
+                now_row = {"page_id": page_id, "layout_dets":layout_dets_per_page[page_id]}
+            new_pdf_dict["doc_layout_result"].append(now_row)
+        new_data_to_save.append(new_pdf_dict)
+    if "s3:" in new_data_to_save and dataset.client is None:dataset.client=build_client()
+    write_jsonl_to_path(new_data_to_save, result_path, dataset.client)
+
+async def gpu_inference(queue,
+              layout_pair,
               mdf_pair,
               det_pair,
               size_pair,
               location_pair,
+              data_to_save,
               timer):
     layout_images, layout_model = layout_pair
     mfd_images, mfd_model = mdf_pair
@@ -110,7 +135,8 @@ async def gpu_inference(layout_pair,
             page_id= int(page_id)
             real_input_height = int(real_input_height)
             real_input_width  = int(real_input_width)
-        
+            if pdf_path not in data_to_save:
+                data_to_save[pdf_path] = {'height':real_input_height, 'width':real_input_width}
             layout_dets = clean_layout_dets(layout_det['layout_dets'])
             for xyxy, conf, cla in zip(mfd_det.boxes.xyxy.cpu(), 
                                     mfd_det.boxes.conf.cpu(), 
@@ -124,6 +150,7 @@ async def gpu_inference(layout_pair,
                     'latex': '',
                 }
                 layout_dets.append(new_item)
+            data_to_save[pdf_path][page_id] = layout_dets
             ori_shape_list.append((real_input_height, real_input_width))
             pdf_and_page_id_this_batch.append((pdf_path, page_id))
             rough_layout_this_batch.append(layout_dets)
@@ -141,22 +168,34 @@ async def gpu_inference(layout_pair,
             #dt_boxaes_batch = ocrmodel.batch_det_model.net(canvas_tensor_this_batch)
     torch.cuda.synchronize()
     dt_boxaes_batch = dt_boxaes_batch['maps'][:,0].cpu()
-    return dt_boxaes_batch
+    result = (dt_boxaes_batch,partition_per_batch,pdf_and_page_id_this_batch)
+    queue.put(result)
 
-
-async def cpu_postprocess(queue, ocrmodel):
+async def cpu_postprocess(queue, ocrmodel,data_to_save):
     while True:
-        dt_boxaes_batch = await queue.get()
-        if dt_boxaes_batch is None:
+        state = await queue.get()
+        if state is None:
             break
+        dt_boxaes_batch,partition_per_batch,pdf_and_page_id_this_batch = state
         dt_boxaes_batch=dt_boxaes_batch.numpy()
         post_result = ocrmodel.batch_det_model.fast_postprocess(dt_boxaes_batch, np.array([(1920,1472, 0.5, 0.5)]*len(dt_boxaes_batch)) )
         dt_boxes_list = [ocrmodel.batch_det_model.filter_tag_det_res(dt_boxes['points'][0], (1920,1472)) for dt_boxes in post_result]
+        for partition_id in range(len(partition_per_batch)-1):
+            pdf_path, page_id = pdf_and_page_id_this_batch[partition_id]
+            partition_start = partition_per_batch[partition_id]
+            partition_end   = partition_per_batch[partition_id+1]
+            dt_boxes_this_partition = dt_boxes_list[partition_start:partition_end]
+            for dt_boxes in dt_boxes_this_partition: #(1, 4, 2)
+                for line_box in dt_boxes:
+                    p1, p2, p3, p4 = line_box.tolist()
+                    data_to_save[pdf_path][page_id].append(
+                        {
+                            'category_id': 15,
+                            'poly': p1 + p2 + p3 + p4,
+                        }
+                    )
         queue.task_done()
-
-async def process_image(queue, layout_pair, mdf_pair, det_pair, size_pair, location_pair, timer):
-    dt_boxaes_batch = await gpu_inference(layout_pair, mdf_pair, det_pair, size_pair, location_pair, timer)
-    await queue.put(dt_boxaes_batch)
+        
 
 if __name__ == "__main__":
 

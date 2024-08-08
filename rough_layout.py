@@ -192,7 +192,8 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
     featcher   = DataPrefetcher(dataloader,device='cuda')
     data_to_save = {}
     inner_batch_size = inner_batch_size
-    pbar  = tqdm(total=len(dataset.metadata),position=2,desc="PDF Pages",leave=False)
+    #pbar  = tqdm(total=len(dataset.metadata),position=2,desc="PDF Pages",leave=False)
+    pbar  = None
     pdf_passed = set()
     batch = featcher.next()
     data_loading = []
@@ -202,7 +203,7 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
     #for batch in dataloader:
         try:
             data_loading.append(time.time() - last_record_time);last_record_time =time.time() 
-            pbar.set_description(f"[Data][{np.mean(data_loading[-10:]):.2f}] [Model][{np.mean(model_train[-10:]):.2f}]")
+            if pbar:pbar.set_description(f"[Data][{np.mean(data_loading[-10:]):.2f}] [Model][{np.mean(model_train[-10:]):.2f}]")
             pdf_index_batch, page_ids_batch = batch["pdf_index"], batch["page_index"]
             mfd_layout_images_batch, layout_images_batch, det_layout_images_batch = batch["mfd_image"], batch["layout_image"], batch["det_images"]
             heights_batch, widths_batch = batch["height"], batch["width"]
@@ -328,15 +329,17 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                                             'poly': p1 + p2 + p3 + p4,
                                         }
                                     )
-            pbar.update(len(new_pdf_processed))
+            if pbar:pbar.update(len(new_pdf_processed))
 
         except:
             #raise
             print("ERROR: Fail to process batch")
         timer.log()
         model_train.append(time.time() - last_record_time);last_record_time =time.time()
-        pbar.set_description(f"[Data][{np.mean(data_loading[-10:]):.2f}] [Model][{np.mean(model_train[-10:]):.2f}]")
+        if pbar:pbar.set_description(f"[Data][{np.mean(data_loading[-10:]):.2f}] [Model][{np.mean(model_train[-10:]):.2f}]")
         batch = featcher.next()
+        if pbar is None:
+            pbar = tqdm(total=len(dataset.metadata)-1,position=2,desc="PDF Pages",leave=False)
 
     ### next, we construct each result for each pdf in pdf wise and remove the page_id by the list position 
     pdf_to_metadata = {t['path']:t for t in dataset.metadata}
@@ -357,7 +360,7 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                 now_row = {"page_id": page_id, "layout_dets":layout_dets_per_page[page_id]}
             new_pdf_dict["doc_layout_result"].append(now_row)
         new_data_to_save.append(new_pdf_dict)
-    if dataset.client is None:dataset.client=build_client()
+    if "s3:" in new_data_to_save and dataset.client is None:dataset.client=build_client()
     write_jsonl_to_path(new_data_to_save, result_path, dataset.client)
 
 def test_dataset(pdf_path, layout_model, mfd_model, ocrmodel):
@@ -373,26 +376,6 @@ def test_dataset(pdf_path, layout_model, mfd_model, ocrmodel):
     print("======================================================")
     for _ in dataset:
         timer.log()
-
-import threading
-from flask import Flask, request, jsonify
-import requests
-from modules.batch_text_detector import fast_torch_postprocess_multiprocess, PostProcessConfig
-app = Flask(__name__)
-
-@app.route('/postprocess', methods=['POST'])
-def postprocess():
-    data = request.json
-    preds_list       = data['preds_list']
-    shape_list_batch = data['shape_list_batch']
-    ori_shape_list   = data['ori_shape_list']
-    
-    post_result = fast_torch_postprocess_multiprocess(preds_list, shape_list_batch)
-    dt_boxes_list = [
-        ocrmodel.batch_det_model.filter_tag_det_res(dt_boxes['points'][0], ori_shape)
-        for dt_boxes, ori_shape in zip(post_result, ori_shape_list)
-    ]
-    return jsonify(dt_boxes_list)
 
 if __name__ == "__main__":
 
@@ -414,7 +397,7 @@ if __name__ == "__main__":
     mfd_model    = get_batch_YOLO_model(model_configs,inner_batch_size) 
     ocrmodel = None
     ocrmodel = ocr_model = ModifiedPaddleOCR(show_log=True)
-    timer = Timers(True,warmup=5)
+    timer = Timers(False,warmup=5)
     #test_dataset("debug.jsonl", layout_model, mfd_model, ocrmodel)
     deal_with_one_dataset("debug.jsonl", 
                           "debug.stage_1.jsonl", 
