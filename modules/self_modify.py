@@ -8,9 +8,9 @@ from io import BytesIO
 from PIL import Image
 
 from paddleocr import PaddleOCR
-from paddleocr.ppocr.utils.logging import get_logger
-from paddleocr.ppocr.utils.utility import check_and_read, alpha_to_color, binarize_img
-from paddleocr.tools.infer.utility import draw_ocr_box_txt, get_rotate_crop_image, get_minarea_rect_crop
+from ppocr.utils.logging import get_logger
+from ppocr.utils.utility import check_and_read, alpha_to_color, binarize_img
+from tools.infer.utility import draw_ocr_box_txt, get_rotate_crop_image, get_minarea_rect_crop
 logger = get_logger()
 
 def img_decode(content: bytes):

@@ -111,7 +111,7 @@ if __name__ == '__main__':
     else:
         all_pdfs = [args.pdf]
     print("total files:", len(all_pdfs))
-    for idx, single_pdf in enumerate(all_pdfs):
+    for pdf_idx, single_pdf in enumerate(all_pdfs):
         try:
             img_list = load_pdf_fitz(single_pdf, dpi=dpi)
         except:
@@ -119,7 +119,7 @@ if __name__ == '__main__':
             print("unexpected pdf file:", single_pdf)
         if img_list is None:
             continue
-        print("pdf index:", idx, "pages:", len(img_list))
+        print("pdf index:", pdf_idx, "pages:", len(img_list))
         # layout detection and formula detection
         doc_layout_result = []
         latex_filling_list = []
@@ -167,16 +167,16 @@ if __name__ == '__main__':
             crop_xmax, crop_ymax = int(input_res['poly'][4]), int(input_res['poly'][5])
             crop_paste_x = 50
             crop_paste_y = 50
-            # 创建一个宽高各多50的白色背景
-            new_width = xmax - xmin + paste_x * 2
-            new_height = ymax - ymin + paste_y * 2
-            return_image = Image.new('RGB', (new_width, new_height), 'white')
+            # Create a white background with an additional width and height of 50
+            crop_new_width = crop_xmax - crop_xmin + crop_paste_x * 2
+            crop_new_height = crop_ymax - crop_ymin + crop_paste_y * 2
+            return_image = Image.new('RGB', (crop_new_width, crop_new_height), 'white')
 
-            # 裁剪图像
-            crop_box = (xmin, ymin, xmax, ymax)
+            # Crop image
+            crop_box = (crop_xmin, crop_ymin, crop_xmax, crop_ymax)
             cropped_img = input_pil_img.crop(crop_box)
-            new_image.paste(cropped_img, (paste_x, paste_y))
-            return_list = [crop_paste_x, crop_paste_y, crop_xmin, crop_ymin, crop_xmax, crop_ymax]
+            return_image.paste(cropped_img, (crop_paste_x, crop_paste_y))
+            return_list = [crop_paste_x, crop_paste_y, crop_xmin, crop_ymin, crop_xmax, crop_ymax, crop_new_width, crop_new_height]
             return return_image, return_list
             
         # ocr and table recognition
@@ -201,20 +201,20 @@ if __name__ == '__main__':
                     table_res_list.append(res)
 
             ocr_start = time.time()
-            # 对每一个需OCR处理的区域进行处理
+            # Process each area that requires OCR processing
             for res in ocr_res_list:
                 new_image, useful_list = crop_img(res, pil_img)
-                paste_x, paste_y, xmin, ymin, xmax, ymax = useful_list
-                # 调整公式区域坐标
+                paste_x, paste_y, xmin, ymin, xmax, ymax, new_width, new_height = useful_list
+                # Adjust the coordinates of the formula area
                 adjusted_mfdetrec_res = []
                 for mf_res in single_page_mfdetrec_res:
                     mf_xmin, mf_ymin, mf_xmax, mf_ymax = mf_res["bbox"]
-                    # 将公式区域坐标调整为相对于裁剪区域的坐标
+                    # Adjust the coordinates of the formula area to the coordinates relative to the cropping area
                     x0 = mf_xmin - xmin + paste_x
                     y0 = mf_ymin - ymin + paste_y
                     x1 = mf_xmax - xmin + paste_x
                     y1 = mf_ymax - ymin + paste_y
-                    # 过滤在图外的公式块
+                    # Filter formula blocks outside the graph
                     if any([x1 < 0, y1 < 0]) or any([x0 > new_width, y0 > new_height]):
                         continue
                     else:
@@ -222,17 +222,17 @@ if __name__ == '__main__':
                             "bbox": [x0, y0, x1, y1],
                         })
 
-                # OCR识别
+                # OCR recognition
                 new_image = cv2.cvtColor(np.asarray(new_image), cv2.COLOR_RGB2BGR)
-                ocr_res = self.ocr_model.ocr(new_image, mfd_res=adjusted_mfdetrec_res)[0]
+                ocr_res = ocr_model.ocr(new_image, mfd_res=adjusted_mfdetrec_res)[0]
 
-                # 整合结果
+                # Integration results
                 if ocr_res:
                     for box_ocr_res in ocr_res:
                         p1, p2, p3, p4 = box_ocr_res[0]
                         text, score = box_ocr_res[1]
 
-                        # 将坐标转换回原图坐标系
+                        # Convert the coordinates back to the original coordinate system
                         p1 = [p1[0] - paste_x + xmin, p1[1] - paste_y + ymin]
                         p2 = [p2[0] - paste_x + xmin, p2[1] - paste_y + ymin]
                         p3 = [p3[0] - paste_x + xmin, p3[1] - paste_y + ymin]
@@ -252,13 +252,14 @@ if __name__ == '__main__':
             for res in table_res_list:
                 new_image, _ = crop_img(res, pil_img)
 
-                start = time.time()
+                single_table_start = time.time()
                 with torch.no_grad():
                     output = tr_model(new_image)
-                end = time.time()
-                if (end - start) > model_configs['model_args']['table_max_time']:
+                if (time.time() - single_table_start) > model_configs['model_args']['table_max_time']:
                     res["timeout"] = True
                 res["latex"] = output[0]
+            table_cost = round(time.time() - table_start, 2)
+            print(f"table cost: {table_cost}")
 
         output_dir = args.output
         os.makedirs(output_dir, exist_ok=True)
@@ -276,7 +277,7 @@ if __name__ == '__main__':
             vis_pdf_result = []
             for idx, image in enumerate(img_list):
                 single_page_res = doc_layout_result[idx]['layout_dets']
-                vis_img = Image.new('RGB', Image.fromarray(image).size, 'white') if args.render else Image.fromarray(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+                vis_img = Image.new('RGB', Image.fromarray(image).size, 'white') if args.render else Image.fromarray(image)
                 draw = ImageDraw.Draw(vis_img)
                 for res in single_page_res:
                     label = int(res['category_id'])
