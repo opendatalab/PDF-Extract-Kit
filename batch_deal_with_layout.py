@@ -73,68 +73,87 @@ if __name__ == '__main__':
     device    = model_configs['model_args']['device']
     dpi       = model_configs['model_args']['pdf_dpi']
 
-    task_name = "layoutV3"
+    task_name = "layoutV5"
     layout_model = None
     mfd_model    = None
     client = None
     ocrmodel = None
     for inputs_path in tqdm(all_file_list, leave=False, position=1):
         filename    = os.path.basename(inputs_path)
-        result_path = os.path.join(args.result_save_path, task_name, "result", filename)
         if inputs_path.startswith('s3'):
             inputs_path = "opendata:"+inputs_path
-        if result_path.startswith('s3'):
-            result_path = "opendata:"+result_path
         # assert inputs_path.startswith('opendata:s3')
         # assert result_path.startswith('opendata:s3')
         if client is None:
             client = build_client()
-        
-        
+        if not check_path_exists(inputs_path,client):
+            tqdm.write(f"[Skip]: no {inputs_path} ")
+            continue
+
+        POSSIABLE_RESULT_SAVE_DIR_LIST=[
+            os.path.join(args.result_save_path, "layoutV5", "result"),
+            os.path.join(args.result_save_path, "layoutV3", "result"),
+            os.path.join(args.result_save_path, "layoutV2", "result"),
+            os.path.join(args.result_save_path, "layoutV1", "result"),
+            os.path.join("opendata:s3://llm-pdf-text/pdf_gpu_output/ebook_index_v4/scihub/v001/scihub/"),
+        ]
+
         skip = False
-        for result_old_path in [
-            os.path.join(args.result_save_path, "layoutV3", "result", filename),
-            os.path.join(args.result_save_path, "layoutV2", "result", filename),
-            os.path.join(args.result_save_path, "layoutV1", "result", filename),
-            os.path.join("opendata:s3://llm-pdf-text/pdf_gpu_output/ebook_index_v4/scihub/v001/scihub/", filename),
-        ]:
-            
+        for result_old_dir in POSSIABLE_RESULT_SAVE_DIR_LIST:
+            result_old_path = os.path.join(result_old_dir, filename)
             if check_path_exists(result_old_path,client) and not args.redo:
                 tqdm.write(f"[Skip]: existed {result_old_path} ")
                 skip = True
                 break
         if skip:continue
 
-        if not check_path_exists(inputs_path,client):
-            tqdm.write(f"[Skip]: no {inputs_path} ")
-            continue
         
-        lock_path = os.path.join(LOCKSERVER, "checklocktime", filename)
-        last_start_time = check_lock_and_last_start_time(lock_path,client)
-        if last_start_time and not args.redo:
-            date_string = last_start_time
-            date_format = "%Y-%m-%d %H:%M:%S"
-            date = datetime.strptime(date_string, date_format)
-            deltatime = datetime.now() - date
-            if deltatime < timedelta(hours=1):
-                tqdm.write(f"[Skip]: {filename} is locked by {date_string} created at {last_start_time} [now is {deltatime}]")
-                continue
         
-        create_last_start_time_lock(os.path.join(LOCKSERVER,"createlocktime", filename),client)
+        partion_num = 1
+        for partion_idx in range(partion_num):
+            if partion_num > 1:
+                filename_with_partion = f"{filename.replace('.jsonl','')}.{partion_idx}_{partion_num}.jsonl"
+            else:
+                filename_with_partion = filename
 
-        if layout_model is None:layout_model = get_layout_model(model_configs,args.accelerated_layout)
-        if mfd_model    is None:mfd_model    = get_batch_YOLO_model(model_configs,batch_size=args.inner_batch_size,use_tensorRT=args.accelerated_mfd)
-        if ocrmodel is None:ocrmodel = ModifiedPaddleOCR(show_log=True)
-        print(f"now we deal with {inputs_path} to {result_path}")
-        try:
-            deal_with_one_dataset(inputs_path, result_path, 
-                                    layout_model, mfd_model,  ocrmodel=ocrmodel, 
-                                    inner_batch_size=args.inner_batch_size, 
-                                    batch_size=args.batch_size,
-                                    num_workers=args.num_workers,
-                                    do_text_det = not args.do_not_det,
-                                    do_text_rec = args.do_rec)
-            print(f"finish dealing with {inputs_path} to {result_path}")
-        except:
-            traceback.print_exc()
-            tqdm.write(f"[Error]: {inputs_path} to {result_path}")
+            skip = False
+            for result_old_dir in POSSIABLE_RESULT_SAVE_DIR_LIST:
+                result_old_path = os.path.join(result_old_dir, filename_with_partion)
+                if check_path_exists(result_old_path,client) and not args.redo:
+                    tqdm.write(f"[Skip]: existed {result_old_path} ")
+                    skip = True
+                    break
+            if skip:continue
+            result_path = os.path.join(args.result_save_path, task_name, "result", filename_with_partion)
+            lock_path = os.path.join(LOCKSERVER, "checklocktime", filename_with_partion)
+            last_start_time = check_lock_and_last_start_time(lock_path,client)
+            if last_start_time and not args.redo:
+                date_string = last_start_time
+                date_format = "%Y-%m-%d %H:%M:%S"
+                date = datetime.strptime(date_string, date_format)
+                deltatime = datetime.now() - date
+                if deltatime < timedelta(hours=1):
+                    tqdm.write(f"[Skip]: {filename_with_partion} is locked by {date_string} created at {last_start_time} [now is {deltatime}]")
+                    continue
+            
+            create_last_start_time_lock(os.path.join(LOCKSERVER,"createlocktime", filename_with_partion),client)
+
+            if layout_model is None:layout_model = get_layout_model(model_configs,args.accelerated_layout)
+            if mfd_model    is None:mfd_model    = get_batch_YOLO_model(model_configs,batch_size=args.inner_batch_size,use_tensorRT=args.accelerated_mfd)
+            if ocrmodel is None:ocrmodel = ModifiedPaddleOCR(show_log=True)
+            print(f"now we deal with {inputs_path} to {result_path}")
+            try:
+                deal_with_one_dataset(inputs_path, result_path, 
+                                        layout_model, mfd_model,  ocrmodel=ocrmodel, 
+                                        inner_batch_size=args.inner_batch_size, 
+                                        batch_size=args.batch_size,
+                                        num_workers=args.num_workers,
+                                        do_text_det = not args.do_not_det,
+                                        do_text_rec = args.do_rec,
+                                        partion_num = partion_num,
+                                        partion_idx = partion_idx
+                                        )
+                print(f"finish dealing with {result_path}")
+            except:
+                traceback.print_exc()
+                tqdm.write(f"[Error]: {inputs_path} to {result_path}")

@@ -24,9 +24,12 @@ class PDFImageDataset(IterableDataset,DatasetUtils):
     #client = build_client()
     def __init__(self, metadata_filepath, aug, input_format, 
                  mfd_pre_transform, det_pre_transform=None,
-                 return_original_image=False,timer=Timers(False)):
+                 return_original_image=False,timer=Timers(False),
+                 partion_num = 1,
+                 partion_idx = 0):
         super().__init__()
         self.metadata= self.smart_read_json(metadata_filepath)
+        self.metadata= np.array_split(self.metadata, partion_num)[partion_idx]
         self.dpi = 200
         self.aug = aug
         self.input_format = input_format
@@ -174,17 +177,24 @@ def process_batch(inputs):
     dt_boxes    = post_result[0]['points']
     dt_boxes    = ocrmodel.batch_det_model.filter_tag_det_res(dt_boxes, ori_shape)
     return dt_boxes
+
+
+
 def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model, 
                           ocrmodel=None, inner_batch_size=4, 
                           batch_size=32,num_workers=8,
                           do_text_det=False,
                           do_text_rec=False,
-                          timer=Timers(False)):
+                          timer=Timers(False),
+                          partion_num = 1,
+                          partion_idx = 0):
     dataset    = PDFImageDataset(pdf_path,layout_model.predictor.aug,layout_model.predictor.input_format,
                                  
                                  mfd_pre_transform=mfd_process(mfd_model.predictor.args.imgsz,mfd_model.predictor.model.stride,mfd_model.predictor.model.pt),
                                  det_pre_transform=ocrmodel.batch_det_model.prepare_image,
-                                 return_original_image=do_text_rec
+                                 return_original_image=do_text_rec,
+                                 partion_num = partion_num,
+                                 partion_idx = partion_idx
                                  )
     collate_fn = custom_collate_fn if do_text_rec else None
     dataloader = DataLoader(dataset, batch_size=batch_size,collate_fn=collate_fn, 
@@ -213,7 +223,9 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
             new_pdf_processed = pdf_index - pdf_passed
             pdf_passed        = pdf_passed|pdf_index
             
-            for j in tqdm(range(0, len(mfd_layout_images_batch), inner_batch_size),position=3,leave=False,desc="mini-Batch"):
+            iterater = tqdm(range(0, len(mfd_layout_images_batch), inner_batch_size),position=3,leave=False,desc="mini-Batch") if len(mfd_layout_images_batch)>inner_batch_size else range(0, len(mfd_layout_images_batch), inner_batch_size)
+
+            for j in iterater:
                 pdf_index  = pdf_index_batch[j:j+inner_batch_size]
                 page_ids   = page_ids_batch[j:j+inner_batch_size]
                 mfd_images = mfd_layout_images_batch[j:j+inner_batch_size]
@@ -282,8 +294,9 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                         with timer('text_detection/det_net'):
                             ### do inner_batch_size batch forward
                             dt_boxaes_batch_list = []
-                            for i in range(0, len(canvas_tensor_this_batch), inner_batch_size):
-                                dt_boxaes_batch = ocrmodel.batch_det_model.net(canvas_tensor_this_batch[i:i+inner_batch_size])
+                            det_inner_batch_size = 128
+                            for i in range(0, len(canvas_tensor_this_batch), det_inner_batch_size):
+                                dt_boxaes_batch = ocrmodel.batch_det_model.net(canvas_tensor_this_batch[i:i+det_inner_batch_size])
                                 dt_boxaes_batch = dt_boxaes_batch['maps'].cpu().numpy()[:,0]
                                 dt_boxaes_batch_list.append(dt_boxaes_batch) 
                             dt_boxaes_batch_list= np.concatenate(dt_boxaes_batch_list, axis=0)
@@ -345,7 +358,7 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
         if pbar:pbar.set_description(f"[Data][{np.mean(data_loading[-10:]):.2f}] [Model][{np.mean(model_train[-10:]):.2f}]")
         batch = featcher.next()
         if pbar is None:
-            pbar = tqdm(total=len(dataset.metadata)-1,position=2,desc="PDF Pages",leave=False)
+            pbar = tqdm(total=len(dataset.metadata)-1,position=2,desc="PDF Pages",leave=False, bar_format='{l_bar}{bar}{r_bar}')
 
     ### next, we construct each result for each pdf in pdf wise and remove the page_id by the list position 
     pdf_to_metadata = {t['path']:t for t in dataset.metadata}
