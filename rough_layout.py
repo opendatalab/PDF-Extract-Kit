@@ -192,7 +192,7 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
     featcher   = DataPrefetcher(dataloader,device='cuda')
     data_to_save = {}
     inner_batch_size = inner_batch_size
-    pbar  = tqdm(total=len(dataset.metadata),position=2,desc="PDF Pages",leave=True)
+    pbar  = tqdm(total=len(dataset.metadata),position=2,desc="PDF Pages",leave=False)
     pdf_passed = set()
     batch = featcher.next()
     data_loading = []
@@ -405,8 +405,8 @@ if __name__ == "__main__":
     device    = model_configs['model_args']['device']
     dpi       = model_configs['model_args']['pdf_dpi']
 
-        
-    layout_model = get_layout_model(model_configs)
+    accelerated = True
+    layout_model = get_layout_model(model_configs,accelerated)
     inner_batch_size= 16
     mfd_model    = get_batch_YOLO_model(model_configs,inner_batch_size) 
     ocrmodel = None

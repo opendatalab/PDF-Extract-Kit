@@ -175,9 +175,9 @@ class Layoutlmv3_BatchPredictor(Layoutlmv3_Predictor):
 
 
 
-def get_layout_model(model_configs):
+def get_layout_model(model_configs, accelerated):
     model = Layoutlmv3_BatchPredictor(model_configs['model_args']['layout_weight'])
-    compiled = False
+    compiled = accelerated
     if compiled:
         model.compile()
         model.iscompiled = True
