@@ -66,6 +66,8 @@ class PDFImageDataset(IterableDataset,DatasetUtils):
         return self.text_det_transform(image)[0]
 
     def read_data_based_on_current_state(self):
+        #print(f"read image from current_page_index={self.current_page_index} ")
+
         with self.timer("load_page"):
             page  = self.get_pdf_by_index(self.current_pdf_index).load_page(self.current_page_index)
         with self.timer("from_page_to_pimage"):
@@ -91,34 +93,35 @@ class PDFImageDataset(IterableDataset,DatasetUtils):
     def check_should_skip(self):
         if self.current_pdf_index >= len(self.metadata):
             raise StopIteration
-        
-        if self.current_page_index >= self.get_pdf_by_index(self.current_pdf_index).page_count:
+        current_pdf_page_num = self.get_pdf_by_index(self.current_pdf_index).page_count
+        #print(f"current_page_index={self.current_page_index} current_pdf_page_num={current_pdf_page_num}|{len(self.get_pdf_by_index(self.current_pdf_index))}")
+
+        if self.current_page_index >= current_pdf_page_num:
             worker_info = get_worker_info()
             step_for_pdf= 1 if worker_info is None else worker_info.num_workers
             self.current_pdf_index += step_for_pdf
             self.current_page_index = 0
+            
 
-            if self.current_pdf_index >= len(self.metadata):
-                raise StopIteration
+
 
     def __next__(self):
-        # self.check_should_skip()
-        # with self.timer("read_data_based_on_current_state"):
-        #     output = self.read_data_based_on_current_state()
-        # self.current_page_index += 1
+        
         fail_times = 0
-        try:
+        output = None
+        while output is None and fail_times<=10:
             self.check_should_skip()
-            output = self.read_data_based_on_current_state()
-            self.current_page_index += 1
-            fail_times = 0
-        except StopIteration:
-            raise StopIteration
-        except:
-            fail_times +=1
-            self.current_page_index += 1
-            if fail_times>10:
+            try:
+                output = self.read_data_based_on_current_state()
+                #print(output["pdf_index"],output["page_index"])
+                self.current_page_index += 1
+                fail_times = 0
+            except StopIteration:
                 raise StopIteration
+            except:
+                fail_times +=1
+        if fail_times>10 or output is None:
+            raise StopIteration
         return output
         
     
@@ -179,6 +182,72 @@ def process_batch(inputs):
     return dt_boxes
 
 
+def inference_layout(layout_pair,layout_model,inner_batch_size):
+    
+    layout_images, heights, widths = layout_pair
+    origin_length = len(layout_images)
+    
+    if len(layout_images)<inner_batch_size and layout_model.iscompiled:
+        layout_images  = torch.nn.functional.pad(layout_images,   (0,0,0,0,0,0,0, inner_batch_size-len(layout_images)))
+        heights = torch.nn.functional.pad(heights,  (0, inner_batch_size-len(heights)))
+        widths  = torch.nn.functional.pad(widths,   (0, inner_batch_size-len(widths)))
+    layout_res = layout_model((layout_images,heights, widths), ignore_catids=[],dtype=torch.float16)
+    layout_res = layout_res[:origin_length]
+    return layout_res
+
+def inference_mfd(mfd_images,mfd_model,inner_batch_size):
+    origin_length = len(mfd_images)
+    
+    if len(mfd_images)<inner_batch_size:
+        mfd_images = torch.nn.functional.pad(mfd_images, (0,0,0,0,0,0,0, inner_batch_size-len(mfd_images)))
+    mfd_res    = mfd_model.predict(mfd_images, imgsz=(1888,1472), conf=0.3, iou=0.5, verbose=False)
+    mfd_res = mfd_res[:origin_length]
+    return mfd_res
+
+def combine_layout_mfd_result(layout_res, mfd_res, heights, widths):
+    rough_layout_this_batch =[]
+    ori_shape_list = []
+    for layout_det, mfd_det, real_input_height, real_input_width in zip(layout_res, mfd_res, heights, widths):
+        mfd_height,mfd_width = mfd_det.orig_shape
+        real_input_height = int(real_input_height)
+        real_input_width  = int(real_input_width)
+        layout_dets = clean_layout_dets(layout_det['layout_dets'])
+        for xyxy, conf, cla in zip(mfd_det.boxes.xyxy.cpu(), 
+                                mfd_det.boxes.conf.cpu(), 
+                                mfd_det.boxes.cls.cpu()):
+
+            xyxy =  ops.scale_boxes((mfd_height,mfd_width), xyxy, (real_input_height, real_input_width))
+            xmin, ymin, xmax, ymax = [int(p.item()) for p in xyxy]
+            new_item = {
+                'category_id': 13 + int(cla.item()),
+                'poly': [xmin, ymin, xmax, ymin, xmax, ymax, xmin, ymax],
+                'score': round(float(conf.item()), 2),
+                'latex': '',
+            }
+            layout_dets.append(new_item)
+        ori_shape_list.append((real_input_height, real_input_width))
+        rough_layout_this_batch.append(layout_dets)
+        assert real_input_height == 1920
+        assert real_input_width  == 1472
+    return rough_layout_this_batch, ori_shape_list
+
+def inference_det(canvas_tensor_this_batch,det_model,det_inner_batch_size):
+    with torch.no_grad():
+        ### do inner_batch_size batch forward
+        dt_boxaes_batch_list = []
+        for i in range(0, len(canvas_tensor_this_batch), det_inner_batch_size):
+            dt_boxaes_batch = det_model(canvas_tensor_this_batch[i:i+det_inner_batch_size])
+            dt_boxaes_batch = dt_boxaes_batch['maps'].cpu()[:,0]
+            dt_boxaes_batch_list.append(dt_boxaes_batch) 
+        dt_boxaes_batch_list= torch.cat(dt_boxaes_batch_list)
+    return dt_boxaes_batch_list
+
+def det_postprocess(dt_boxaes_batch,ocrmodel):
+    dt_boxaes_batch=dt_boxaes_batch.numpy()
+    post_result = ocrmodel.batch_det_model.fast_postprocess(dt_boxaes_batch, np.array([(1920,1472, 0.5, 0.5)]*len(dt_boxaes_batch)) )
+    dt_boxes_list = [ocrmodel.batch_det_model.filter_tag_det_res(dt_boxes['points'][0], (1920,1472)) for dt_boxes in post_result]
+    return dt_boxes_list
+
 
 def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model, 
                           ocrmodel=None, inner_batch_size=4, 
@@ -197,15 +266,17 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                                  partion_idx = partion_idx
                                  )
     collate_fn = custom_collate_fn if do_text_rec else None
+    num_workers=min(num_workers,len(dataset.metadata))
     dataloader = DataLoader(dataset, batch_size=batch_size,collate_fn=collate_fn, 
                             num_workers=num_workers,pin_memory=True, pin_memory_device='cuda',
-                            prefetch_factor=3)        
-    featcher   = DataPrefetcher(dataloader,device='cuda')
+                            prefetch_factor=2 if num_workers>0 else None)        
+    
     data_to_save = {}
     inner_batch_size = inner_batch_size
     #pbar  = tqdm(total=len(dataset.metadata),position=2,desc="PDF Pages",leave=False)
     pbar  = None
     pdf_passed = set()
+    featcher   = DataPrefetcher(dataloader,device='cuda')
     batch = featcher.next()
     data_loading = []
     model_train  = []
@@ -226,14 +297,14 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
             iterater = tqdm(range(0, len(mfd_layout_images_batch), inner_batch_size),position=3,leave=False,desc="mini-Batch") if len(mfd_layout_images_batch)>inner_batch_size else range(0, len(mfd_layout_images_batch), inner_batch_size)
 
             for j in iterater:
-                pdf_index  = pdf_index_batch[j:j+inner_batch_size]
-                page_ids   = page_ids_batch[j:j+inner_batch_size]
-                mfd_images = mfd_layout_images_batch[j:j+inner_batch_size]
-                images     = layout_images_batch[j:j+inner_batch_size]
-                heights    = heights_batch[j:j+inner_batch_size]
-                widths     = widths_batch[j:j+inner_batch_size]
+                pdf_index  = pdf_index_batch[j:j+inner_batch_size].cuda()
+                page_ids   = page_ids_batch[j:j+inner_batch_size].cuda()
+                mfd_images = mfd_layout_images_batch[j:j+inner_batch_size].cuda()
+                images     = layout_images_batch[j:j+inner_batch_size].cuda()
+                heights    = heights_batch[j:j+inner_batch_size].cuda()
+                widths     = widths_batch[j:j+inner_batch_size].cuda()
                 oimages    = oimage_list[j:j+inner_batch_size] if oimage_list is not None else None
-                detimages  = det_layout_images_batch[j:j+inner_batch_size]
+                detimages  = det_layout_images_batch[j:j+inner_batch_size].cuda()
     
                 with timer('get_layout'):
                     if len(images)<inner_batch_size and layout_model.iscompiled:
@@ -293,6 +364,7 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                             canvas_tensor_this_batch = torch.stack(canvas_tensor_this_batch)
                         with timer('text_detection/det_net'):
                             ### do inner_batch_size batch forward
+                            
                             dt_boxaes_batch_list = []
                             det_inner_batch_size = 128
                             for i in range(0, len(canvas_tensor_this_batch), det_inner_batch_size):
@@ -300,6 +372,7 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                                 dt_boxaes_batch = dt_boxaes_batch['maps'].cpu().numpy()[:,0]
                                 dt_boxaes_batch_list.append(dt_boxaes_batch) 
                             dt_boxaes_batch_list= np.concatenate(dt_boxaes_batch_list, axis=0)
+                            #print(dt_boxaes_batch_list.shape)
                         # with timer('text_detection/discard_batch'):
                         #     pred_batch  = ocrmodel.batch_det_model.discard_batch(dt_boxaes_batch)
                         with timer('text_detection/batch_postprocess'):
@@ -309,7 +382,7 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                             # dt_boxes    = post_result[0]['points']
                             with timer('text_detection/batch_postprocess/filter'):
                                 dt_boxes_list = [ocrmodel.batch_det_model.filter_tag_det_res(dt_boxes['points'][0], (1920,1472)) for dt_boxes in post_result ]
-            
+                            
                     if oimages is not None and do_text_rec:
                         with timer('text_detection/collect_for_text_images'):
                             text_image_batch, text_image_position,text_line_bbox = collect_text_image_and_its_coordinate(single_page_mfdetrec_res_this_batch, partition_per_batch, oimages,dt_boxes_list)
@@ -337,6 +410,7 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                             partition_start = partition_per_batch[partition_id]
                             partition_end   = partition_per_batch[partition_id+1]
                             dt_boxes_this_partition = dt_boxes_list[partition_start:partition_end]
+                            
                             for dt_boxes in dt_boxes_this_partition: #(1, 4, 2)
                                 for line_box in dt_boxes:
                                     p1, p2, p3, p4 = line_box.tolist()
@@ -362,16 +436,19 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
 
     ### next, we construct each result for each pdf in pdf wise and remove the page_id by the list position 
     pdf_to_metadata = {t['path']:t for t in dataset.metadata}
-
+ 
     new_data_to_save = []
     for pdf_path, layout_dets_per_page in data_to_save.items():
+        
         new_pdf_dict = copy.deepcopy(pdf_to_metadata[pdf_path])
         new_pdf_dict['height'] = layout_dets_per_page.pop('height')
         new_pdf_dict['width'] = layout_dets_per_page.pop('width')
         pages = [t for t in layout_dets_per_page.keys()]
         pages.sort()
+        #print(pages)
+ 
         new_pdf_dict["doc_layout_result"]=[]
-        for page_id in range(max(pages)):
+        for page_id in range(max(pages)+1): ### those , before, we may lost whole the last page for layoutV1-5 result
             if page_id not in layout_dets_per_page:
                 print(f"WARNING: page {page_id} of PDF: {pdf_path} fail to parser!!! ")
                 now_row = {"page_id": page_id, "status": "fail", "layout_dets":[]}
@@ -380,6 +457,7 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
             new_pdf_dict["doc_layout_result"].append(now_row)
         new_data_to_save.append(new_pdf_dict)
     if "s3:" in new_data_to_save and dataset.client is None:dataset.client=build_client()
+
     write_jsonl_to_path(new_data_to_save, result_path, dataset.client)
 
 def test_dataset(pdf_path, layout_model, mfd_model, ocrmodel):
@@ -411,7 +489,7 @@ if __name__ == "__main__":
     layout_model = get_layout_model(model_configs,accelerated)
     
     total_memory = get_gpu_memory()
-    inner_batch_size = 16 if total_memory > 60 else 2
+    inner_batch_size = 1#16 if total_memory > 60 else 2
     print(f"totally gpu memory is {total_memory} we use inner batch size {inner_batch_size}")
     mfd_model    = get_batch_YOLO_model(model_configs,inner_batch_size) 
     ocrmodel = None
@@ -421,7 +499,7 @@ if __name__ == "__main__":
     deal_with_one_dataset("debug.jsonl", 
                           "debug.stage_1.jsonl", 
                           layout_model, mfd_model, ocrmodel=ocrmodel, 
-                          inner_batch_size=inner_batch_size, batch_size=16,num_workers=4,
+                          inner_batch_size=inner_batch_size, batch_size=inner_batch_size,num_workers=0,
                           do_text_det = True,
                           do_text_rec = False,
                           timer=timer)

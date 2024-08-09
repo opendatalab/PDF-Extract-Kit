@@ -237,5 +237,6 @@ class DatasetUtils:
         if path not in self.last_read_pdf_buffer:
             self.clean_pdf_buffer()
             self.last_read_pdf_buffer[path] = self.smart_load_pdf(path)
+            
         pdf_buffer = self.last_read_pdf_buffer[path]
         return pdf_buffer

@@ -75,10 +75,12 @@ async def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
         batch = featcher.next()
         if pbar is None:
             pbar = tqdm(total=len(dataset.metadata)-update_seq,position=2,desc="PDF Pages",leave=True)
+    
+    await queue.join()
     await queue.put(None)  # Signal the consumer to exit
     await postprocess_task  # Wait for the consumer to finish
 
-    print("we finish generate data, lets collect and save it")
+    tqdm.write("we finish generate data, lets collect and save it")
     ### next, we construct each result for each pdf in pdf wise and remove the page_id by the list position 
     pdf_to_metadata = {t['path']:t for t in dataset.metadata}
     new_data_to_save = []
@@ -99,63 +101,6 @@ async def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
         new_data_to_save.append(new_pdf_dict)
     if "s3:" in new_data_to_save and dataset.client is None:dataset.client=build_client()
     write_jsonl_to_path(new_data_to_save, result_path, dataset.client)
-
-def inference_layout(layout_pair,layout_model,inner_batch_size):
-    
-    layout_images, heights, widths = layout_pair
-    origin_length = len(layout_images)
-    
-    if len(layout_images)<inner_batch_size and layout_model.iscompiled:
-        layout_images  = torch.nn.functional.pad(layout_images,   (0,0,0,0,0,0,0, inner_batch_size-len(layout_images)))
-        heights = torch.nn.functional.pad(heights,  (0, inner_batch_size-len(heights)))
-        widths  = torch.nn.functional.pad(widths,   (0, inner_batch_size-len(widths)))
-    layout_res = layout_model((layout_images,heights, widths), ignore_catids=[],dtype=torch.float16)
-    layout_res = layout_res[:origin_length]
-    return layout_res
-
-def inference_mfd(mfd_images,mfd_model,inner_batch_size):
-    origin_length = len(mfd_images)
-    
-    if len(mfd_images)<inner_batch_size:
-        mfd_images = torch.nn.functional.pad(mfd_images, (0,0,0,0,0,0,0, inner_batch_size-len(mfd_images)))
-    mfd_res    = mfd_model.predict(mfd_images, imgsz=(1888,1472), conf=0.3, iou=0.5, verbose=False)
-    mfd_res = mfd_res[:origin_length]
-    return mfd_res
-
-def combine_layout_mfd_result(layout_res, mfd_res, heights, widths):
-    rough_layout_this_batch =[]
-    ori_shape_list = []
-    for layout_det, mfd_det, real_input_height, real_input_width in zip(layout_res, mfd_res, heights, widths):
-        mfd_height,mfd_width = mfd_det.orig_shape
-        layout_dets = clean_layout_dets(layout_det['layout_dets'])
-        for xyxy, conf, cla in zip(mfd_det.boxes.xyxy.cpu(), 
-                                mfd_det.boxes.conf.cpu(), 
-                                mfd_det.boxes.cls.cpu()):
-            xyxy =  ops.scale_boxes(mfd_det.orig_shape, xyxy, (real_input_height, real_input_width))
-            xmin, ymin, xmax, ymax = [int(p.item()) for p in xyxy]
-            new_item = {
-                'category_id': 13 + int(cla.item()),
-                'poly': [xmin, ymin, xmax, ymin, xmax, ymax, xmin, ymax],
-                'score': round(float(conf.item()), 2),
-                'latex': '',
-            }
-            layout_dets.append(new_item)
-        ori_shape_list.append((real_input_height, real_input_width))
-        rough_layout_this_batch.append(layout_dets)
-        assert real_input_height == 1920
-        assert real_input_width  == 1472
-    return rough_layout_this_batch, ori_shape_list
-
-def inference_det(canvas_tensor_this_batch,det_model,det_inner_batch_size):
-    with torch.no_grad():
-        ### do inner_batch_size batch forward
-        dt_boxaes_batch_list = []
-        for i in range(0, len(canvas_tensor_this_batch), det_inner_batch_size):
-            dt_boxaes_batch = det_model(canvas_tensor_this_batch[i:i+det_inner_batch_size])
-            dt_boxaes_batch = dt_boxaes_batch['maps'].cpu()[:,0]
-            dt_boxaes_batch_list.append(dt_boxaes_batch) 
-        dt_boxaes_batch_list= torch.cat(dt_boxaes_batch_list)
-    return dt_boxaes_batch_list
 
 async def gpu_inference(queue,
               layout_pair,
@@ -179,30 +124,38 @@ async def gpu_inference(queue,
 
     pdf_and_page_id_this_batch=[]
     for pdf_path, page_id, layout_dets,ori_shape in zip(pdf_paths, page_ids, rough_layout_this_batch,ori_shape_list):
+        page_id = int(page_id)
         if pdf_path not in data_to_save:
             data_to_save[pdf_path] = {'height':ori_shape[0], 'width':ori_shape[1]}
         data_to_save[pdf_path][page_id] = layout_dets
         pdf_and_page_id_this_batch.append((pdf_path, page_id))
 
+    
     with timer('text_detection/collect_for_line_detect'):
-        canvas_tensor_this_batch, partition_per_batch,canvas_idxes_this_batch,single_page_mfdetrec_res_this_batch = collect_paragraph_image_and_its_coordinate(detimages, rough_layout_this_batch,2)
+        det_height, det_width = detimages.shape[2:]
+        scale_height = int(heights[0])/int(det_height)
+        scale_width  = int(widths[0])/int(det_width)
+        assert scale_height == scale_width
+        assert scale_height == 2
+        canvas_tensor_this_batch, partition_per_batch,_,_ = collect_paragraph_image_and_its_coordinate(detimages, rough_layout_this_batch,scale_height) # 2 is the scale between detiamge and box_images
     with timer('text_detection/stack'):
         canvas_tensor_this_batch = torch.stack(canvas_tensor_this_batch)
     with timer('text_detection/det_net'):
         dt_boxaes_batch = inference_det(canvas_tensor_this_batch,det_model,128)
+    
+    
     torch.cuda.synchronize()
     result = (dt_boxaes_batch,partition_per_batch,pdf_and_page_id_this_batch)
-    queue.put(result)
+    await queue.put(result)
 
 async def cpu_postprocess(queue, ocrmodel,data_to_save):
     while True:
         state = await queue.get()
         if state is None:
+            queue.task_done()
             break
         dt_boxaes_batch,partition_per_batch,pdf_and_page_id_this_batch = state
-        dt_boxaes_batch=dt_boxaes_batch.numpy()
-        post_result = ocrmodel.batch_det_model.fast_postprocess(dt_boxaes_batch, np.array([(1920,1472, 0.5, 0.5)]*len(dt_boxaes_batch)) )
-        dt_boxes_list = [ocrmodel.batch_det_model.filter_tag_det_res(dt_boxes['points'][0], (1920,1472)) for dt_boxes in post_result]
+        dt_boxes_list = det_postprocess(dt_boxaes_batch,ocrmodel)
         for partition_id in range(len(partition_per_batch)-1):
             pdf_path, page_id = pdf_and_page_id_this_batch[partition_id]
             partition_start = partition_per_batch[partition_id]
@@ -231,7 +184,7 @@ if __name__ == "__main__":
     device    = model_configs['model_args']['device']
     dpi       = model_configs['model_args']['pdf_dpi']
 
-    layout_model = get_layout_model(model_configs,accelerated=True)
+    layout_model = get_layout_model(model_configs,accelerated=False)
     #layout_model.compile()
     total_memory = get_gpu_memory()
     inner_batch_size = 16 if total_memory > 60 else 2
