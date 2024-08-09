@@ -1,5 +1,6 @@
 
 from rough_layout import *
+from rough_layout_with_aync import *
 from get_data_utils import *
 RESULT_SAVE_PATH="opendata:s3://llm-pdf-text/pdf_gpu_output/scihub_shared"
 #RESULT_SAVE_PATH="tianning:s3://temp/debug"
@@ -27,7 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('--result_save_path', type=str, default=RESULT_SAVE_PATH)
     parser.add_argument('--accelerated_layout',  action='store_true', help='', default=False)
     parser.add_argument('--accelerated_mfd',  action='store_true', help='', default=False)
-
+    parser.add_argument('--async_mode',  action='store_true', help='', default=False)
     args = parser.parse_args()
     root_path = args.root_path
     if os.path.isdir(root_path):
@@ -73,7 +74,7 @@ if __name__ == '__main__':
     device    = model_configs['model_args']['device']
     dpi       = model_configs['model_args']['pdf_dpi']
 
-    task_name = "layoutV5"
+    task_name = "layoutV6"
     layout_model = None
     mfd_model    = None
     client = None
@@ -91,6 +92,10 @@ if __name__ == '__main__':
             continue
 
         POSSIABLE_RESULT_SAVE_DIR_LIST=[
+            os.path.join(args.result_save_path, "layoutV9", "result"),
+            os.path.join(args.result_save_path, "layoutV8", "result"),
+            os.path.join(args.result_save_path, "layoutV7", "result"),
+            os.path.join(args.result_save_path, "layoutV6", "result"),
             os.path.join(args.result_save_path, "layoutV5", "result"),
             os.path.join(args.result_save_path, "layoutV3", "result"),
             os.path.join(args.result_save_path, "layoutV2", "result"),
@@ -143,16 +148,28 @@ if __name__ == '__main__':
             if ocrmodel is None:ocrmodel = ModifiedPaddleOCR(show_log=True)
             print(f"now we deal with {inputs_path} to {result_path}")
             try:
-                deal_with_one_dataset(inputs_path, result_path, 
-                                        layout_model, mfd_model,  ocrmodel=ocrmodel, 
-                                        inner_batch_size=args.inner_batch_size, 
-                                        batch_size=args.batch_size,
-                                        num_workers=args.num_workers,
-                                        do_text_det = not args.do_not_det,
-                                        do_text_rec = args.do_rec,
-                                        partion_num = partion_num,
-                                        partion_idx = partion_idx
-                                        )
+                if args.async_mode:
+                    asyncio.run(deal_with_one_dataset_async(inputs_path, result_path, 
+                                            layout_model, mfd_model, ocrmodel=ocrmodel, 
+                                            inner_batch_size=args.inner_batch_size, 
+                                            batch_size=args.batch_size,
+                                            num_workers=args.num_workers,
+                                            do_text_det = not args.do_not_det,
+                                            do_text_rec = args.do_rec,
+                                            partion_num = partion_num,
+                                            partion_idx = partion_idx
+                                            ))
+                else:
+                    deal_with_one_dataset(inputs_path, result_path, 
+                                            layout_model, mfd_model,  ocrmodel=ocrmodel, 
+                                            inner_batch_size=args.inner_batch_size, 
+                                            batch_size=args.batch_size,
+                                            num_workers=args.num_workers,
+                                            do_text_det = not args.do_not_det,
+                                            do_text_rec = args.do_rec,
+                                            partion_num = partion_num,
+                                            partion_idx = partion_idx
+                                            )
                 print(f"finish dealing with {result_path}")
             except:
                 traceback.print_exc()

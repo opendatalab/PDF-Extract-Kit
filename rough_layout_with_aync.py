@@ -3,26 +3,27 @@ import asyncio
 
 
 
-async def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model, 
+async def deal_with_one_dataset_async(pdf_path, result_path, layout_model, mfd_model, 
                           ocrmodel=None, inner_batch_size=4, 
                           batch_size=32,num_workers=8,
-                          timer=Timers(False)):
-    do_text_det = True
-    do_text_rec = False
-
-    assert do_text_det
+                          do_text_det=False,
+                          do_text_rec=False,
+                          timer=Timers(False),
+                          partion_num = 1,
+                          partion_idx = 0):
     dataset    = PDFImageDataset(pdf_path,layout_model.predictor.aug,layout_model.predictor.input_format,
                                  
                                  mfd_pre_transform=mfd_process(mfd_model.predictor.args.imgsz,mfd_model.predictor.model.stride,mfd_model.predictor.model.pt),
                                  det_pre_transform=ocrmodel.batch_det_model.prepare_image,
-                                 return_original_image=do_text_rec
+                                 return_original_image=do_text_rec,
+                                 partion_num = partion_num,
+                                 partion_idx = partion_idx
                                  )
-   
-    
     collate_fn = custom_collate_fn if do_text_rec else None
+    num_workers=min(num_workers,len(dataset.metadata))
     dataloader = DataLoader(dataset, batch_size=batch_size,collate_fn=collate_fn, 
                             num_workers=num_workers,pin_memory=True, pin_memory_device='cuda',
-                            prefetch_factor=3)        
+                            prefetch_factor=3 if num_workers>0 else None)       
     queue = asyncio.Queue()
     data_to_save = {}
     postprocess_task = asyncio.create_task(cpu_postprocess(queue, ocrmodel,data_to_save))
@@ -47,34 +48,39 @@ async def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
         pdf_index = set([t.item() for t in pdf_index_batch])
         new_pdf_processed = pdf_index - pdf_passed
         pdf_passed        = pdf_passed|pdf_index
-        
-        for j in tqdm(range(0, len(mfd_layout_images_batch), inner_batch_size),position=3,leave=False,desc="mini-Batch"):
-            pdf_index  = pdf_index_batch[j:j+inner_batch_size]
-            page_ids   = page_ids_batch[j:j+inner_batch_size]
-            mfd_images = mfd_layout_images_batch[j:j+inner_batch_size]
-            images     = layout_images_batch[j:j+inner_batch_size]
-            heights    = heights_batch[j:j+inner_batch_size]
-            widths     = widths_batch[j:j+inner_batch_size]
-            oimages    = oimage_list[j:j+inner_batch_size] if oimage_list is not None else None
-            detimages  = det_layout_images_batch[j:j+inner_batch_size]
-            
-            layout_pair   = (images, layout_model)
-            mdf_pair      = (mfd_images, mfd_model)
-            det_pair      = (detimages, ocrmodel.batch_det_model.net)
-            size_pair     = (heights, widths,inner_batch_size)
-            pdf_paths     = [dataset.metadata[pdf_index]['path'] for pdf_index in pdf_index]
-            location_pair = (pdf_paths, page_ids)
-            await gpu_inference(queue, layout_pair, mdf_pair, det_pair, size_pair, location_pair, data_to_save, timer)
+        iterater = tqdm(range(0, len(mfd_layout_images_batch), inner_batch_size),position=3,leave=False,desc="mini-Batch") if len(mfd_layout_images_batch)>inner_batch_size else range(0, len(mfd_layout_images_batch), inner_batch_size)
 
+        for j in iterater:
+            try:
+                pdf_index  = pdf_index_batch[j:j+inner_batch_size]
+                page_ids   = page_ids_batch[j:j+inner_batch_size]
+                mfd_images = mfd_layout_images_batch[j:j+inner_batch_size]
+                images     = layout_images_batch[j:j+inner_batch_size]
+                heights    = heights_batch[j:j+inner_batch_size]
+                widths     = widths_batch[j:j+inner_batch_size]
+                oimages    = oimage_list[j:j+inner_batch_size] if oimage_list is not None else None
+                detimages  = det_layout_images_batch[j:j+inner_batch_size]
+                
+                layout_pair   = (images, layout_model)
+                mdf_pair      = (mfd_images, mfd_model)
+                det_pair      = (detimages, ocrmodel.batch_det_model.net)
+                size_pair     = (heights, widths,inner_batch_size)
+                pdf_paths     = [dataset.metadata[pdf_index]['path'] for pdf_index in pdf_index]
+                location_pair = (pdf_paths, page_ids)
+                await gpu_inference(queue, layout_pair, mdf_pair, det_pair, size_pair, location_pair, data_to_save, timer)
+            except KeyboardInterrupt:
+                raise
+            except:
+                traceback.print_exc()
+                print("ERROR: Fail to process batch")
         update_seq = len(new_pdf_processed)
         if pbar:pbar.update(update_seq)
-
         timer.log()
         model_train.append(time.time() - last_record_time);last_record_time =time.time()
         if pbar:pbar.set_description(f"[Data][{np.mean(data_loading[-10:]):.2f}] [Model][{np.mean(model_train[-10:]):.2f}]")
         batch = featcher.next()
         if pbar is None:
-            pbar = tqdm(total=len(dataset.metadata)-update_seq,position=2,desc="PDF Pages",leave=True)
+            pbar = tqdm(total=len(dataset.metadata)-update_seq,position=2,desc="PDF Pages",leave=False, bar_format='{l_bar}{bar}{r_bar}')
     
     await queue.join()
     await queue.put(None)  # Signal the consumer to exit
@@ -82,25 +88,7 @@ async def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
 
     tqdm.write("we finish generate data, lets collect and save it")
     ### next, we construct each result for each pdf in pdf wise and remove the page_id by the list position 
-    pdf_to_metadata = {t['path']:t for t in dataset.metadata}
-    new_data_to_save = []
-    for pdf_path, layout_dets_per_page in data_to_save.items():
-        new_pdf_dict = copy.deepcopy(pdf_to_metadata[pdf_path])
-        new_pdf_dict['height'] = layout_dets_per_page.pop('height')
-        new_pdf_dict['width'] = layout_dets_per_page.pop('width')
-        pages = [t for t in layout_dets_per_page.keys()]
-        pages.sort()
-        new_pdf_dict["doc_layout_result"]=[]
-        for page_id in range(max(pages)):
-            if page_id not in layout_dets_per_page:
-                print(f"WARNING: page {page_id} of PDF: {pdf_path} fail to parser!!! ")
-                now_row = {"page_id": page_id, "status": "fail", "layout_dets":[]}
-            else:
-                now_row = {"page_id": page_id, "layout_dets":layout_dets_per_page[page_id]}
-            new_pdf_dict["doc_layout_result"].append(now_row)
-        new_data_to_save.append(new_pdf_dict)
-    if "s3:" in new_data_to_save and dataset.client is None:dataset.client=build_client()
-    write_jsonl_to_path(new_data_to_save, result_path, dataset.client)
+    save_result(data_to_save,dataset,result_path)
 
 async def gpu_inference(queue,
               layout_pair,
@@ -194,7 +182,7 @@ if __name__ == "__main__":
     ocrmodel = ocr_model = ModifiedPaddleOCR(show_log=True)
     timer = Timers(False,warmup=5)
     
-    asyncio.run(deal_with_one_dataset("debug.jsonl", 
+    asyncio.run(deal_with_one_dataset_async("debug.jsonl", 
                           "debug.stage_1.jsonl", 
                           layout_model, mfd_model, ocrmodel=ocrmodel, 
                           inner_batch_size=inner_batch_size, batch_size=16,num_workers=4,
