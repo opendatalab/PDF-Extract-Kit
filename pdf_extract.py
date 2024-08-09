@@ -162,11 +162,9 @@ if __name__ == '__main__':
         b = time.time()
         print("formula nums:", len(mf_image_list), "mfr time:", round(b-a, 2))
 
-        def crop_img(input_res, input_pil_img):
+        def crop_img(input_res, input_pil_img, crop_paste_x=0, crop_paste_y=0):
             crop_xmin, crop_ymin = int(input_res['poly'][0]), int(input_res['poly'][1])
             crop_xmax, crop_ymax = int(input_res['poly'][4]), int(input_res['poly'][5])
-            crop_paste_x = 50
-            crop_paste_y = 50
             # Create a white background with an additional width and height of 50
             crop_new_width = crop_xmax - crop_xmin + crop_paste_x * 2
             crop_new_height = crop_ymax - crop_ymin + crop_paste_y * 2
@@ -203,7 +201,7 @@ if __name__ == '__main__':
             ocr_start = time.time()
             # Process each area that requires OCR processing
             for res in ocr_res_list:
-                new_image, useful_list = crop_img(res, pil_img)
+                new_image, useful_list = crop_img(res, pil_img, crop_paste_x=50, crop_paste_y=50)
                 paste_x, paste_y, xmin, ymin, xmax, ymax, new_width, new_height = useful_list
                 # Adjust the coordinates of the formula area
                 adjusted_mfdetrec_res = []
