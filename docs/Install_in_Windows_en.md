@@ -82,7 +82,7 @@ pip install https://github.com/opendatalab/PDF-Extract-Kit/blob/main/assets/whl/
 pip install --force-reinstall torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu118
 ```
 
-### 3.Modify Configurations for CUDA Inference
+### 3.Modify Configurations for CUDA Inference(Layout & Formula)
 
 PDF-Extract-Kit/configs/model_configs.yaml:2
 ```yaml
