@@ -1,6 +1,6 @@
 
 from rough_layout import *
-from rough_layout_with_aync import *
+# from rough_layout_with_aync import * ## async is not safe, lets disable it 
 from get_data_utils import *
 RESULT_SAVE_PATH="opendata:s3://llm-pdf-text/pdf_gpu_output/scihub_shared"
 #RESULT_SAVE_PATH="tianning:s3://temp/debug"
@@ -30,6 +30,7 @@ if __name__ == '__main__':
     parser.add_argument('--accelerated_mfd',  action='store_true', help='', default=False)
     parser.add_argument('--async_mode',  action='store_true', help='', default=False)
     args = parser.parse_args()
+    assert not args.async_mode, "async_mode is not safe, please disable it"
     root_path = args.root_path
     if os.path.isdir(root_path):
         ###### do not let the program scan the dir ########
@@ -149,16 +150,17 @@ if __name__ == '__main__':
             print(f"now we deal with {inputs_path} to {result_path}")
             try:
                 if args.async_mode:
-                    asyncio.run(deal_with_one_dataset_async(inputs_path, result_path, 
-                                            layout_model, mfd_model, ocrmodel=ocrmodel, 
-                                            inner_batch_size=args.inner_batch_size, 
-                                            batch_size=args.batch_size,
-                                            num_workers=args.num_workers,
-                                            do_text_det = not args.do_not_det,
-                                            do_text_rec = args.do_rec,
-                                            partion_num = partion_num,
-                                            partion_idx = partion_idx
-                                            ))
+                    pass
+                    # asyncio.run(deal_with_one_dataset_async(inputs_path, result_path, 
+                    #                         layout_model, mfd_model, ocrmodel=ocrmodel, 
+                    #                         inner_batch_size=args.inner_batch_size, 
+                    #                         batch_size=args.batch_size,
+                    #                         num_workers=args.num_workers,
+                    #                         do_text_det = not args.do_not_det,
+                    #                         do_text_rec = args.do_rec,
+                    #                         partion_num = partion_num,
+                    #                         partion_idx = partion_idx
+                    #                         ))
                 else:
                     deal_with_one_dataset(inputs_path, result_path, 
                                             layout_model, mfd_model,  ocrmodel=ocrmodel, 

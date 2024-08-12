@@ -147,14 +147,14 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
             iterater = tqdm(range(0, len(mfd_layout_images_batch), inner_batch_size),position=3,leave=False,desc="mini-Batch") if len(mfd_layout_images_batch)>inner_batch_size else range(0, len(mfd_layout_images_batch), inner_batch_size)
 
             for j in iterater:
-                pdf_index  = pdf_index_batch[j:j+inner_batch_size].cuda()
-                page_ids   = page_ids_batch[j:j+inner_batch_size].cuda()
-                mfd_images = mfd_layout_images_batch[j:j+inner_batch_size].cuda()
-                layout_images = layout_images_batch[j:j+inner_batch_size].cuda()
-                heights    = heights_batch[j:j+inner_batch_size].cuda()
-                widths     = widths_batch[j:j+inner_batch_size].cuda()
+                pdf_index  = pdf_index_batch[j:j+inner_batch_size]
+                page_ids   = page_ids_batch[j:j+inner_batch_size]
+                mfd_images = mfd_layout_images_batch[j:j+inner_batch_size]
+                layout_images = layout_images_batch[j:j+inner_batch_size]
+                heights    = heights_batch[j:j+inner_batch_size]
+                widths     = widths_batch[j:j+inner_batch_size]
                 oimages    = oimage_list[j:j+inner_batch_size] if oimage_list is not None else None
-                detimages  = det_layout_images_batch[j:j+inner_batch_size].cuda()
+                detimages  = det_layout_images_batch[j:j+inner_batch_size]
                 pdf_paths  = [dataset.metadata[pdf_index]['path'] for pdf_index in pdf_index]
                 with timer('get_layout'):
                     layout_res = inference_layout((layout_images,heights, widths),layout_model,inner_batch_size)
@@ -225,7 +225,6 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                                         }
                                     )
             
-            if pbar:pbar.update(len(new_pdf_processed))
 
         except KeyboardInterrupt:
             raise
