@@ -1,4 +1,4 @@
-unimernet
+unimernet>=0.1.6
 matplotlib
 PyMuPDF
 ultralytics

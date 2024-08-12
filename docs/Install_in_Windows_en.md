@@ -60,7 +60,7 @@ python pdf_extract.py --pdf demo/demo1.pdf
   https://developer.nvidia.com/cuda-11-8-0-download-archive
   - cuDNN v8.7.0 (November 28th, 2022), for CUDA 11.x
   https://developer.nvidia.com/rdp/cudnn-archive
-- Ensure your GPU has adequate memory, with a minimum of 6GB recommended; ideally, 16GB or more is preferred.
+- Ensure your GPU has adequate memory, with a minimum of 8GB recommended; ideally, 16GB or more is preferred.
   - If the GPU memory is less than 16GB, adjust the `batch_size` in the [Preprocessing](#Preprocessing) section as needed, lowering it to "64" or "32" appropriately.
 
 
@@ -82,7 +82,7 @@ pip install https://github.com/opendatalab/PDF-Extract-Kit/blob/main/assets/whl/
 pip install --force-reinstall torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu118
 ```
 
-### 3.Modify Configurations for CUDA Inference
+### 3.Modify Configurations for CUDA Inference(Layout & Formula)
 
 PDF-Extract-Kit/configs/model_configs.yaml:2
 ```yaml
@@ -97,4 +97,10 @@ DEVICE: cuda
 
 ```bash
 python pdf_extract.py --pdf demo/demo1.pdf
+```
+
+### 5.When VRAM is 16GB or more, OCR acceleration can be enabled.
+When you confirm that your VRAM is 16GB or more, you can install paddlepaddle-gpu using the following command, which will automatically enable OCR acceleration after installation:
+```bash
+pip install paddlepaddle-gpu==2.6.1
 ```

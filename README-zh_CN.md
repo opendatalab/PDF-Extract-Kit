@@ -229,16 +229,10 @@ conda create -n pipeline python=3.10
 
 pip install -r requirements.txt
 
-pip install --extra-index-url https://miropsota.github.io/torch_packages_builder detectron2==0.6+pt2.3.1cu121
+pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-linux_x86_64.whl
 ```
 
-安装完环境后，可能会遇到一些版本冲突导致版本变更，如果遇到了版本相关的报错，可以尝试下面的命令重新安装指定版本的库。
-
-```bash
-pip install pillow==8.4.0
-```
-
-除了版本冲突外，可能还会遇到torch无法调用的错误，可以先把下面的库卸载，然后重新安装cuda12和cudnn。
+安装完环境后，可能还会遇到torch无法调用的错误，可以先把下面的库卸载，然后重新安装cuda12和cudnn。
 
 ```bash
 pip uninstall nvidia-cusparse-cu12

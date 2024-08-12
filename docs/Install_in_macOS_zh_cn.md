@@ -29,8 +29,7 @@
 ### 2.安装依赖
 
 ```bash
-pip install unimernet==0.1.0
-pip install -r requirements-without-unimernet+cpu.txt
+pip install -r requirements+cpu.txt
 
 # detectron2需要编译安装,自行编译安装可以参考https://github.com/facebookresearch/detectron2/issues/5114
 # 或直接使用我们编译好的的whl包
