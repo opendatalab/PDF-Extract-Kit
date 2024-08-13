@@ -249,7 +249,7 @@ If you intend to experience this project on Google Colab, please <a href="https:
 ## Run Extraction Script
 
 ```bash 
-python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
+python pdf_extract.py --pdf assets/examples/example.pdf
 ```
 
 Parameter explanations:
