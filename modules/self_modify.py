@@ -77,7 +77,7 @@ def sorted_boxes(dt_boxes):
 
 
 def __is_overlaps_y_exceeds_threshold(bbox1, bbox2, overlap_ratio_threshold=0.8):
-    """检查两个bbox在y轴上是否有重叠，并且该重叠区域的高度占两个bbox高度更低的那个超过80%"""
+    """Check if two bounding boxes overlap on the y-axis, and if the height of the overlapping region exceeds 80% of the height of the shorter bounding box."""
     _, y0_1, _, y1_1 = bbox1
     _, y0_2, _, y1_2 = bbox2
 
@@ -90,13 +90,13 @@ def __is_overlaps_y_exceeds_threshold(bbox1, bbox2, overlap_ratio_threshold=0.8)
 
 
 def bbox_to_points(bbox):
-    """ 将bbox格式转换为四个顶点的数组 """
+    """ change bbox(shape: N * 4) to polygon(shape: N * 8) """
     x0, y0, x1, y1 = bbox
     return np.array([[x0, y0], [x1, y0], [x1, y1], [x0, y1]]).astype('float32')
 
 
 def points_to_bbox(points):
-    """ 将四个顶点的数组转换为bbox格式 """
+    """ change polygon(shape: N * 8) to bbox(shape: N * 4) """
     x0, y0 = points[0]
     x1, _ = points[1]
     _, y1 = points[2]
