@@ -1,6 +1,6 @@
 
 from get_data_utils import *
-from torch.utils.data import IterableDataset,get_worker_info,DataLoader
+from torch.utils.data import IterableDataset,get_worker_info,DataLoader, Dataset
 from utils import Timers
 import torch
 
@@ -124,6 +124,149 @@ class PDFImageDataset(IterableDataset,DatasetUtils):
         return im[0]
 
 
+
+class RecImageDataset(Dataset, DatasetUtils):
+    def __init__(self, metadata_filepath,
+                 partion_num = 1,
+                 partion_idx = 0):
+        super().__init__()
+        self.metadata= self.smart_read_json(metadata_filepath)
+        self.metadata= np.array_split(self.metadata, partion_num)[partion_idx]
+        self.dpi = 200
+        self.timer = Timers(False)
+    def __len__(self):
+        return len(self.metadata)
+    
+    def __getitem__(self, index) :
+        pdf_metadata = self.metadata[index]
+        return deal_with_one_pdf(pdf_metadata, self.client)
+
+def deal_with_one_pdf(pdf_metadata,client):
+
+    images_pool = {}
+    pdf_path = pdf_metadata['path']
+    if pdf_path.startswith('s3'):
+        pdf_path = "opendata:"+pdf_path
+    try:
+        with read_pdf_from_path(pdf_path, client) as pdf:
+            for pdf_page_metadata in pdf_metadata['doc_layout_result']:
+                page_id = pdf_page_metadata['page_id']
+                page    = pdf.load_page(page_id)
+                ori_im  = process_pdf_page_to_image(page, 200)     
+                bbox_id = 0
+                for bbox_metadata in pdf_page_metadata['layout_dets']:
+                    if bbox_metadata['category_id']!=15:continue
+                    location= (pdf_path,page_id,bbox_id)
+                    tmp_box  = np.array(bbox_metadata['poly']).reshape(-1, 2)
+                    tmp_box  = sorted_boxes(tmp_box[None])[0].astype('float32')
+                    img_crop = get_rotate_crop_image(ori_im, tmp_box, padding=10)
+                    bbox_id+=1
+                    images_pool[location] = img_crop
+
+        return (pdf_path,images_pool)
+    except KeyboardInterrupt:
+        raise
+    except:
+
+        raise
+        return (pdf_path,{})
+
+import cv2
+from tqdm import tqdm
+def sorted_boxes(dt_boxes):
+    """
+    Sort text boxes in order from top to bottom, left to right
+    args:
+        dt_boxes(array):detected text boxes with shape [4, 2]
+    return:
+        sorted boxes(array) with shape [4, 2]
+    """
+    num_boxes = dt_boxes.shape[0]
+    sorted_boxes = sorted(dt_boxes, key=lambda x: (x[0][1], x[0][0]))
+    _boxes = list(sorted_boxes)
+
+    for i in range(num_boxes - 1):
+        for j in range(i, -1, -1):
+            if abs(_boxes[j + 1][0][1] - _boxes[j][0][1]) < 10 and \
+                    (_boxes[j + 1][0][0] < _boxes[j][0][0]):
+                tmp = _boxes[j]
+                _boxes[j] = _boxes[j + 1]
+                _boxes[j + 1] = tmp
+            else:
+                break
+    return _boxes
+
+def get_rotate_crop_image(img, points, padding=10):
+    """
+    Extracts a rotated and cropped image patch defined by the quadrilateral `points`
+    with an additional padding.
+    
+    Args:
+        img (numpy.ndarray): The input image.
+        points (numpy.ndarray): A (4, 2) array containing the coordinates of the quadrilateral.
+        padding (int): The number of pixels to expand the bounding box on each side.
+
+    Returns:
+        numpy.ndarray: The cropped and rotated image patch.
+    """
+    assert len(points) == 4, "shape of points must be 4*2"
+    
+    # Calculate the bounding box with padding
+    img_height, img_width = img.shape[0:2]
+    left = max(0, int(np.min(points[:, 0])) - padding)
+    right = min(img_width, int(np.max(points[:, 0])) + padding)
+    top = max(0, int(np.min(points[:, 1])) - padding)
+    bottom = min(img_height, int(np.max(points[:, 1])) + padding)
+    
+    # Crop the image with padding
+    img_crop = img[top:bottom, left:right, :].copy()
+    
+    # Adjust points to the new cropped region
+    points[:, 0] -= left
+    points[:, 1] -= top
+
+    # Calculate the width and height of the rotated crop
+    img_crop_width = int(
+        max(
+            np.linalg.norm(points[0] - points[1]), 
+            np.linalg.norm(points[2] - points[3])
+        )
+    )
+    img_crop_height = int(
+        max(
+            np.linalg.norm(points[0] - points[3]), 
+            np.linalg.norm(points[1] - points[2])
+        )
+    )
+
+    # Define the destination points for perspective transformation
+    pts_std = np.float32(
+        [
+            [0, 0],
+            [img_crop_width, 0],
+            [img_crop_width, img_crop_height],
+            [0, img_crop_height],
+        ]
+    )
+    
+    # Perform the perspective transformation
+    M = cv2.getPerspectiveTransform(points, pts_std)
+    dst_img = cv2.warpPerspective(
+        img_crop,
+        M,
+        (img_crop_width, img_crop_height),
+        borderMode=cv2.BORDER_REPLICATE,
+        flags=cv2.INTER_CUBIC,
+    )
+    
+    # Rotate the image if the height/width ratio is >= 1.5
+    dst_img_height, dst_img_width = dst_img.shape[0:2]
+    if dst_img_height * 1.0 / dst_img_width >= 1.5:
+        dst_img = np.rot90(dst_img)
+    
+    return dst_img
+      
+
 def custom_collate_fn(batches):
     
     return_batch = {}
@@ -142,4 +285,19 @@ def custom_collate_fn(batches):
         elif key in ['oimage']:
             return_batch[key] = return_batch[key]
     return return_batch
+    
+def rec_collate_fn(batches):
+    
+    location_abs = []
+    images_list  = []
+    for images_pool in batches:
+        for location, image in images_pool.items():
+            location_abs.append(location)
+            images_list.append(image)
+    return location_abs,images_list
+
+def none_collate_fn(batches):
+    
+
+    return batches
     
