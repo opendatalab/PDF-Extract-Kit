@@ -13,9 +13,9 @@ To run the project smoothly on Windows, perform the following preparations:
 - Install ImageMagick:
   - https://docs.wand-py.org/en/latest/guide/install.html#install-imagemagick-on-windows
 - Modify configurations:
-  - PDF-Extract-Kit/pdf_extract.py:148 
+  - PDF-Extract-Kit/pdf_extract.py:L148  Adjust `batch_size` to suit your GPU memory. Specifically, try to lower `batch_size` when you encounter an error of OOM(out of memory).
     ```python
-    dataloader = DataLoader(dataset, batch_size=128, num_workers=0)
+    dataloader = DataLoader(dataset, batch_size=64, num_workers=0)
     ```
     
 ## Using in CPU Environment
@@ -36,11 +36,11 @@ pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/d
 
 ### 3.Modify Configurations for CPU Inference
 
-PDF-Extract-Kit/configs/model_configs.yaml:2
+PDF-Extract-Kit/configs/model_configs.yaml:L2
 ```yaml
 device: cpu
 ```
-PDF-Extract-Kit/modules/layoutlmv3/layoutlmv3_base_inference.yaml:72
+PDF-Extract-Kit/modules/layoutlmv3/layoutlmv3_base_inference.yaml:L72
 ```yaml
 DEVICE: cpu
 ```
@@ -48,7 +48,7 @@ DEVICE: cpu
 ### 4.Run the Application
 
 ```bash
-python pdf_extract.py --pdf demo/demo1.pdf
+python pdf_extract.py --pdf assets/examples/example.pdf
 ```
 
 ## Using in GPU Environment
@@ -84,11 +84,11 @@ pip install --force-reinstall torch==2.3.1 torchvision==0.18.1 --index-url https
 
 ### 3.Modify Configurations for CUDA Inference(Layout & Formula)
 
-PDF-Extract-Kit/configs/model_configs.yaml:2
+PDF-Extract-Kit/configs/model_configs.yaml:L2
 ```yaml
 device: cuda
 ```
-PDF-Extract-Kit/modules/layoutlmv3/layoutlmv3_base_inference.yaml:72
+PDF-Extract-Kit/modules/layoutlmv3/layoutlmv3_base_inference.yaml:L72
 ```yaml
 DEVICE: cuda
 ```
@@ -96,7 +96,7 @@ DEVICE: cuda
 ### 4.Run the Application
 
 ```bash
-python pdf_extract.py --pdf demo/demo1.pdf
+python pdf_extract.py --pdf assets/examples/example.pdf
 ```
 
 ### 5.When VRAM is 16GB or more, OCR acceleration can be enabled.
