@@ -144,6 +144,8 @@ def deal_with_one_pdf(pdf_metadata):
     
     images_pool = {}
     pdf_path = pdf_metadata['path']
+    if pdf_path.startswith('s3'):
+        pdf_path = "opendata:"+pdf_path
     try:
         with read_pdf_from_path(pdf_path, client) as pdf:
             for pdf_page_metadata in pdf_metadata['doc_layout_result']:
@@ -164,6 +166,8 @@ def deal_with_one_pdf(pdf_metadata):
     except KeyboardInterrupt:
         raise
     except:
+
+        raise
         return (pdf_path, {})
     
 
@@ -224,6 +228,7 @@ class UnifiedResizedDataset(Dataset):
 
     def __getitem__(self, idx):
         return resize_norm_img(self.image_list[idx], self.max_wh_ratio, self.rec_image_shape, self.limited_max_width, self.limited_min_width)
+
 def postprocess(self,preds, label=None):
     preds_prob,preds_idx  = preds.max(axis=2)
     text = self.decode(preds_idx.cpu().numpy(), preds_prob.cpu().numpy(), is_remove_duplicate=True)
@@ -232,13 +237,19 @@ def postprocess(self,preds, label=None):
     label = self.decode(label)
     return text, label
 
+def gpu_inference(batch, tex_recognizer):
+    inp = batch
+    with torch.no_grad():
+        prob_out = tex_recognizer.net(inp)
+    rec_result = postprocess(tex_recognizer.postprocess_op,prob_out)
+    return rec_result
 if __name__ == "__main__":
     batch_size = 128
     #dataset    = RecImageDataset("debug.jsonl",tex_recognizer)
     metadata_filepath = "part-66210c190659-012553.jsonl"
     metadatas = read_json_from_path(metadata_filepath, client)
     print("we are going to processing only the text recognition")
-    processes_num = min(64, len(metadatas))
+    processes_num = min(8, len(metadatas))
     with Pool(processes=processes_num) as pool:
         image_pool_list = list(tqdm(pool.imap(deal_with_one_pdf, metadatas), total=len(metadatas), desc="Reading whole text image into memory"))
     # image_pool_list = [deal_with_one_pdf(t) for t in tqdm(metadatas, desc="Reading whole text image into memory")]
@@ -253,6 +264,8 @@ if __name__ == "__main__":
             image_pool[key]=val
     print(f"we have {len(no_image_pdf_list)} pdfs has no text image")
     print(f"we have {len(image_pool)} text images")
+    if len(image_pool) == 0:
+        exit()
     grouped_bboxes = build_bbox_group(metadatas)
     
     
@@ -273,10 +286,7 @@ if __name__ == "__main__":
         pbar  = tqdm(total=len(dataloader_group),position=2,leave=False)
         batch = featcher.next()
         while batch is not None:
-            inp = batch
-            with torch.no_grad():
-                prob_out = tex_recognizer.net(inp)
-            rec_result = postprocess(tex_recognizer.postprocess_op,prob_out)
+            rec_result = gpu_inference(batch, tex_recognizer)
             rec_list_group.extend(rec_result)
             pbar.update(1)
             batch = featcher.next()
