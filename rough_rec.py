@@ -198,8 +198,7 @@ if __name__ == "__main__":
                 assert len(location_and_bbox) == len(rec_list_group)
                 for (location, bbox), rec_res in zip(location_and_bbox, rec_list_group):
                     location_to_rec[location] = rec_res
-                    print(rec_res[0])
-                raise
+
                 pbar_whole_images.update(len(img_list_group))
 
         patch_metadata_list = []
