@@ -254,7 +254,7 @@ pip uninstall nvidia-cusparse-cu12
 ## 运行提取脚本
 
 ```bash 
-python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
+python pdf_extract.py --pdf assets/examples/example.pdf
 ```
 
 相关参数解释：
