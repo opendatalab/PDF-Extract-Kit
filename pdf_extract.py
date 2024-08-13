@@ -162,19 +162,19 @@ if __name__ == '__main__':
         b = time.time()
         print("formula nums:", len(mf_image_list), "mfr time:", round(b-a, 2))
 
-        def crop_img(input_res, input_pil_img, crop_paste_x=0, crop_paste_y=0):
+        def crop_img(input_res, input_pil_img, padding_x=0, padding_y=0):
             crop_xmin, crop_ymin = int(input_res['poly'][0]), int(input_res['poly'][1])
             crop_xmax, crop_ymax = int(input_res['poly'][4]), int(input_res['poly'][5])
             # Create a white background with an additional width and height of 50
-            crop_new_width = crop_xmax - crop_xmin + crop_paste_x * 2
-            crop_new_height = crop_ymax - crop_ymin + crop_paste_y * 2
+            crop_new_width = crop_xmax - crop_xmin + padding_x * 2
+            crop_new_height = crop_ymax - crop_ymin + padding_y * 2
             return_image = Image.new('RGB', (crop_new_width, crop_new_height), 'white')
 
             # Crop image
             crop_box = (crop_xmin, crop_ymin, crop_xmax, crop_ymax)
             cropped_img = input_pil_img.crop(crop_box)
-            return_image.paste(cropped_img, (crop_paste_x, crop_paste_y))
-            return_list = [crop_paste_x, crop_paste_y, crop_xmin, crop_ymin, crop_xmax, crop_ymax, crop_new_width, crop_new_height]
+            return_image.paste(cropped_img, (padding_x, padding_y))
+            return_list = [padding_x, padding_y, crop_xmin, crop_ymin, crop_xmax, crop_ymax, crop_new_width, crop_new_height]
             return return_image, return_list
             
         # ocr and table recognition
@@ -201,7 +201,7 @@ if __name__ == '__main__':
             ocr_start = time.time()
             # Process each area that requires OCR processing
             for res in ocr_res_list:
-                new_image, useful_list = crop_img(res, pil_img, crop_paste_x=50, crop_paste_y=50)
+                new_image, useful_list = crop_img(res, pil_img, padding_x=25, padding_y=25)
                 paste_x, paste_y, xmin, ymin, xmax, ymax, new_width, new_height = useful_list
                 # Adjust the coordinates of the formula area
                 adjusted_mfdetrec_res = []
