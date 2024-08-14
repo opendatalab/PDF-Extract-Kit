@@ -30,8 +30,7 @@ Use either venv or conda, with Python version recommended as 3.10.
 ### 2.Install Dependencies
 
 ```bash
-pip install unimernet==0.1.0
-pip install -r requirements-without-unimernet+cpu.txt
+pip install -r requirements+cpu.txt
 
 # For detectron2, compile it yourself as per https://github.com/facebookresearch/detectron2/issues/5114
 # Or use our precompiled wheel
