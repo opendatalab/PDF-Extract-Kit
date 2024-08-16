@@ -19,7 +19,7 @@ from get_data_utils import *
 import traceback
 import logging
 
-from scihub_pdf_dataset import PDFImageDataset, custom_collate_fn,DataLoader
+from scihub_pdf_dataset import PDFImageDataset, PageInfoDataset, custom_collate_fn,DataLoader
 
 def clean_layout_dets(layout_dets):
     rows = []
@@ -95,6 +95,8 @@ def inference_det(canvas_tensor_this_batch,det_model,det_inner_batch_size):
 def det_postprocess(dt_boxaes_batch,ocrmodel):
     dt_boxaes_batch=dt_boxaes_batch.numpy()
     post_result = ocrmodel.batch_det_model.fast_postprocess(dt_boxaes_batch, np.array([(1920,1472, 0.5, 0.5)]*len(dt_boxaes_batch)) )
+    # print(post_result[0]['points'].shape)
+    # raise
     dt_boxes_list = [ocrmodel.batch_det_model.filter_tag_det_res(dt_boxes['points'][0], (1920,1472)) for dt_boxes in post_result]
     return dt_boxes_list
 
@@ -180,6 +182,9 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                         assert scale_height == scale_width
                         assert scale_height == 2
                         canvas_tensor_this_batch, partition_per_batch,_,_ = collect_paragraph_image_and_its_coordinate(detimages, rough_layout_this_batch,scale_height) # 2 is the scale between detiamge and box_images
+                    if len(canvas_tensor_this_batch)==0:
+                        tqdm.write("WARNING: no text line to detect")
+                        continue
                     with timer('text_detection/stack'):
                         canvas_tensor_this_batch = torch.stack(canvas_tensor_this_batch)
                     with timer('text_detection/det_net'):
@@ -243,6 +248,153 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
     ### next, we construct each result for each pdf in pdf wise and remove the page_id by the list position 
     save_result(data_to_save,dataset,result_path)
 
+
+def deal_with_page_info_dataset(pdf_path, result_path, layout_model, mfd_model, 
+                          ocrmodel=None, inner_batch_size=4, 
+                          batch_size=32,num_workers=8,
+                          do_text_det=False,
+                          do_text_rec=False,
+                          timer=Timers(False),
+                          partion_num = 1,
+                          partion_idx = 0,page_num_for_name=None):
+    dataset    = PageInfoDataset(pdf_path,layout_model.predictor.aug,layout_model.predictor.input_format,
+                                 
+                                 mfd_pre_transform=mfd_process(mfd_model.predictor.args.imgsz,mfd_model.predictor.model.stride,mfd_model.predictor.model.pt),
+                                 det_pre_transform=ocrmodel.batch_det_model.prepare_image,
+                                 return_original_image=do_text_rec,
+                                 partion_num = partion_num,
+                                 partion_idx = partion_idx,page_num_for_name=page_num_for_name
+                                 )
+    print(f"current dataset size={len(dataset)} images")
+    collate_fn = custom_collate_fn if do_text_rec else None
+    num_workers=min(num_workers,len(dataset.metadata))
+    dataloader = DataLoader(dataset, batch_size=batch_size,collate_fn=collate_fn, 
+                            num_workers=num_workers,pin_memory=True, pin_memory_device='cuda',
+                            prefetch_factor=3 if num_workers>0 else None)        
+    
+    data_to_save = {}
+    inner_batch_size = inner_batch_size
+    #pbar  = tqdm(total=len(dataset.metadata),position=2,desc="PDF Pages",leave=False)
+    pbar  = None
+    pdf_passed = set()
+    featcher   = DataPrefetcher(dataloader,device='cuda')
+    batch = featcher.next()
+    data_loading = []
+    model_train  = []
+    last_record_time = time.time()
+    while batch is not None:
+        data_loading.append(time.time() - last_record_time);last_record_time =time.time() 
+        if pbar:pbar.set_description(f"[Data][{np.mean(data_loading[-10:]):.2f}] [Model][{np.mean(model_train[-10:]):.2f}]")
+        pdf_index_batch, page_ids_batch = batch["pdf_index"], batch["page_index"]
+        mfd_layout_images_batch, layout_images_batch, det_layout_images_batch = batch["mfd_image"], batch["layout_image"], batch["det_images"]
+        heights_batch, widths_batch = batch["height"], batch["width"]
+        oimage_list = batch.get('oimage',None)
+        pdf_index = set([t.item() for t in pdf_index_batch])
+
+        
+        iterater = tqdm(range(0, len(mfd_layout_images_batch), inner_batch_size),position=3,leave=False,desc="mini-Batch") if len(mfd_layout_images_batch)>inner_batch_size else range(0, len(mfd_layout_images_batch), inner_batch_size)
+
+        for j in iterater:
+            pdf_index  = pdf_index_batch[j:j+inner_batch_size]
+            page_ids   = page_ids_batch[j:j+inner_batch_size]
+            mfd_images = mfd_layout_images_batch[j:j+inner_batch_size]
+            layout_images = layout_images_batch[j:j+inner_batch_size]
+            heights    = heights_batch[j:j+inner_batch_size]
+            widths     = widths_batch[j:j+inner_batch_size]
+            oimages    = oimage_list[j:j+inner_batch_size] if oimage_list is not None else None
+            detimages  = det_layout_images_batch[j:j+inner_batch_size]
+            pdf_paths  = [dataset.metadata[pdf_index]['path'] for pdf_index in pdf_index]
+            with timer('get_layout'):
+                layout_res = inference_layout((layout_images,heights, widths),layout_model,inner_batch_size)
+            with timer('get_mfd'):
+                mfd_res    = inference_mfd(mfd_images,mfd_model,inner_batch_size)
+            with timer('combine_layout_mfd_result'):
+                rough_layout_this_batch, ori_shape_list = combine_layout_mfd_result(layout_res, mfd_res, heights, widths)
+            pdf_and_page_id_this_batch=[]
+            for pdf_path, page_id, layout_dets,ori_shape in zip(pdf_paths, page_ids, rough_layout_this_batch,ori_shape_list):
+                page_id = int(page_id)
+                if pdf_path not in data_to_save:
+                    data_to_save[pdf_path] = {'height':ori_shape[0], 'width':ori_shape[1]}
+                data_to_save[pdf_path][page_id] = layout_dets
+                pdf_and_page_id_this_batch.append((pdf_path, page_id))
+            
+            
+            if ocrmodel is not None:
+                if not do_text_det:continue
+                with timer('text_detection/collect_for_line_detect'):
+                    det_height, det_width = detimages.shape[2:]
+                    scale_height = int(heights[0])/int(det_height)
+                    scale_width  = int(widths[0])/int(det_width)
+                    assert scale_height == scale_width
+                    assert scale_height == 2
+                    canvas_tensor_this_batch, partition_per_batch,_,_ = collect_paragraph_image_and_its_coordinate(detimages, rough_layout_this_batch,scale_height) # 2 is the scale between detiamge and box_images
+                if len(canvas_tensor_this_batch)==0:
+                    tqdm.write("WARNING: no text line to detect")
+                    continue
+                with timer('text_detection/stack'):
+                    canvas_tensor_this_batch = torch.stack(canvas_tensor_this_batch)
+                with timer('text_detection/det_net'):
+                    dt_boxaes_batch = inference_det(canvas_tensor_this_batch,ocrmodel.batch_det_model.net,128)
+                with timer('text_detection/det_postprocess'):
+                    dt_boxes_list = det_postprocess(dt_boxaes_batch,ocrmodel)
+                
+                
+                if do_text_rec:
+                    with timer('text_detection/collect_for_text_images'):
+                        text_image_batch, text_image_position,text_line_bbox = collect_text_image_and_its_coordinate(single_page_mfdetrec_res_this_batch, partition_per_batch, oimages,dt_boxes_list)
+                    with timer('text_detection/get_line_text_rec'):
+                        rec_res, elapse = ocrmodel.text_recognizer(text_image_batch)
+                    for line_box, rec_result,(partition_id,text_block_id, text_line_id) in zip(text_line_bbox, rec_res,text_image_position):
+                        text, score = rec_result
+                        pdf_id, page_id = pdf_and_page_id_this_batch[partition_id]
+                        pdf_path = dataset.metadata[pdf_id]['path']
+                        p1, p2, p3, p4 = line_box.tolist()
+                        #print(line_box)
+                        data_to_save[pdf_path][page_id].append(
+                            {
+                                'category_id': 15,
+                                'poly': p1 + p2 + p3 + p4,
+                                'score': round(score, 2),
+                                'text': text,
+                            }
+
+                        )
+                else:
+                    for partition_id in range(len(partition_per_batch)-1):
+                        pdf_path, page_id = pdf_and_page_id_this_batch[partition_id]
+                        partition_start = partition_per_batch[partition_id]
+                        partition_end   = partition_per_batch[partition_id+1]
+                        dt_boxes_this_partition = dt_boxes_list[partition_start:partition_end]
+                        
+                        for dt_boxes in dt_boxes_this_partition: #(1, 4, 2)
+                            for line_box in dt_boxes:
+                                p1, p2, p3, p4 = line_box.tolist()
+                                data_to_save[pdf_path][page_id].append(
+                                    {
+                                        'category_id': 15,
+                                        'poly': p1 + p2 + p3 + p4,
+                                    }
+                                )
+            
+
+        # except KeyboardInterrupt:
+        #     raise
+        # except:
+        #     traceback.print_exc()
+        #     print("ERROR: Fail to process batch")
+        update_seq = len(page_ids_batch)
+        if pbar:pbar.update(update_seq)
+        timer.log()
+        model_train.append(time.time() - last_record_time);last_record_time =time.time()
+        if pbar:pbar.set_description(f"[Data][{np.mean(data_loading[-10:]):.2f}] [Model][{np.mean(model_train[-10:]):.2f}]")
+        batch = featcher.next()
+        if pbar is None:
+            pbar = tqdm(total=len(dataset),position=2,desc="PDF Pages",leave=False, bar_format='{l_bar}{bar}{r_bar}')
+
+    ### next, we construct each result for each pdf in pdf wise and remove the page_id by the list position 
+    save_result(data_to_save,dataset,result_path)
+
+
 def save_result(data_to_save,dataset,result_path):
     pdf_to_metadata = {t['path']:t for t in dataset.metadata}
  
@@ -305,13 +457,15 @@ if __name__ == "__main__":
     ocrmodel = ocr_model = ModifiedPaddleOCR(show_log=True)
     timer = Timers(False,warmup=5)
     #test_dataset("debug.jsonl", layout_model, mfd_model, ocrmodel)
-    deal_with_one_dataset("debug.jsonl", 
-                          "debug.stage_1.jsonl", 
+    #page_num_map_whole = get_page_num_map_whole()
+    page_num_map_whole = None
+    deal_with_page_info_dataset("part-66210c190659-000026.jsonl", 
+                          "part-66210c190659-000026.jsonl.stage_1.jsonl", 
                           layout_model, mfd_model, ocrmodel=ocrmodel, 
                           inner_batch_size=inner_batch_size, batch_size=inner_batch_size,num_workers=8,
                           do_text_det = True,
                           do_text_rec = False,
-                          timer=timer)
+                          timer=timer,page_num_for_name=page_num_map_whole)
     
     
     

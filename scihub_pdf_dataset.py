@@ -74,21 +74,36 @@ class PDFImageDataset(IterableDataset,DatasetUtils):
             output['oimage'] = original_image
         return output
     
-    def check_should_skip(self):
+    def go_to_next_pdf(self):
+        worker_info = get_worker_info()
+        step_for_pdf= 1 if worker_info is None else worker_info.num_workers
+         
+        self.current_pdf_index += step_for_pdf
+        # pdf_path  = self.metadata[self.current_pdf_index]['path']
+        # error_count = 0
+        # while (not self.check_path_exists(pdf_path) or self.get_pdf_buffer(pdf_path) is None) and error_count<10 :
+        #     tqdm.write(f"[Error]: {pdf_path}")
+        #     self.current_pdf_index += step_for_pdf
+        #     pdf_path  = self.metadata[self.current_pdf_index]['path']
+        #     error_count+=1
+        # if pdf_path is None:
+        #     raise NotImplementedError(f"Seem you use a very bad dataset that we can't find any pdf file, anymore")
+        self.current_page_index = 0
         if self.current_pdf_index >= len(self.metadata):
             raise StopIteration
-        current_pdf_page_num = self.get_pdf_by_index(self.current_pdf_index).page_count
-        #print(f"current_page_index={self.current_page_index} current_pdf_page_num={current_pdf_page_num}|{len(self.get_pdf_by_index(self.current_pdf_index))}")
-
+    
+    def check_should_skip(self):
+        pdf_now = self.get_pdf_by_index(self.current_pdf_index)
+        error_count = 0
+        while pdf_now is None and error_count<10:
+            self.go_to_next_pdf()
+            pdf_now = self.get_pdf_by_index(self.current_pdf_index)
+            error_count+=1
+        if error_count>=10:
+            raise NotImplementedError(f"Seem you use a very bad dataset that we can't find any pdf file, anymore")
+        current_pdf_page_num = pdf_now.page_count
         if self.current_page_index >= current_pdf_page_num:
-            worker_info = get_worker_info()
-            step_for_pdf= 1 if worker_info is None else worker_info.num_workers
-            self.current_pdf_index += step_for_pdf
-            self.current_page_index = 0
-            if self.current_pdf_index >= len(self.metadata):
-                raise StopIteration
-
-
+            self.go_to_next_pdf()
 
     def __next__(self):
         
@@ -101,17 +116,15 @@ class PDFImageDataset(IterableDataset,DatasetUtils):
                 self.current_page_index += 1
                 fail_times = 0
             except StopIteration:
+                self.clean_pdf_buffer()
                 raise StopIteration
             except:
                 fail_times +=1
         if fail_times>10 or output is None:
+            self.clean_pdf_buffer()
             raise StopIteration
         return output
         
-    
-
-       
-
     def prepare_for_mfd_model(self, im:np.ndarray):
         if self.mfd_pre_transform is None :return im
         assert im.ndim==3
@@ -122,8 +135,6 @@ class PDFImageDataset(IterableDataset,DatasetUtils):
         im = im.astype('float')/255
         im = torch.from_numpy(im)
         return im[0]
-
-
 
 class RecImageDataset(Dataset, DatasetUtils):
     def __init__(self, metadata_filepath,
@@ -140,6 +151,97 @@ class RecImageDataset(Dataset, DatasetUtils):
     def __getitem__(self, index) :
         pdf_metadata = self.metadata[index]
         return deal_with_one_pdf(pdf_metadata, self.client)
+
+class PageInfoDataset(Dataset,DatasetUtils):
+    #client = build_client()
+    def __init__(self, metadata_filepath, aug, input_format, 
+                 mfd_pre_transform, det_pre_transform=None,
+                 return_original_image=False,timer=Timers(False),
+                 partion_num = 1,
+                 partion_idx = 0,
+                 page_num_for_name=None):
+        super().__init__()
+        if page_num_for_name is None:
+            filename = metadata_filepath.split("/")[-1].replace('.jsonl','.json')
+            page_num_for_name_path = f"opendata:s3://llm-pdf-text/pdf_gpu_output/scihub_shared/page_num_map/{filename}"
+            page_num_for_name_list = self.smart_read_json(page_num_for_name_path)
+            page_num_for_name={}
+            for pdf_path, page_num in page_num_for_name_list:
+                if pdf_path.startswith("s3:"): pdf_path = "opendata:"+ pdf_path
+                page_num_for_name[pdf_path] = page_num
+            tqdm.write(f"we load page_num_for_name from {page_num_for_name_path}")
+        metadata= self.smart_read_json(metadata_filepath)
+        metadata= np.array_split(metadata, partion_num)[partion_idx]
+        tqdm.write("we filte out good metadata")
+        self.metadata   = []
+        self.pdf_id_and_page_id_pair = []
+        for row in metadata:
+            if row['path'].startswith("s3:"): row['path'] = "opendata:"+ row['path']
+            if row['path'] not in page_num_for_name:continue
+            if page_num_for_name[row['path']]<=0:continue
+            
+            path     = row['path']
+
+            page_num = page_num_for_name[path]
+            row['page_num'] = page_num_for_name[path]
+            for page_id in range(page_num):
+                self.pdf_id_and_page_id_pair.append((len(self.metadata), page_id)) 
+            self.metadata.append(row)
+        
+        self.dpi = 200
+        self.aug = aug
+        self.input_format = input_format
+        self.mfd_pre_transform = mfd_pre_transform
+        self.return_original_image = return_original_image
+        self.det_pre_transform = det_pre_transform
+        self.timer = timer
+    
+    def __len__(self):
+        return len(self.pdf_id_and_page_id_pair)
+    
+    def prepare_for_mfd_model(self, im:np.ndarray):
+        if self.mfd_pre_transform is None :return im
+        assert im.ndim==3
+        im = [im]
+        im = np.stack(self.mfd_pre_transform(im))
+        im = im[..., ::-1].transpose((0, 3, 1, 2))  # BGR to RGB, BHWC to BCHW, (n, 3, h, w)
+        im = np.ascontiguousarray(im)  # contiguous
+        im = im.astype('float')/255
+        im = torch.from_numpy(im)
+        return im[0]
+
+    def prepare_for_text_det(self,image):
+        return self.text_det_transform(image)[0]
+
+    def get_pdf_by_page_id(self,page_id):
+        pdf_path  = self.metadata[page_id]['path']
+        return self.get_pdf_buffer(pdf_path)
+    
+    def __getitem__(self, index):
+        current_pdf_index, current_page_index = self.pdf_id_and_page_id_pair[index]
+        with self.timer("load_page"):
+            page  = self.get_pdf_by_page_id(current_pdf_index).load_page(current_page_index)
+        with self.timer("from_page_to_pimage"):
+            oimage = process_pdf_page_to_image(page, self.dpi)
+        original_image = oimage[:, :, ::-1] if self.input_format == "RGB" else oimage
+        height, width = original_image.shape[:2]
+        with self.timer("get_layout_image"):
+            layout_image = self.aug.get_transform(original_image).apply_image(original_image)
+            layout_image = torch.as_tensor(layout_image.astype("float32").transpose(2, 0, 1))[:,:1042,:800] ## it will be 1043x800 --> 1042:800
+        ## lets make sure the image has correct size 
+        # if layout_image.size(1) < 1042:
+        #     layout_image = torch.nn.functional.pad(layout_image, (0, 0, 0, 1042-layout_image.size(1)))
+        with self.timer("get_mfd_image"):
+            mfd_image=self.prepare_for_mfd_model(oimage)
+        with self.timer("get_det_image"):
+            det_images = torch.from_numpy(self.det_pre_transform(original_image)[0])
+        
+        output= {"pdf_index":current_pdf_index, "page_index":current_page_index, "mfd_image":mfd_image, "layout_image":layout_image, "det_images":det_images, "height":height, "width":width}
+        if self.return_original_image:
+            output['oimage'] = original_image
+        return output
+
+
 
 def deal_with_one_pdf(pdf_metadata,client):
 
@@ -167,8 +269,7 @@ def deal_with_one_pdf(pdf_metadata,client):
     except KeyboardInterrupt:
         raise
     except:
-
-        raise
+        tqdm.write(f"[Error]: {pdf_path}")
         return (pdf_path,{})
 
 import cv2

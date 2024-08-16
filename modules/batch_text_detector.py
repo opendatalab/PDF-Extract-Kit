@@ -429,6 +429,7 @@ class BatchTextDetector(TextDetector):
         if isinstance(preds, dict):
             preds = preds['maps'][:, 0, :, :]
 
+        #return fast_torch_postprocess(preds, shape_list,config)
         if len(shape_list) == 1:
             return fast_torch_postprocess(preds, shape_list,config)
         else:
@@ -448,7 +449,7 @@ class BatchTextDetector(TextDetector):
             dt_boxes_list.append(dt_boxes)
         return dt_boxes_list
 
-def fast_torch_postprocess(self, pred_batch, shape_list):
+def fast_torch_postprocess(pred_batch, shape_list,config):
     """
     Accelerate below 
     def __call__(self, outs_dict, shape_list):
@@ -473,14 +474,13 @@ def fast_torch_postprocess(self, pred_batch, shape_list):
     """
     
     if isinstance(pred_batch, torch.Tensor):pred_batch= pred_batch.cpu().numpy()
-    segmentation_batch = pred_batch > self.thresh
+    segmentation_batch = pred_batch > config.thresh
     if isinstance(segmentation_batch, torch.Tensor):segmentation_batch = segmentation_batch.cpu().numpy()
-    config = PostProcessConfig(thresh=self.thresh, unclip_ratio=self.unclip_ratio, max_candidates=self.max_candidates, min_size=self.min_size, box_thresh=self.box_thresh)
     
     boxes_batch = []
     for batch_index in range(pred_batch.shape[0]):
         src_h, src_w, ratio_h, ratio_w = shape_list[batch_index]
-        boxes, scores = boxes_from_bitmap(pred_batch[batch_index], segmentation_batch[batch_index],src_w, src_h,config)
+        boxes  = boxes_from_bitmap(pred_batch[batch_index], segmentation_batch[batch_index],src_w, src_h,config)
         #boxes = boxes_from_bitmap_without_score(self,segmentation_batch[batch_index],src_w, src_h)
         boxes_batch.append({'points': boxes})
     return boxes_batch
@@ -593,18 +593,8 @@ def boxes_from_bitmap(pred, _bitmap, dest_width, dest_height,config:PostProcessC
         img, contours, _ = outs[0], outs[1], outs[2]
     elif len(outs) == 2:
         contours, _ = outs[0], outs[1]
-    num_contours = min(len(contours), config.max_candidates)
 
-    boxes = []
-    scores = []
-    for index in range(num_contours):
-        contour = contours[index]
-        result  = deal_with_on_contours(contour, pred, height, width, dest_height, dest_width, config)
-        if result is None:continue
-        box, score = result
-        boxes.append(box)
-        scores.append(score)
-    return np.array(boxes), scores
+    return boxes_from_contours(pred, contours, dest_width, dest_height,config)
 
 def boxes_from_bitmap_without_score(self, _bitmap, dest_width, dest_height):
     '''

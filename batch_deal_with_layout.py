@@ -24,7 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('--shuffle',  action='store_true', help='', default=False)
     parser.add_argument('--inner_batch_size', type=int, default=16)
     parser.add_argument('--batch_size', type=int, default=16)
-    parser.add_argument('--num_workers', type=int, default=8)
+    parser.add_argument('--num_workers', type=int, default=4)
     parser.add_argument('--result_save_path', type=str, default=RESULT_SAVE_PATH)
     parser.add_argument('--accelerated_layout',  action='store_true', help='', default=False)
     parser.add_argument('--accelerated_mfd',  action='store_true', help='', default=False)
@@ -80,6 +80,7 @@ if __name__ == '__main__':
     mfd_model    = None
     client = None
     ocrmodel = None
+    page_num_map_whole = None#get_page_num_map_whole()
     for inputs_path in tqdm(all_file_list, leave=False, position=1):
         filename    = os.path.basename(inputs_path)
         if inputs_path.startswith('s3'):
@@ -148,30 +149,18 @@ if __name__ == '__main__':
             if mfd_model    is None:mfd_model    = get_batch_YOLO_model(model_configs,batch_size=args.inner_batch_size,use_tensorRT=args.accelerated_mfd)
             if ocrmodel is None:ocrmodel = ModifiedPaddleOCR(show_log=True)
             print(f"now we deal with {inputs_path} to {result_path}")
+            
             try:
-                if args.async_mode:
-                    pass
-                    # asyncio.run(deal_with_one_dataset_async(inputs_path, result_path, 
-                    #                         layout_model, mfd_model, ocrmodel=ocrmodel, 
-                    #                         inner_batch_size=args.inner_batch_size, 
-                    #                         batch_size=args.batch_size,
-                    #                         num_workers=args.num_workers,
-                    #                         do_text_det = not args.do_not_det,
-                    #                         do_text_rec = args.do_rec,
-                    #                         partion_num = partion_num,
-                    #                         partion_idx = partion_idx
-                    #                         ))
-                else:
-                    deal_with_one_dataset(inputs_path, result_path, 
-                                            layout_model, mfd_model,  ocrmodel=ocrmodel, 
-                                            inner_batch_size=args.inner_batch_size, 
-                                            batch_size=args.batch_size,
-                                            num_workers=args.num_workers,
-                                            do_text_det = not args.do_not_det,
-                                            do_text_rec = args.do_rec,
-                                            partion_num = partion_num,
-                                            partion_idx = partion_idx
-                                            )
+                deal_with_page_info_dataset(inputs_path, result_path, 
+                                        layout_model, mfd_model,  ocrmodel=ocrmodel, 
+                                        inner_batch_size=args.inner_batch_size, 
+                                        batch_size=args.batch_size,
+                                        num_workers=args.num_workers,
+                                        do_text_det = not args.do_not_det,
+                                        do_text_rec = args.do_rec,
+                                        partion_num = partion_num,
+                                        partion_idx = partion_idx,page_num_for_name=page_num_map_whole
+                                        )
                 print(f"finish dealing with {result_path}")
             except:
                 traceback.print_exc()
