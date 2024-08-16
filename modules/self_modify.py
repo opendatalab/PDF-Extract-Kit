@@ -170,6 +170,123 @@ def update_det_boxes(dt_boxes, mfd_res):
     return new_dt_boxes
 
 
+def merge_spans_to_line(spans):
+    """
+    Merge given spans into lines. Spans are considered based on their position in the document.
+    If spans overlap sufficiently on the Y-axis, they are merged into the same line; otherwise, a new line is started.
+
+    Parameters:
+    spans (list): A list of spans, where each span is a dictionary containing at least the key 'bbox',
+                  which itself is a list of four integers representing the bounding box:
+                  [x0, y0, x1, y1], where (x0, y0) is the top-left corner and (x1, y1) is the bottom-right corner.
+
+    Returns:
+    list: A list of lines, where each line is a list of spans.
+    """
+    # Return an empty list if the spans list is empty
+    if len(spans) == 0:
+        return []
+    else:
+        # Sort spans by the Y0 coordinate
+        spans.sort(key=lambda span: span['bbox'][1])
+
+        lines = []
+        current_line = [spans[0]]
+        for span in spans[1:]:
+            # If the current span overlaps with the last span in the current line on the Y-axis, add it to the current line
+            if __is_overlaps_y_exceeds_threshold(span['bbox'], current_line[-1]['bbox']):
+                current_line.append(span)
+            else:
+                # Otherwise, start a new line
+                lines.append(current_line)
+                current_line = [span]
+
+        # Add the last line if it exists
+        if current_line:
+            lines.append(current_line)
+
+        return lines
+
+
+def merge_overlapping_spans(spans):
+    """
+    Merges overlapping spans on the same line.
+
+    :param spans: A list of span coordinates [(x1, y1, x2, y2), ...]
+    :return: A list of merged spans
+    """
+    # Return an empty list if the input spans list is empty
+    if not spans:
+        return []
+
+    # Sort spans by their starting x-coordinate
+    spans.sort(key=lambda x: x[0])
+
+    # Initialize the list of merged spans
+    merged = []
+    for span in spans:
+        # Unpack span coordinates
+        x1, y1, x2, y2 = span
+        # If the merged list is empty or there's no horizontal overlap, add the span directly
+        if not merged or merged[-1][2] < x1:
+            merged.append(span)
+        else:
+            # If there is horizontal overlap, merge the current span with the previous one
+            last_span = merged.pop()
+            # Update the merged span's top-left corner to the smaller (x1, y1) and bottom-right to the larger (x2, y2)
+            x1 = min(last_span[0], x1)
+            y1 = min(last_span[1], y1)
+            x2 = max(last_span[2], x2)
+            y2 = max(last_span[3], y2)
+            # Add the merged span back to the list
+            merged.append((x1, y1, x2, y2))
+
+    # Return the list of merged spans
+    return merged
+
+
+def merge_det_boxes(dt_boxes):
+    """
+    Merge detection boxes.
+
+    This function takes a list of detected bounding boxes, each represented by four corner points.
+    The goal is to merge these bounding boxes into larger text regions.
+
+    Parameters:
+    dt_boxes (list): A list containing multiple text detection boxes, where each box is defined by four corner points.
+
+    Returns:
+    list: A list containing the merged text regions, where each region is represented by four corner points.
+    """
+    # Convert the detection boxes into a dictionary format with bounding boxes and type
+    dt_boxes_dict_list = []
+    for text_box in dt_boxes:
+        text_bbox = points_to_bbox(text_box)
+        text_box_dict = {
+            'bbox': text_bbox,
+        }
+        dt_boxes_dict_list.append(text_box_dict)
+
+    # Merge adjacent text regions into lines
+    lines = merge_spans_to_line(dt_boxes_dict_list)
+
+    # Initialize a new list for storing the merged text regions
+    new_dt_boxes = []
+    for line in lines:
+        line_bbox_list = []
+        for span in line:
+            line_bbox_list.append(span['bbox'])
+
+        # Merge overlapping text regions within the same line
+        merged_spans = merge_overlapping_spans(line_bbox_list)
+
+        # Convert the merged text regions back to point format and add them to the new detection box list
+        for span in merged_spans:
+            new_dt_boxes.append(bbox_to_points(span))
+
+    return new_dt_boxes
+
+
 class ModifiedPaddleOCR(PaddleOCR):
     def ocr(self, img, det=True, rec=True, cls=True, bin=False, inv=False, mfd_res=None, alpha_color=(255, 255, 255)):
         """
@@ -272,6 +389,9 @@ class ModifiedPaddleOCR(PaddleOCR):
         img_crop_list = []
 
         dt_boxes = sorted_boxes(dt_boxes)
+
+        dt_boxes = merge_det_boxes(dt_boxes)
+
         if mfd_res:
             bef = time.time()
             dt_boxes = update_det_boxes(dt_boxes, mfd_res)
