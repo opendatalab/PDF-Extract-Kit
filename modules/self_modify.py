@@ -120,6 +120,8 @@ def update_det_boxes(dt_boxes, mfdetrec_res):
             
     return new_dt_boxes
 
+
+
 class ModifiedPaddleOCR(PaddleOCR):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

@@ -270,7 +270,7 @@ def deal_with_page_info_dataset(pdf_path, result_path, layout_model, mfd_model,
     num_workers=min(num_workers,len(dataset.metadata))
     dataloader = DataLoader(dataset, batch_size=batch_size,collate_fn=collate_fn, 
                             num_workers=num_workers,pin_memory=True, pin_memory_device='cuda',
-                            prefetch_factor=3 if num_workers>0 else None)        
+                            prefetch_factor=2 if num_workers>0 else None)        
     
     data_to_save = {}
     inner_batch_size = inner_batch_size
@@ -393,7 +393,7 @@ def deal_with_page_info_dataset(pdf_path, result_path, layout_model, mfd_model,
 
     ### next, we construct each result for each pdf in pdf wise and remove the page_id by the list position 
     save_result(data_to_save,dataset,result_path)
-
+    
 
 def save_result(data_to_save,dataset,result_path):
     pdf_to_metadata = {t['path']:t for t in dataset.metadata}

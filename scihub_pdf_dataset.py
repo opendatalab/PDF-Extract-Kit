@@ -137,6 +137,7 @@ class PDFImageDataset(IterableDataset,DatasetUtils):
         return im[0]
 
 class RecImageDataset(Dataset, DatasetUtils):
+    error_count=0
     def __init__(self, metadata_filepath,
                  partion_num = 1,
                  partion_idx = 0):
@@ -153,6 +154,7 @@ class RecImageDataset(Dataset, DatasetUtils):
         return deal_with_one_pdf(pdf_metadata, self.client)
 
 class PageInfoDataset(Dataset,DatasetUtils):
+    error_count=0
     #client = build_client()
     def __init__(self, metadata_filepath, aug, input_format, 
                  mfd_pre_transform, det_pre_transform=None,
@@ -217,7 +219,7 @@ class PageInfoDataset(Dataset,DatasetUtils):
         pdf_path  = self.metadata[page_id]['path']
         return self.get_pdf_buffer(pdf_path)
     
-    def __getitem__(self, index):
+    def retreive_resource(self,index):
         current_pdf_index, current_page_index = self.pdf_id_and_page_id_pair[index]
         with self.timer("load_page"):
             page  = self.get_pdf_by_page_id(current_pdf_index).load_page(current_page_index)
@@ -240,6 +242,17 @@ class PageInfoDataset(Dataset,DatasetUtils):
         if self.return_original_image:
             output['oimage'] = original_image
         return output
+
+    def __getitem__(self, index):
+        assert self.error_count < 10
+        try:
+            out = self.retreive_resource(index)
+            self.error_count = 0
+        except:
+            random_index = np.random.randint(0,len(self.pdf_id_and_page_id_pair))
+            self.error_count +=1
+            out = self[random_index]
+        return out 
 
 
 

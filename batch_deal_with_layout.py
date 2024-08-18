@@ -7,6 +7,7 @@ RESULT_SAVE_PATH="opendata:s3://llm-pdf-text/pdf_gpu_output/scihub_shared"
 INPUT_LOAD_PATH="opendata:s3://llm-process-pperf/ebook_index_v4/scihub/v001/scihub"
 LOCKSERVER="http://10.140.52.123:8000"
 from datetime import datetime,timedelta
+
 if __name__ == '__main__':
     import argparse, logging, os
     import numpy as np
@@ -161,7 +162,13 @@ if __name__ == '__main__':
                                         partion_num = partion_num,
                                         partion_idx = partion_idx,page_num_for_name=page_num_map_whole
                                         )
-                print(f"finish dealing with {result_path}")
+                print(f"""
+=========================================
+finish dealing with {result_path}
+=========================================
+                      """)
             except:
                 traceback.print_exc()
-                tqdm.write(f"[Error]: {inputs_path} to {result_path}")
+                tqdm.write(f"[Error]: {filename_with_partion} failed")
+            finally:
+                pass

@@ -1,10 +1,73 @@
 import numpy as np
 import copy
-from modules.self_modify import sorted_boxes, update_det_boxes
 import torch
 import cv2
-
 import torch
+def sorted_boxes(dt_boxes):
+    """
+    Sort text boxes in order from top to bottom, left to right
+    args:
+        dt_boxes(array):detected text boxes with shape [4, 2]
+    return:
+        sorted boxes(array) with shape [4, 2]
+    """
+    num_boxes = dt_boxes.shape[0]
+    sorted_boxes = sorted(dt_boxes, key=lambda x: (x[0][1], x[0][0]))
+    _boxes = list(sorted_boxes)
+
+    for i in range(num_boxes - 1):
+        for j in range(i, -1, -1):
+            if abs(_boxes[j + 1][0][1] - _boxes[j][0][1]) < 10 and \
+                    (_boxes[j + 1][0][0] < _boxes[j][0][0]):
+                tmp = _boxes[j]
+                _boxes[j] = _boxes[j + 1]
+                _boxes[j + 1] = tmp
+            else:
+                break
+    return _boxes
+
+def formula_in_text(mf_bbox, text_bbox):
+    x1, y1, x2, y2 = mf_bbox
+    x3, y3 = text_bbox[0]
+    x4, y4 = text_bbox[2]
+    left_box, right_box = None, None
+    same_line = abs((y1+y2)/2 - (y3+y4)/2) / abs(y4-y3) < 0.2
+    if not same_line:
+        return False, left_box, right_box
+    else:
+        drop_origin = False
+        left_x = x1 - 1
+        right_x = x2 + 1
+        if x3 < x1 and x2 < x4:
+            drop_origin = True
+            left_box = np.array([text_bbox[0], [left_x, text_bbox[1][1]], [left_x, text_bbox[2][1]], text_bbox[3]]).astype('float32')
+            right_box = np.array([[right_x, text_bbox[0][1]], text_bbox[1], text_bbox[2], [right_x, text_bbox[3][1]]]).astype('float32')
+        if x3 < x1 and x1 <= x4 <= x2:
+            drop_origin = True
+            left_box = np.array([text_bbox[0], [left_x, text_bbox[1][1]], [left_x, text_bbox[2][1]], text_bbox[3]]).astype('float32')
+        if x1 <= x3 <= x2 and x2 < x4:
+            drop_origin = True
+            right_box = np.array([[right_x, text_bbox[0][1]], text_bbox[1], text_bbox[2], [right_x, text_bbox[3][1]]]).astype('float32')
+        if x1 <= x3 < x4 <= x2:
+            drop_origin = True
+        return drop_origin, left_box, right_box
+
+
+def update_det_boxes(dt_boxes, mfdetrec_res):
+    new_dt_boxes = dt_boxes
+    for mf_box in mfdetrec_res:
+        flag, left_box, right_box = False, None, None
+        for idx, text_box in enumerate(new_dt_boxes):
+            ret, left_box, right_box = formula_in_text(mf_box['bbox'], text_box)
+            if ret:
+                new_dt_boxes.pop(idx)
+                if left_box is not None:
+                    new_dt_boxes.append(left_box)
+                if right_box is not None:
+                    new_dt_boxes.append(right_box)
+                break
+            
+    return new_dt_boxes
 
 def get_gpu_memory():
     if torch.cuda.is_available():

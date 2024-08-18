@@ -1,18 +1,18 @@
 #!/bin/bash
-
+TASKLIMIT=60
 # Function to get the count of pending tasks
 get_pending_count() {
-    squeue -u zhangtianning.di | grep PD | wc -l
+    squeue -u zhangtianning.di | grep spot | grep PD | wc -l
 }
 
 # Function to get the count of running tasks
 get_running_count() {
-    squeue -u zhangtianning.di | grep R | wc -l
+    squeue -u zhangtianning.di | grep spot |grep R | wc -l
 }
 
 # Function to get the JOBIDs of pending tasks
 get_pending_jobids() {
-    squeue -u zhangtianning.di | grep PD | awk '{print $1}'
+    squeue -u zhangtianning.di | grep spot | grep PD | awk '{print $1}'
 }
 
 # Function to submit a task
@@ -50,7 +50,7 @@ while true; do
     echo "Running tasks: $running_count"
 
     # Submit a task only when running tasks < 60 and pending tasks < 3
-    if [ "$running_count" -lt 100 ] && [ "$pending_count" -lt 3 ]; then
+    if [ "$running_count" -lt $TASKLIMIT ] && [ "$pending_count" -lt 3 ]; then
         echo "Submitting a new task..."
         submit_task
     fi
