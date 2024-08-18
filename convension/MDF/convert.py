@@ -13,7 +13,7 @@ iou_thres = model_configs['model_args']['iou_thres']
 device    = model_configs['model_args']['device']
 dpi       = model_configs['model_args']['pdf_dpi']
 
-inner_batch_size = 32
+inner_batch_size = 8
 mfd_model    = get_batch_YOLO_model(model_configs,inner_batch_size) 
 mfd_model.export(format="engine",half=True,imgsz=(1888,1472), batch=inner_batch_size, simplify=True)  # creates 'yolov8n.engine'
 oldname = model_configs['model_args']['mfd_weight']

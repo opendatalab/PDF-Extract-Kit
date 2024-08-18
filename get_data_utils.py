@@ -87,11 +87,71 @@ def write_jsonl_to_path(data, path, client):
             f.write(byte_object)
 
 
+import boto3
+from botocore.client import Config
+class MyFastS2client:
+    def __init__(self, ACCESS_KEY, SECRET_KEY,ENDPOINT):
 
+        session = boto3.Session(
+            aws_access_key_id=ACCESS_KEY,
+            aws_secret_access_key=SECRET_KEY,
+            region_name=''
+        )
+
+        # Create an S3 client
+        self.s3 = session.client(
+            's3',
+            endpoint_url=ENDPOINT,
+            config=Config(signature_version='s3v4')  # Ensure compatibility
+        )
+
+    def get(self, path):
+        # path is like opendata:s3://llm-process-pperf/ebook_index_v4/scihub/v001/scihub/part-66210c190659-000026.jsonl
+        # obtain bucket_name and object_key
+        bucket_name = path.split("//")[1].split("/")[0]
+        object_key  = "/".join(path.split("//")[1].split("/")[1:])
+        response = self.s3.get_object(Bucket=bucket_name, Key=object_key)
+        return response['Body'].read()
+
+    def put(self, path,data):
+        # path is like opendata:s3://llm-process-pperf/ebook_index_v4/scihub/v001/scihub/part-66210c190659-000026.jsonl
+        # obtain bucket_name and object_key
+        bucket_name = path.split("//")[1].split("/")[0]
+        object_key  = "/".join(path.split("//")[1].split("/")[1:])
+    
+        self.s3.put_object(Bucket=bucket_name, Key=object_key, Body=data)
+
+    def contains(self, path):
+        # path is like opendata:s3://llm-process-pperf/ebook_index_v4/scihub/v001/scihub/part-66210c190659-000026.jsonl
+        # obtain bucket_name and object_key
+        bucket_name = path.split("//")[1].split("/")[0]
+        object_key  = "/".join(path.split("//")[1].split("/")[1:])
+        try:
+            self.s3.head_object(Bucket=bucket_name, Key=object_key)
+            return True
+        except:
+            return False
 def build_client():
     #print(f"we will building ceph client...................")
-    from petrel_client.client import Client  # 安装完成后才可导入
-    client = Client(conf_path="~/petreloss.conf") # 实例化Petrel Client，然后就可以调用下面的APIs   
+    
+    try:
+        from petrel_client.client import Client  # 安装完成后才可导入
+        client = Client(conf_path="~/petreloss.conf") # 实例化Petrel Client，然后就可以调用下面的APIs   
+    except:
+        
+        ### get key and endpoint from local .client.conf
+        with open(".client.conf",'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                if "key" in line:
+                    ACCESS_KEY = line.split("=")[1].strip()
+                if "secret" in line:
+                    SECRET_KEY = line.split("=")[1].strip()
+                if "endpoint" in line:
+                    ENDPOINT = line.split("=")[1].strip()
+        client = MyFastS2client(ACCESS_KEY, SECRET_KEY, ENDPOINT) # 实例化Petrel Client，然后就可以调用下面的APIs   
+    
+
     #print(f"done..................")
     return client
 

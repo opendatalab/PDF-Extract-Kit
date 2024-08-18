@@ -2,9 +2,14 @@
 
 import os 
 os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
+import warnings
+# Suppress all FutureWarnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore', category=UserWarning)
+
 from get_batch_yolo import mfd_process, get_batch_YOLO_model
 from get_batch_layout_model import get_layout_model
-from modules.self_modify import ModifiedPaddleOCR
+from modules.no_paddle_ocr import ModifiedPaddleOCR
 from utils import *
 from utils import Timers
 import numpy as np
@@ -446,11 +451,16 @@ if __name__ == "__main__":
     device    = model_configs['model_args']['device']
     dpi       = model_configs['model_args']['pdf_dpi']
 
-    accelerated = False
+    accelerated = True
     layout_model = get_layout_model(model_configs,accelerated)
     
     total_memory = get_gpu_memory()
-    inner_batch_size = 16 if total_memory > 60 else 2
+    if total_memory > 60:
+        inner_batch_size = 16
+    elif total_memory > 30:
+        inner_batch_size = 8
+    else:
+        inner_batch_size = 2
     print(f"totally gpu memory is {total_memory} we use inner batch size {inner_batch_size}")
     mfd_model    = get_batch_YOLO_model(model_configs,inner_batch_size) 
     ocrmodel = None
@@ -460,12 +470,12 @@ if __name__ == "__main__":
     #page_num_map_whole = get_page_num_map_whole()
     page_num_map_whole = None
     deal_with_page_info_dataset("part-66210c190659-000026.jsonl", 
-                          "part-66210c190659-000026.jsonl.stage_1.jsonl", 
-                          layout_model, mfd_model, ocrmodel=ocrmodel, 
-                          inner_batch_size=inner_batch_size, batch_size=inner_batch_size,num_workers=8,
-                          do_text_det = True,
-                          do_text_rec = False,
-                          timer=timer,page_num_for_name=page_num_map_whole)
+                                "part-66210c190659-000026.jsonl.stage_1.jsonl", 
+                                layout_model, mfd_model, ocrmodel=ocrmodel, 
+                                inner_batch_size=inner_batch_size, batch_size=inner_batch_size,num_workers=8,
+                                do_text_det = True,
+                                do_text_rec = False,
+                                timer=timer,page_num_for_name=page_num_map_whole)
     
     
     

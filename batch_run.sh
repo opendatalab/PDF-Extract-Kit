@@ -6,3 +6,5 @@ do
 sbatch  -p test_s2 -N1 -c8 --gres=gpu:1  run.sh sci_index_files.remain.filelist 0 10
 #sbatch --quotatype=spot -p AI4Chem -N1 -c8 --gres=gpu:1  run.sh sci_index_files.remain.filelist 0 2000
 done 
+
+# sbatch -p vip_gpu_ailab_low -N1 -c16 --gres=gpu:1 run.sh sci_index_files.remain.filelist 0 10
