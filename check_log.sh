@@ -10,7 +10,10 @@ do
     fi
 done
 
-runningPID=`squeue -u zhangtianning.di | awk '{print $1}'`
+user=`whoami`
+jobname='ParseSciHUB'
+
+runningPID=`squeue -u $user -n $jobname | awk '{print $1}'`
 for log_file in .log/*; 
 do 
     ### skip if it is not a file
