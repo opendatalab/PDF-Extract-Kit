@@ -186,7 +186,7 @@ def check_lock_exists(path, client):
 
 def check_lock_and_last_start_time(path, client):
     if "s3:" in path:
-        raise NotImplementedError("s3 lock not implemented")
+        raise NotImplementedError(f"s3 lock not implemented. Now path {path}")
     elif path.startswith('http'):
         assert 'checklocktime' in path, "please use `checklocktime` flag for data path"
         response = requests.get(path)

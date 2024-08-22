@@ -5,10 +5,12 @@ from get_data_utils import *
 RESULT_SAVE_PATH="opendata:s3://llm-pdf-text/pdf_gpu_output/scihub_shared"
 #RESULT_SAVE_PATH="tianning:s3://temp/debug"
 INPUT_LOAD_PATH="opendata:s3://llm-process-pperf/ebook_index_v4/scihub/v001/scihub"
-LOCKSERVER="http://10.140.52.123:8000"
+
+CURRENT_END_SIGN=".current_end.sign"
 from datetime import datetime,timedelta
 import socket   
 hostname= socket.gethostname()
+LOCKSERVER="http://10.140.52.123:8000" if hostname.startswith('SH') else "http://paraai-n32-h-01-ccs-master-2:32453"
 if __name__ == '__main__':
     import argparse, logging, os
     import numpy as np
@@ -33,7 +35,7 @@ if __name__ == '__main__':
     parser.add_argument('--async_mode',  action='store_true', help='', default=False)
     
     args = parser.parse_args()
-    args.check_lock = hostname.startswith('SH')
+    #args.check_lock = hostname.startswith('SH')
     assert not args.async_mode, "async_mode is not safe, please disable it"
     root_path = args.root_path
     if os.path.isdir(root_path):
@@ -86,6 +88,8 @@ if __name__ == '__main__':
     ocrmodel = None
     page_num_map_whole = None#get_page_num_map_whole()
     for inputs_path in tqdm(all_file_list, leave=False, position=1):
+        if os.path.exists(CURRENT_END_SIGN):
+            break
         filename    = os.path.basename(inputs_path)
         if inputs_path.startswith('s3'):
             inputs_path = "opendata:"+inputs_path
@@ -136,19 +140,19 @@ if __name__ == '__main__':
                     break
             if skip:continue
             result_path = os.path.join(args.result_save_path, task_name, "result", filename_with_partion)
-            if args.check_lock:
-                lock_path = os.path.join(LOCKSERVER, "checklocktime", filename_with_partion)
-                last_start_time = check_lock_and_last_start_time(lock_path,client)
-                if last_start_time and not args.redo:
-                    date_string = last_start_time
-                    date_format = "%Y-%m-%d %H:%M:%S"
-                    date = datetime.strptime(date_string, date_format)
-                    deltatime = datetime.now() - date
-                    if deltatime < timedelta(hours=1):
-                        tqdm.write(f"[Skip]: {filename_with_partion} is locked by {date_string} created at {last_start_time} [now is {deltatime}]")
-                        continue
-                
-                create_last_start_time_lock(os.path.join(LOCKSERVER,"createlocktime", filename_with_partion),client)
+ 
+            lock_path = os.path.join(LOCKSERVER, "checklocktime", filename_with_partion)
+            last_start_time = check_lock_and_last_start_time(lock_path,client)
+            if last_start_time and not args.redo:
+                date_string = last_start_time
+                date_format = "%Y-%m-%d %H:%M:%S"
+                date = datetime.strptime(date_string, date_format)
+                deltatime = datetime.now() - date
+                if deltatime < timedelta(hours=1):
+                    tqdm.write(f"[Skip]: {filename_with_partion} is locked by {date_string} created at {last_start_time} [now is {deltatime}]")
+                    continue
+            
+            create_last_start_time_lock(os.path.join(LOCKSERVER,"createlocktime", filename_with_partion),client)
 
             if layout_model is None:layout_model = get_layout_model(model_configs,args.accelerated_layout)
             if mfd_model    is None:mfd_model    = get_batch_YOLO_model(model_configs,batch_size=args.inner_batch_size,use_tensorRT=args.accelerated_mfd)
