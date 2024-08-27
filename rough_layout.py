@@ -24,7 +24,7 @@ from get_data_utils import *
 import traceback
 import logging
 
-from scihub_pdf_dataset import PDFImageDataset, PageInfoDataset, custom_collate_fn,DataLoader
+from scihub_pdf_dataset import PDFImageDataset, PageInfoDataset, custom_collate_fn,DataLoader,AddonDataset
 
 def clean_layout_dets(layout_dets):
     rows = []
@@ -263,13 +263,53 @@ def deal_with_page_info_dataset(pdf_path, result_path, layout_model, mfd_model,
                           partion_num = 1,
                           partion_idx = 0,page_num_for_name=None):
     dataset    = PageInfoDataset(pdf_path,layout_model.predictor.aug,layout_model.predictor.input_format,
-                                 
                                  mfd_pre_transform=mfd_process(mfd_model.predictor.args.imgsz,mfd_model.predictor.model.stride,mfd_model.predictor.model.pt),
                                  det_pre_transform=ocrmodel.batch_det_model.prepare_image,
                                  return_original_image=do_text_rec,
                                  partion_num = partion_num,
                                  partion_idx = partion_idx,page_num_for_name=page_num_for_name
                                  )
+    data_to_save = fast_dealwith_one_dataset(dataset,layout_model, mfd_model, ocrmodel,
+                                            inner_batch_size=inner_batch_size,
+                                            batch_size=batch_size,
+                                            num_workers=num_workers,
+                                            do_text_det=do_text_det,
+                                            do_text_rec=do_text_rec,
+                                            timer= timer)
+    save_result(data_to_save,dataset,result_path)
+
+def deal_with_page_addon_dataset(metadata_path, pdfid_and_pageid_list, result_path, layout_model, mfd_model, 
+                          ocrmodel=None, inner_batch_size=4, 
+                          batch_size=32,num_workers=8,
+                          do_text_det=False,
+                          do_text_rec=False,
+                          timer=Timers(False),
+                          partion_num = 1,
+                          partion_idx = 0):
+    dataset    = AddonDataset(metadata_path, pdfid_and_pageid_list,layout_model.predictor.aug,layout_model.predictor.input_format,
+                              mfd_pre_transform=mfd_process(mfd_model.predictor.args.imgsz,mfd_model.predictor.model.stride,mfd_model.predictor.model.pt),
+                              det_pre_transform=ocrmodel.batch_det_model.prepare_image,
+                              return_original_image=do_text_rec,
+                              partion_num = partion_num,
+                              partion_idx = partion_idx
+                              )
+    data_to_save = fast_dealwith_one_dataset(dataset,layout_model, mfd_model, ocrmodel,
+                                            inner_batch_size=inner_batch_size,
+                                            batch_size=batch_size,
+                                            num_workers=num_workers,
+                                            do_text_det=do_text_det,
+                                            do_text_rec=do_text_rec,
+                                            timer= timer)
+    save_result(data_to_save,dataset,result_path)
+
+
+
+def fast_dealwith_one_dataset(dataset,layout_model, mfd_model, ocrmodel, 
+                          inner_batch_size=4, 
+                          batch_size=32,num_workers=8,
+                          do_text_det=False,
+                          do_text_rec=False,
+                          timer=Timers(False)) :
     print(f"current dataset size={len(dataset)} images")
     collate_fn = custom_collate_fn if do_text_rec else None
     num_workers=min(num_workers,len(dataset.metadata))
@@ -395,9 +435,8 @@ def deal_with_page_info_dataset(pdf_path, result_path, layout_model, mfd_model,
         batch = featcher.next()
         if pbar is None:
             pbar = tqdm(total=len(dataset),position=2,desc="PDF Pages",leave=False, bar_format='{l_bar}{bar}{r_bar}')
-
+    return data_to_save
     ### next, we construct each result for each pdf in pdf wise and remove the page_id by the list position 
-    save_result(data_to_save,dataset,result_path)
     
 
 def save_result(data_to_save,dataset,result_path):

@@ -9,12 +9,12 @@ from torch.utils.data import Dataset, TensorDataset, DataLoader
 from dataaccelerate import DataPrefetcher 
 from modules.batch_text_rec import TextRecognizer, rec_args
 import torch
-from scihub_pdf_dataset import RecImageDataset,rec_collate_fn,deal_with_one_pdf,none_collate_fn
+from scihub_pdf_dataset import RecImageDataset,rec_collate_fn,deal_with_one_pdf,none_collate_fn,clean_pdf_path,Timers
 try:
     client=build_client()
 except:
     client=None
-   
+eps=1e-7
 import math
 
 # def rec_preprocessing(text_recognizer, img_list):
@@ -36,11 +36,11 @@ import math
 def resize_norm_img(img, max_wh_ratio=None,rec_image_shape=None,limited_max_width=None,limited_min_width=None):
     imgC, imgH, imgW = rec_image_shape
     assert imgC == img.shape[2]
-    max_wh_ratio = max(max_wh_ratio, imgW / imgH)
+    max_wh_ratio = max(max_wh_ratio, imgW / (imgH+eps))
     imgW = int((imgH * max_wh_ratio))
     imgW = max(min(imgW, limited_max_width), limited_min_width)
     h, w = img.shape[:2]
-    ratio = w / float(h)
+    ratio = w / (float(h)+eps)
     ratio_imgH = math.ceil(imgH * ratio)
     ratio_imgH = max(ratio_imgH, limited_min_width)
     if ratio_imgH > imgW:
@@ -62,7 +62,7 @@ class UnifiedResizedDataset(Dataset):
         for img_now in img_list:
             # h, w = img_list[ino].shape[0:2]
             h, w = img_now.shape[0:2]
-            wh_ratio = w * 1.0 / h
+            wh_ratio = w * 1.0 / (h+eps)
             max_wh_ratio = max(max_wh_ratio, wh_ratio)
         self.max_wh_ratio = max_wh_ratio
         self.image_list   = img_list
@@ -73,7 +73,23 @@ class UnifiedResizedDataset(Dataset):
         return len(self.image_list)
 
     def __getitem__(self, idx):
-        return resize_norm_img(self.image_list[idx], self.max_wh_ratio, self.rec_image_shape, self.limited_max_width, self.limited_min_width)
+        return idx, resize_norm_img(self.image_list[idx], self.max_wh_ratio, self.rec_image_shape, self.limited_max_width, self.limited_min_width)
+
+class UnifiedResizedGroupDataset(Dataset):
+    def __init__(self, img_list,rec_image_shape,limited_max_width,limited_min_width,max_wh_ratios_list):
+    
+        self.image_list   = img_list
+        self.rec_image_shape =rec_image_shape
+        self.limited_max_width =limited_max_width
+        self.limited_min_width =limited_min_width
+        self.max_wh_ratios_list = max_wh_ratios_list
+    def __len__(self):
+        return len(self.image_list)
+
+    def __getitem__(self, idx):
+        return idx, resize_norm_img(self.image_list[idx], self.max_wh_ratios_list[idx], self.rec_image_shape, self.limited_max_width, self.limited_min_width)
+
+
 
 def postprocess(self,preds, label=None):
     preds_prob,preds_idx  = preds.max(axis=2)
@@ -107,7 +123,7 @@ def build_bbox_group(metadatas):
     location2group = {}
     location2boxes = {}
     for pdf_index, pdf_metadata in enumerate(tqdm(metadatas,desc="building group")):
-        pdf_path = pdf_metadata['path']
+        pdf_path = clean_pdf_path(pdf_metadata['path'])
         for pdf_page_metadata in pdf_metadata['doc_layout_result']:
             page_id = pdf_page_metadata['page_id']
             bbox_id = 0
@@ -118,8 +134,8 @@ def build_bbox_group(metadatas):
                 bbox_id+=1
                 bbox = bbox_metadata['poly']
                 width, height = calculate_dimensions(bbox)
-                width_group   = int(width  // width_range)
-                height_group  = int(height // height_range)
+                width_group   = int(width  / (width_range + eps))
+                height_group  = int(height / (height_range+ eps))
                 group_key     = (width_group, height_group)
                 if group_key not in grouped_bboxes:
                     grouped_bboxes[group_key] = []
@@ -135,90 +151,232 @@ def obtain_data_from_pool_list(pool_list, key):
             return pool[key]
     return None
 
+def deal_with_one_dataset(pdf_path, result_path, tex_recognizer,
+                          pdf_batch_size  =32,
+                          image_batch_size=256,
+                          num_workers=8,
+                          partion_num = 1,
+                          partion_idx = 0):
+    images_dataset = RecImageDataset(pdf_path,partion_num = partion_num, partion_idx = partion_idx)
+    data_to_save =  fast_deal_with_one_dataset2(images_dataset,tex_recognizer,
+                                               pdf_batch_size  =pdf_batch_size,
+                          image_batch_size=image_batch_size,num_workers=num_workers)
+    write_jsonl_to_path(data_to_save,result_path,images_dataset.client)
+
+
+
+def fast_deal_with_one_dataset(images_dataset:RecImageDataset,tex_recognizer:TextRecognizer,
+                          pdf_batch_size  =32,
+                          image_batch_size=256,
+                          num_workers=8):
+
+    _,location2group,location2boxes = build_bbox_group(images_dataset.metadata)
+    image_collecter   = DataLoader(images_dataset, batch_size=pdf_batch_size,collate_fn=none_collate_fn, 
+                            num_workers=num_workers,pin_memory=False,
+                            prefetch_factor=2)  
+    location_to_rec = {}
+    for image_pool_list in tqdm(image_collecter,position=0,leave=True,desc="Images batch"):
+        no_image_pdf_list = []
+        image_pool = {}
+        current_group_bboxes = {}
+        for idx,(pdf_path, image_dict) in enumerate(tqdm(image_pool_list,position=0,leave=False, desc="Partiton current image pool")):
+            if len(image_dict)==0:
+                no_image_pdf_list.append(pdf_path)
+                #print(f"pdf {pdf_path} has no text image")
+                continue
+            for key,val in image_dict.items():
+                image_pool[key]=val
+                group = location2group[key]
+                if group not in current_group_bboxes:
+                    current_group_bboxes[group] = []
+                current_group_bboxes[group].append((key,location2boxes[key]))
+        if len(image_pool) == 0:continue
+        
+        
+        #### next step, lets do normlized the bbox to the same size
+
+        
+        pbar_whole_images  = tqdm(total=len(image_pool),position=1,leave=False,desc=f"Group batch:{len(no_image_pdf_list)} pdfs has no text image and {len(image_pool)} text images")
+        for group_key, location_and_bbox in current_group_bboxes.items():
+            if len(location_and_bbox) == 0:continue
+            
+            img_list_group = [image_pool[location] for location, bbox in location_and_bbox]
+            rec_list_group = []
+            dataset          = UnifiedResizedDataset(img_list_group, tex_recognizer.rec_image_shape, tex_recognizer.limited_max_width, tex_recognizer.limited_min_width)
+            if len(dataset)<=image_batch_size:
+                adapat_num_workers = 0
+            elif len(dataset)<=2*image_batch_size:
+                adapat_num_workers = 1
+            else:
+                adapat_num_workers = num_workers
+            dataloader_group = DataLoader(dataset, batch_size=image_batch_size, num_workers=adapat_num_workers, pin_memory=True, pin_memory_device='cuda')
+            featcher   = DataPrefetcher(dataloader_group,device='cuda')
+            pbar  = tqdm(total=len(dataloader_group),position=2,leave=False,desc="GPU batch")
+            batch = featcher.next()
+            indexes=[]
+            while batch is not None:
+                index, batch = batch
+                rec_result = gpu_inference(batch, tex_recognizer)
+                rec_list_group.extend(rec_result)
+                indexes.extend([t.item() for t in index])
+                pbar.update(1)
+                batch = featcher.next()
+            assert len(location_and_bbox) == len(rec_list_group)
+
+            for index, rec_res in zip(indexes, rec_list_group):
+                (location, bbox) = location_and_bbox[index]
+                location_to_rec[location] = rec_res
+
+            pbar_whole_images.update(len(img_list_group))
+
+    patch_metadata_list = []
+    for pdf_index, pdf_metadata in enumerate(tqdm(images_dataset.metadata)):
+        pdf_path = clean_pdf_path(pdf_metadata['path'])
+        
+        patch_metadata = {'path':pdf_path,'doc_layout_result':[]}
+        for pdf_page_metadata in pdf_metadata['doc_layout_result']:
+            page_id = pdf_page_metadata['page_id']
+            bbox_id = 0
+            this_line_pool = {'page_id':page_id, 'layout_dets':[]}
+            for bbox_metadata in pdf_page_metadata['layout_dets']:
+                if bbox_metadata['category_id']!=15:continue
+                location= (pdf_path,page_id,bbox_id)
+                bbox_id+=1
+                text, score = location_to_rec[location]
+                this_line_pool['layout_dets'].append({'category_id':15, 'text':text, 'score':float(score)})
+            patch_metadata['doc_layout_result'].append(this_line_pool)
+        patch_metadata_list.append(patch_metadata)
+    return patch_metadata_list
+
+
+from torch.utils.data import Sampler
+
+from torch.utils.data import Sampler
+
+class GroupBatchSampler(Sampler):
+    def __init__(self, group_indices, batch_size):
+        self.group_indices = group_indices
+        self.batch_size = batch_size
+
+    def __iter__(self):
+        for indices in self.group_indices:
+            # Yield full batches within the group
+            for i in range(0, len(indices), self.batch_size):
+                yield indices[i:i + self.batch_size]
+
+    def __len__(self):
+        return sum((len(indices) + self.batch_size - 1) // self.batch_size for indices in self.group_indices)
+    
+def fast_deal_with_one_dataset2(images_dataset:RecImageDataset,tex_recognizer:TextRecognizer,
+                          pdf_batch_size  =32,
+                          image_batch_size=256,
+                          num_workers=8):
+
+    _,location2group,location2boxes = build_bbox_group(images_dataset.metadata)
+    image_collecter   = DataLoader(images_dataset, batch_size=pdf_batch_size,collate_fn=none_collate_fn, 
+                            num_workers=num_workers,pin_memory=False,
+                            prefetch_factor=2)  
+    location_to_rec = {}
+    for image_pool_list in tqdm(image_collecter,position=1,leave=True,desc="Images batch"):
+        no_image_pdf_list = []
+        image_pool = {}
+        current_group_bboxes = {}
+        for idx,(pdf_path, image_dict) in enumerate(tqdm(image_pool_list,position=0,leave=False, desc="Partiton current image pool")):
+            if len(image_dict)==0:
+                no_image_pdf_list.append(pdf_path)
+                #print(f"pdf {pdf_path} has no text image")
+                continue
+            for key,val in image_dict.items():
+                image_pool[key]=val
+                group = location2group[key]
+                if group not in current_group_bboxes:
+                    current_group_bboxes[group] = []
+                current_group_bboxes[group].append((key,location2boxes[key]))
+        if len(image_pool) == 0:continue
+        
+        
+        #### next step, lets do normlized the bbox to the same size
+
+        all_images = []
+        all_max_wh_ratios = []
+        group_indices = []
+        location_bbox_map = []
+        current_index = 0
+        for group_key, location_and_bbox in current_group_bboxes.items():
+            if len(location_and_bbox) == 0:
+                continue
+
+            img_list_group = [image_pool[location] for location, bbox in location_and_bbox]
+            max_wh_ratio = max((w / (h + 1e-5) for img in img_list_group for h, w in [img.shape[:2]]), default=0)
+
+            all_images.extend(img_list_group)
+            all_max_wh_ratios.extend([max_wh_ratio] * len(img_list_group))
+            location_bbox_map.extend(location_and_bbox)
+
+            group_indices.append(list(range(current_index, current_index + len(img_list_group))))
+            current_index += len(img_list_group)
+        
+        dataset       = UnifiedResizedGroupDataset(all_images, tex_recognizer.rec_image_shape, tex_recognizer.limited_max_width, tex_recognizer.limited_min_width, all_max_wh_ratios)
+        batch_sampler = GroupBatchSampler(group_indices,image_batch_size)
+        dataloader    = DataLoader(dataset, batch_sampler=batch_sampler, num_workers=num_workers, pin_memory=True, pin_memory_device='cuda')
+
+
+
+        featcher   = DataPrefetcher(dataloader ,device='cuda')
+        pbar = tqdm(total=len(dataset), position=2, leave=False, desc="GPU batch")
+        batch = featcher.next()
+        indexes=[]
+        rec_list = []
+        while batch is not None:
+            index, batch = batch
+            #tqdm.write(f"This Batch shape is {batch.shape}")
+            rec_result = gpu_inference(batch, tex_recognizer)
+            rec_list.extend(rec_result)
+            indexes.extend([t.item() for t in index])
+            pbar.update(len(batch))
+            batch = featcher.next()
+
+        assert len(rec_list) == len(location_bbox_map)
+        for index, rec_res in zip(indexes, rec_list):
+            (location, bbox) = location_bbox_map[index]
+            location_to_rec[location] = rec_res
+
+
+    patch_metadata_list = []
+    for pdf_index, pdf_metadata in enumerate(tqdm(images_dataset.metadata)):
+        pdf_path = clean_pdf_path(pdf_metadata['path'])
+        
+        patch_metadata = {'path':pdf_path,'doc_layout_result':[]}
+        for pdf_page_metadata in pdf_metadata['doc_layout_result']:
+            page_id = pdf_page_metadata['page_id']
+            bbox_id = 0
+            this_line_pool = {'page_id':page_id, 'layout_dets':[]}
+            for bbox_metadata in pdf_page_metadata['layout_dets']:
+                if bbox_metadata['category_id']!=15:continue
+                location= (pdf_path,page_id,bbox_id)
+                bbox_id+=1
+                text, score = location_to_rec[location]
+                this_line_pool['layout_dets'].append({'category_id':15, 'text':text, 'score':float(score)})
+            patch_metadata['doc_layout_result'].append(this_line_pool)
+        patch_metadata_list.append(patch_metadata)
+    return patch_metadata_list
+
 
 if __name__ == "__main__":
     from modules.self_modify import ModifiedPaddleOCR
     ocr_mode = 'batch'
     batch_size = 128
     num_workers= 8
-    metadata_filepath = "part-66210c190659-012553.jsonl"
-    images_dataset           = RecImageDataset(metadata_filepath)
+    metadata_filepath = "rec.test.jsonl"
+    images_dataset    = RecImageDataset(metadata_filepath)
     
     if ocr_mode == 'batch':
-        # metadatas = read_json_from_path(metadata_filepath, client)
-        _,location2group,location2boxes = build_bbox_group(images_dataset.metadata)
-        # processes_num = min(8, len(metadatas))
-        # with Pool(processes=processes_num) as pool:
-        #     image_pool_list = list(tqdm(pool.imap(deal_with_one_pdf, metadatas), total=len(metadatas), desc="Reading whole text image into memory"))
-        # image_pool_list = [deal_with_one_pdf(t) for t in tqdm(metadatas, desc="Reading whole text image into memory")]
-        image_collecter   = DataLoader(images_dataset, batch_size=20,collate_fn=none_collate_fn, 
-                            num_workers=8,pin_memory=False,
-                            prefetch_factor=2)  
         tex_recognizer = TextRecognizer(rec_args)
-        tex_recognizer.rec_batch_num = batch_size
-        location_to_rec = {}
-        for image_pool_list in tqdm(image_collecter,position=0,leave=True,desc="Images batch"):
-            no_image_pdf_list = []
-            image_pool = {}
-            current_group_bboxes = {}
-            for idx,(pdf_path, image_dict) in enumerate(image_pool_list):
-                if len(image_dict)==0:
-                    no_image_pdf_list.append(pdf_path)
-                    #print(f"pdf {pdf_path} has no text image")
-                    continue
-                for key,val in image_dict.items():
-                    image_pool[key]=val
-                    group = location2group[key]
-                    if group not in current_group_bboxes:
-                        current_group_bboxes[group] = []
-                    current_group_bboxes[group].append((key,location2boxes[key]))
-            tqdm.write(f"we have {len(no_image_pdf_list)} pdfs has no text image and {len(image_pool)} text images")
-            if len(image_pool) == 0:continue
-            
-            
-            #### next step, lets do normlized the bbox to the same size
-
-            
-            pbar_whole_images  = tqdm(total=len(image_pool),position=1,leave=False,desc="Group batch")
-            for group_key, location_and_bbox in current_group_bboxes.items():
-                if len(location_and_bbox) == 0:continue
-                
-                img_list_group = [image_pool[location] for location, bbox in location_and_bbox]
-                rec_list_group = []
-                dataset  = UnifiedResizedDataset(img_list_group, tex_recognizer.rec_image_shape, tex_recognizer.limited_max_width, tex_recognizer.limited_min_width)
-                dataloader_group = DataLoader(dataset, batch_size=batch_size, num_workers=8, pin_memory=True, pin_memory_device='cuda')
-                featcher   = DataPrefetcher(dataloader_group,device='cuda')
-                pbar  = tqdm(total=len(dataloader_group),position=2,leave=False,desc="GPU batch")
-                batch = featcher.next()
-                while batch is not None:
-                    rec_result = gpu_inference(batch, tex_recognizer)
-                    rec_list_group.extend(rec_result)
-                    pbar.update(1)
-                    batch = featcher.next()
-                assert len(location_and_bbox) == len(rec_list_group)
-                for (location, bbox), rec_res in zip(location_and_bbox, rec_list_group):
-                    location_to_rec[location] = rec_res
-
-                pbar_whole_images.update(len(img_list_group))
-
-        patch_metadata_list = []
-        for pdf_index, pdf_metadata in enumerate(tqdm(images_dataset.metadata)):
-            pdf_path = pdf_metadata['path']
-            
-            patch_metadata = {'path':pdf_path,'doc_layout_result':[]}
-            for pdf_page_metadata in pdf_metadata['doc_layout_result']:
-                page_id = pdf_page_metadata['page_id']
-                bbox_id = 0
-                this_line_pool = {'page_id':page_id, 'layout_dets':[]}
-                for bbox_metadata in pdf_page_metadata['layout_dets']:
-                    if bbox_metadata['category_id']!=15:continue
-                    
-                    location= (pdf_path,page_id,bbox_id)
-                    bbox_id+=1
-                    text, score = location_to_rec[location]
-                    this_line_pool['layout_dets'].append({'category_id':15, 'text':text, 'score':score})
-                patch_metadata['doc_layout_result'].append(this_line_pool)
-            patch_metadata_list.append(patch_metadata)
+        #tex_recognizer.net.backbone = torch.compile(tex_recognizer.net.backbone)
+        patch_metadata_list = fast_deal_with_one_dataset2(images_dataset,tex_recognizer,pdf_batch_size=32, image_batch_size=128 ,num_workers=num_workers)
+        write_jsonj_to_path(patch_metadata_list, "test_result/result.test3.jsonl", None)
+        # patch_metadata_list = fast_deal_with_one_dataset(images_dataset,tex_recognizer,pdf_batch_size=32, image_batch_size=128 ,num_workers=num_workers)
+        # write_jsonj_to_path(patch_metadata_list, "test_result/result.test1.jsonl", None)
     else:
         
         

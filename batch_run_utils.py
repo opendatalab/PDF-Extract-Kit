@@ -35,40 +35,40 @@ def process_files(func, file_list, args:BatchModeConfig):
     num_processes = args.batch_num
     if num_processes == 0:
         results = []
-        for arxivpath in tqdm(file_list):
+        for arxivpath in tqdm(file_list, desc="Main Loop:"):
             results.append(func((arxivpath, args)))
         return results
     else:
         with Pool(processes=num_processes) as pool:
             args_list = [(file, args) for file in file_list]
-            results = list(tqdm(pool.imap(func, args_list), total=len(file_list)))
+            results = list(tqdm(pool.imap(func, args_list), total=len(file_list), desc="Main Loop:"))
     return results
 
 import json
-def obtain_processed_filelist(args:BatchModeConfig):
+def obtain_processed_filelist(args:BatchModeConfig,alread_processing_file_list=None):
     ROOT_PATH = args.root_path
     index_part= args.index_part
     num_parts = args.num_parts
-
-    if ROOT_PATH.endswith('.json'):
-        with open(ROOT_PATH,'r') as f:
-            alread_processing_file_list = json.load(f)
-    elif os.path.isfile(ROOT_PATH):
-        if ROOT_PATH.endswith('.filelist'):
+    if alread_processing_file_list is None:
+        if ROOT_PATH.endswith('.json'):
             with open(ROOT_PATH,'r') as f:
-                alread_processing_file_list = [t.strip() for t in f.readlines()]
-        elif ROOT_PATH.endswith('.arxivids'):
-            with open(ROOT_PATH,'r') as f:
-                alread_processing_file_list = [os.path.join(args.datapath, t.strip()) for t in f.readlines()]
+                alread_processing_file_list = json.load(f)
+        elif os.path.isfile(ROOT_PATH):
+            if ROOT_PATH.endswith('.filelist'):
+                with open(ROOT_PATH,'r') as f:
+                    alread_processing_file_list = [t.strip() for t in f.readlines()]
+            elif ROOT_PATH.endswith('.arxivids'):
+                with open(ROOT_PATH,'r') as f:
+                    alread_processing_file_list = [os.path.join(args.datapath, t.strip()) for t in f.readlines()]
+            else:
+                alread_processing_file_list = [ROOT_PATH]
+        elif os.path.isdir(ROOT_PATH):
+            ### this means we will do the whole subfiles under this folder
+            alread_processing_file_list = os.listdir(ROOT_PATH)
+            alread_processing_file_list = [os.path.join(ROOT_PATH,t) for t in alread_processing_file_list]
         else:
-            alread_processing_file_list = [ROOT_PATH]
-    elif os.path.isdir(ROOT_PATH):
-        ### this means we will do the whole subfiles under this folder
-        alread_processing_file_list = os.listdir(ROOT_PATH)
-        alread_processing_file_list = [os.path.join(ROOT_PATH,t) for t in alread_processing_file_list]
-    else:
-        ### directly use the arxivid as input
-        alread_processing_file_list = [os.path.join(args.datapath, ROOT_PATH)]
+            ### directly use the arxivid as input
+            alread_processing_file_list = [os.path.join(args.datapath, ROOT_PATH)]
 
     totally_paper_num = len(alread_processing_file_list)
     if totally_paper_num > 1:

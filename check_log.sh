@@ -25,7 +25,9 @@ do
         #echo "Deleting $log_file"
         rm -f "$log_file"
     else
-        line=$(tail -n 30 "$log_file"|grep Data|tail -n 1| sed 's/\x1B\[A//g'| tr -d '\r')
+        #line=$(tail -n 30 "$log_file"|grep Data|tail -n 1| sed 's/\x1B\[A//g'| tr -d '\r')
+        line=$(tail -n 1000 "$log_file"|grep "Images batch"|tail -n 1| sed 's/\x1B\[A//g'| tr -d '\r')
+        
         echo $log_file $line
         #grep Error "$log_file" 
     fi
