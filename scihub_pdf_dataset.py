@@ -250,8 +250,6 @@ class PageInfoDataset(Dataset,DatasetUtils,ImageTransformersUtils):
             out = self[random_index]
         return out 
 
-
-
 class AddonDataset(Dataset,DatasetUtils,ImageTransformersUtils):
     error_count = 0
     dpi = 200
@@ -314,11 +312,70 @@ class AddonDataset(Dataset,DatasetUtils,ImageTransformersUtils):
             self.error_count +=1
             out = self[random_index]
         return out 
+
+
+def get_croped_image(image_pil, bbox):
+    x_min, y_min, x_max, y_max = bbox
+    croped_img = image_pil.crop((x_min, y_min, x_max, y_max))
+    return croped_img
+
+class MFRImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):
+    error_count=0
+    def __init__(self, metadata_filepath,
+                 partion_num = 1,
+                 partion_idx = 0):
+        super().__init__()
+        self.metadata= self.smart_read_json(metadata_filepath)
+        self.metadata= np.array_split(self.metadata, partion_num)[partion_idx]
+        self.dpi = 200
+        self.timer = Timers(False)
+        self.client = build_client()
+    def __len__(self):
+        return len(self.metadata)
+    
+    def extract_mfr_image(self, pdf_metadata):
+        client = self.client
+        images_pool = {}
+        pdf_path = pdf_metadata['path']
+        height = pdf_metadata['height']
+        width  = pdf_metadata['width']
+        if pdf_path.startswith('s3'):
+            pdf_path = "opendata:"+pdf_path
+        try:
+            with read_pdf_from_path(pdf_path, client) as pdf:
+                for pdf_page_metadata in pdf_metadata['doc_layout_result']:
+                    page_id = pdf_page_metadata['page_id']
+                    page    = pdf.load_page(page_id)
+                    ori_im  = process_pdf_page_to_image(page, 200, output_width=width,output_height=height)     
+                    bbox_id = 0
+                    for bbox_metadata in pdf_page_metadata['layout_dets']:
+                        if bbox_metadata['category_id'] not in [13, 14]:continue
+                        location= (clean_pdf_path(pdf_path),page_id,bbox_id)
+                        [xmin, ymin, xmax, ymin, xmax, ymax, xmin, ymax] = bbox_metadata['poly']
+                        bbox_img = get_croped_image(Image.fromarray(ori_im), [xmin, ymin, xmax, ymax])
+                        
+                        bbox_id+=1
+                        images_pool[location] = bbox_img
+            return (pdf_path,images_pool)
+        except KeyboardInterrupt:
+            raise
+        except:
+            traceback.print_exc()
+            tqdm.write(f"[Error]: {pdf_path}")
+            return (pdf_path,{})
+
+    def __getitem__(self, index) :
+        pdf_metadata = self.metadata[index]
+        return deal_with_one_pdf(pdf_metadata, self.client)
+
+
 import traceback
 def deal_with_one_pdf(pdf_metadata,client):
 
     images_pool = {}
     pdf_path = pdf_metadata['path']
+    height = pdf_metadata['height']
+    width  = pdf_metadata['width']
     if pdf_path.startswith('s3'):
         pdf_path = "opendata:"+pdf_path
     try:
@@ -326,7 +383,7 @@ def deal_with_one_pdf(pdf_metadata,client):
             for pdf_page_metadata in pdf_metadata['doc_layout_result']:
                 page_id = pdf_page_metadata['page_id']
                 page    = pdf.load_page(page_id)
-                ori_im  = process_pdf_page_to_image(page, 200)     
+                ori_im  = process_pdf_page_to_image(page, 200, output_width=width,output_height=height)     
                 bbox_id = 0
                 for bbox_metadata in pdf_page_metadata['layout_dets']:
                     if bbox_metadata['category_id']!=15:continue
@@ -370,7 +427,7 @@ def sorted_boxes(dt_boxes):
                 break
     return _boxes
 
-def get_rotate_crop_image(img, points, padding=10):
+def get_rotate_crop_image(img, points, padding=10)->np.ndarray:
     """
     Extracts a rotated and cropped image patch defined by the quadrilateral `points`
     with an additional padding.

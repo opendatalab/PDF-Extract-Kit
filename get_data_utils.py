@@ -5,6 +5,11 @@ import io
 import os
 import fitz 
 fitz.TOOLS.mupdf_display_errors(on=False)
+
+
+def clean_pdf_path(pdf_path):
+    return pdf_path[len("opendata:"):] if pdf_path.startswith("opendata:") else pdf_path
+
 def read_json_from_path(path, client):
     if "s3:" in path:
         buffer = client.get(path).replace(b'\x00', b'\n')
@@ -244,7 +249,7 @@ def pad_image_to_ratio(image, output_width = UNIFIED_WIDTH,output_height=UNIFIED
 
     return new_image
 
-def process_pdf_page_to_image(page, dpi):
+def process_pdf_page_to_image(page, dpi,output_width=UNIFIED_WIDTH,output_height=UNIFIED_HEIGHT):
     pix = page.get_pixmap(matrix=fitz.Matrix(dpi/72, dpi/72))
     if pix.width > 3000 or pix.height > 3000:
         pix = page.get_pixmap(matrix=fitz.Matrix(1, 1), alpha=False)
@@ -252,7 +257,7 @@ def process_pdf_page_to_image(page, dpi):
     else:
         image = Image.frombytes('RGB', (pix.width, pix.height), pix.samples)
 
-    image = pad_image_to_ratio(image, output_width = UNIFIED_WIDTH,output_height=UNIFIED_HEIGHT)
+    image = pad_image_to_ratio(image, output_width = output_width,output_height=output_height)
     
     image = np.array(image)[:,:,::-1]
     return image.copy()
