@@ -100,7 +100,7 @@ if __name__ == '__main__':
     mfr_transform = transforms.Compose([mfr_vis_processors, ])
     tr_model = tr_model_init(model_configs['model_args']['tr_weight'], max_time=model_configs['model_args']['table_max_time'], device=device)
     layout_model = layout_model_init(model_configs['model_args']['layout_weight'])
-    ocr_model = ModifiedPaddleOCR(show_log=True)
+    ocr_model = ModifiedPaddleOCR(show_log=True, det_db_box_thresh=0.3)
     print(now.strftime('%Y-%m-%d %H:%M:%S'))
     print('Model init done!')
     ## ======== model init ========##
@@ -201,7 +201,7 @@ if __name__ == '__main__':
             ocr_start = time.time()
             # Process each area that requires OCR processing
             for res in ocr_res_list:
-                new_image, useful_list = crop_img(res, pil_img, padding_x=25, padding_y=25)
+                new_image, useful_list = crop_img(res, pil_img, padding_x=50, padding_y=50)
                 paste_x, paste_y, xmin, ymin, xmax, ymax, new_width, new_height = useful_list
                 # Adjust the coordinates of the formula area
                 adjusted_mfdetrec_res = []
