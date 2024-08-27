@@ -269,13 +269,13 @@ class DatasetUtils:
     client = None
     last_read_pdf_buffer={}
     def smart_read_json(self, json_path):
-        if "s3" in json_path and self.client is None: self.client = build_client()
-        if json_path.startswith("s3"): json_path = "opendata:"+ json_path
+        if "s3:" in json_path and self.client is None: self.client = build_client()
+        if json_path.startswith("s3:"): json_path = "opendata:"+ json_path
         return read_json_from_path(json_path, self.client)
     
     def smart_write_json(self, data, targetpath):
-        if "s3" in targetpath and self.client is None: self.client = build_client()
-        if json_path.startswith("s3"): json_path = "opendata:"+ json_path
+        if "s3:" in targetpath and self.client is None: self.client = build_client()
+        if json_path.startswith("s3:"): json_path = "opendata:"+ json_path
         write_json_to_path(data, targetpath, self.client)
     
     def check_path_exists(self, path):
@@ -284,8 +284,8 @@ class DatasetUtils:
         return check_path_exists(path, self.client)
 
     def smart_load_pdf(self, pdf_path):
-        if "s3" in pdf_path and self.client is None: self.client = build_client()
-        if pdf_path.startswith("s3"): pdf_path = "opendata:"+ pdf_path
+        if "s3:" in pdf_path and self.client is None: self.client = build_client()
+        if pdf_path.startswith("s3:"): pdf_path = "opendata:"+ pdf_path
         with self.timer("smart_load_pdf"):
             try:
                 pdf_buffer = read_pdf_from_path(pdf_path, self.client)
@@ -303,6 +303,7 @@ class DatasetUtils:
         return pdf_buffer
     
     def clean_pdf_buffer(self):
+        return 
         keys = list(self.last_read_pdf_buffer.keys())
         for key in keys:
             if self.last_read_pdf_buffer[key] is not None:
@@ -311,8 +312,8 @@ class DatasetUtils:
 
 
     def get_pdf_buffer(self,path, buffer_num=1):
-        if "s3" in path and self.client is None: self.client = build_client()
-        if path.startswith("s3"): path = "opendata:"+ path
+        if "s3:" in path and self.client is None: self.client = build_client()
+        if path.startswith("s3:"): path = "opendata:"+ path
         if path not in self.last_read_pdf_buffer:
             if buffer_num is not None and len(self.last_read_pdf_buffer) >= buffer_num:
                 self.clean_pdf_buffer()

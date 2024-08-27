@@ -86,11 +86,17 @@ if __name__ == '__main__':
     mfd_model    = None
     client = None
     ocrmodel = None
-    page_num_map_whole = None#get_page_num_map_whole()
+    page_num_map_whole = None #get_page_num_map_whole()
     for inputs_path in tqdm(all_file_list, leave=False, position=1):
         if os.path.exists(CURRENT_END_SIGN):
             break
         filename    = os.path.basename(inputs_path)
+        if "layoutV" in inputs_path:
+            result_save_root = os.path.dirname(inputs_path)
+            inputs_path = os.path.join(INPUT_LOAD_PATH,filename)
+        else:
+            result_save_root = os.path.join(args.result_save_path, task_name, "result")
+            
         if inputs_path.startswith('s3'):
             inputs_path = "opendata:"+inputs_path
         # assert inputs_path.startswith('opendata:s3')
@@ -134,13 +140,15 @@ if __name__ == '__main__':
             skip = False
             for result_old_dir in POSSIABLE_RESULT_SAVE_DIR_LIST:
                 result_old_path = os.path.join(result_old_dir, filename_with_partion)
-                if check_path_exists(result_old_path,client) and not args.redo:
+                if not args.redo and check_path_exists(result_old_path,client):
                     tqdm.write(f"[Skip]: existed {result_old_path} ")
                     skip = True
                     break
             if skip:continue
-            result_path = os.path.join(args.result_save_path, task_name, "result", filename_with_partion)
- 
+
+            
+            result_path = os.path.join(result_save_root, filename_with_partion)
+
             lock_path = os.path.join(LOCKSERVER, "checklocktime", filename_with_partion)
             last_start_time = check_lock_and_last_start_time(lock_path,client)
             if last_start_time and not args.redo:
@@ -154,10 +162,24 @@ if __name__ == '__main__':
             
             create_last_start_time_lock(os.path.join(LOCKSERVER,"createlocktime", filename_with_partion),client)
 
+            print(f"now we deal with {inputs_path} to {result_path}")
+            os.makedirs(os.path.dirname(result_path), exist_ok=True)
+            if not inputs_path.startswith("opendata:"):
+                page_num_for_name_path = os.path.join(os.path.dirname(os.path.dirname(inputs_path)), 
+                                       "page_num_map", 
+                                       os.path.basename(inputs_path).replace(".jsonl",".json")
+                                       )
+                with open(page_num_for_name_path,'r') as f:
+                    page_num_for_name_list = json.load(f)
+                page_num_for_name={}
+                for pdf_path, page_num in page_num_for_name_list:
+                    if pdf_path.startswith("s3:"): pdf_path = "opendata:"+ pdf_path
+                    page_num_for_name[pdf_path] = page_num
+                page_num_map_whole = page_num_for_name
+                tqdm.write(f"we load page_num_for_name from {page_num_for_name_path}")
             if layout_model is None:layout_model = get_layout_model(model_configs,args.accelerated_layout)
             if mfd_model    is None:mfd_model    = get_batch_YOLO_model(model_configs,batch_size=args.inner_batch_size,use_tensorRT=args.accelerated_mfd)
             if ocrmodel is None:ocrmodel = ModifiedPaddleOCR(show_log=True)
-            print(f"now we deal with {inputs_path} to {result_path}")
             
             try:
                 deal_with_page_info_dataset(inputs_path, result_path, 
