@@ -9,7 +9,7 @@
 
 [English](./README.md) | 简体中文
 
-[[Models (🤗Hugging Face)]](https://huggingface.co/wanderkid/PDF-Extract-Kit) | [[Models(<img src="./assets/images/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/wanderkid/PDF-Extract-Kit) 
+[[Models (🤗Hugging Face)]](https://huggingface.co/wanderkid/PDF-Extract-Kit) | [[Models(<img src="./assets/images/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/OpenDataLab/PDF-Extract-Kit) 
  
 
 🔥🔥🔥 [MinerU：基于PDF-Extract-Kit的高效文档内容提取工具](https://github.com/opendatalab/MinerU)
