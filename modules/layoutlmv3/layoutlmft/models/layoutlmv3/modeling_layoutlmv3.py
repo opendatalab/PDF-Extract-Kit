@@ -665,7 +665,9 @@ class LayoutLMv3Encoder(nn.Module):
                     all_cross_attentions = all_cross_attentions + (layer_outputs[2],)
 
             if self.detection and i in self.out_indices:
-                xp = hidden_states[:, -Hp*Wp:, :].permute(0, 2, 1).reshape(len(hidden_states), -1, Hp, Wp)
+                # xp = hidden_states[:, -Hp*Wp:, :].permute(0, 2, 1).reshape(len(hidden_states), -1, Hp, Wp)
+                # fix for export onnx
+                xp = hidden_states[:, -Hp*Wp:, :].permute(0, 2, 1).reshape(hidden_states.shape[0], -1, Hp, Wp)
                 feat_out[self.out_features[j]] = self.ops[j](xp.contiguous())
                 j += 1
 
@@ -858,7 +860,7 @@ class LayoutLMv3Model(LayoutLMv3PreTrainedModel):
             batch_size, seq_length = input_shape
             device = inputs_embeds.device
         elif images is not None:
-            batch_size = len(images)
+            batch_size = images.shape[0]
             device = images.device
         else:
             raise ValueError("You have to specify either input_ids or inputs_embeds or images")
@@ -902,7 +904,10 @@ class LayoutLMv3Model(LayoutLMv3PreTrainedModel):
         Hp = Wp = None
         if images is not None:
             patch_size = 16
-            Hp, Wp = int(images.shape[2] / patch_size), int(images.shape[3] / patch_size)
+            # Hp, Wp = int(images.shape[2] / patch_size), int(images.shape[3] / patch_size)
+            # fix for onnx export
+            Hp = torch.div(images.shape[2], patch_size, rounding_mode='floor')
+            Wp = torch.div(images.shape[3], patch_size, rounding_mode='floor')
             visual_emb = self.forward_image(images)
             if self.detection:
                 visual_attention_mask = torch.ones((batch_size, visual_emb.shape[1]), dtype=torch.long, device=device)
