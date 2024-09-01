@@ -97,7 +97,7 @@ def layout_box_order_render_with_label(layout_boxes, page_img_file, output_path=
     ext = os.path.splitext(page_img_file)[1]
     new_file_name = f"{base_name}_output{ext}"
     if output_path is not None:
-        save_path = os.path.join(output_path, new_file_name)
+        save_path = output_path
     else:
         save_path = os.path.join(os.path.dirname(page_img_file), new_file_name)
 
@@ -160,20 +160,8 @@ def test_onnx(image_path, min_size, max_size, model_path, output_path=None):
         "image": image
     })
     end = time.time()
-    print(f"inference time: {end - start}")
+    print(f"onnx model inference time: {end - start}")
     #  转换为本项目统一的layout输出格式
-    page_layout_result = outpust_adapter(height, ori_height, ori_width, outputs, width)
-    # 过滤重叠和覆盖的检测框
-    filter_consecutive_boxes(page_layout_result)
-    # 检测框排序
-    sorted_layout_boxes(page_layout_result, ori_width)
-    # 去除所有页眉页脚
-    label_boxes = [box for _, box in enumerate(page_layout_result['layout_dets']) if box['category_id'] != 2]
-    # 按顺序渲染
-    layout_box_order_render_with_label(label_boxes, image_path, output_path)
-
-
-def outpust_adapter(height, ori_height, ori_width, outputs, width):
     boxes = resize_boxes(outputs[0], (ori_width, ori_height), (width, height))
     labels = outputs[1]
     scores = outputs[2]
@@ -193,7 +181,56 @@ def outpust_adapter(height, ori_height, ori_width, outputs, width):
             ],
             "score": scores[bbox_idx]
         })
-    return page_layout_result
+    # 过滤重叠和覆盖的检测框
+    filter_consecutive_boxes(page_layout_result)
+    # 检测框排序
+    sorted_layout_boxes(page_layout_result, ori_width)
+    # 去除所有页眉页脚
+    label_boxes = [box for _, box in enumerate(page_layout_result['layout_dets']) if box['category_id'] != 2]
+    # 按顺序渲染
+    os.makedirs(os.path.dirname(args.torch_test_output), exist_ok=True)
+    layout_box_order_render_with_label(label_boxes, image_path, output_path)
+
+def test_ori_torch_model(args):
+    args.opts = ["MODEL.WEIGHTS", args.MODEL_WEIGHTS]
+    logger = setup_logger()
+    cfg = setup(args)
+    # create a torch model
+    torch_model = build_model(cfg)
+    DetectionCheckpointer(torch_model).resume_or_load(cfg.MODEL.WEIGHTS)
+    torch_model.eval()
+    inputs = get_img_inputs(args.test_img, cfg.INPUT.MIN_SIZE_TEST, cfg.INPUT.MAX_SIZE_TEST)
+    ori_height, ori_width = inputs[0]["height"], inputs[0]["width"]
+    start = time.time()
+    outputs = torch_model(inputs)[0]
+    end = time.time()
+    print(f"torch model inference time: {end - start}")
+    boxes = outputs["instances"].to("cpu")._fields["pred_boxes"].tensor.tolist()
+    labels = outputs["instances"].to("cpu")._fields["pred_classes"].tolist()
+    scores = outputs["instances"].to("cpu")._fields["scores"].tolist()
+    page_layout_result = {
+        "layout_dets": []
+    }
+    for bbox_idx in range(len(boxes)):
+        page_layout_result["layout_dets"].append({
+            "category_id": labels[bbox_idx],
+            "poly": [
+                boxes[bbox_idx][0], boxes[bbox_idx][1],
+                boxes[bbox_idx][2], boxes[bbox_idx][1],
+                boxes[bbox_idx][2], boxes[bbox_idx][3],
+                boxes[bbox_idx][0], boxes[bbox_idx][3],
+            ],
+            "score": scores[bbox_idx]
+        })
+    # 过滤重叠和覆盖的检测框
+    filter_consecutive_boxes(page_layout_result)
+    # 检测框排序
+    sorted_layout_boxes(page_layout_result, ori_width)
+    # 去除所有页眉页脚
+    label_boxes = [box for _, box in enumerate(page_layout_result['layout_dets']) if box['category_id'] != 2]
+    # 按顺序渲染
+    os.makedirs(os.path.dirname(args.torch_test_output), exist_ok=True)
+    layout_box_order_render_with_label(label_boxes, args.test_img, args.torch_test_output)
 
 def export_and_quantize(args):
     args.opts = ["MODEL.WEIGHTS", args.MODEL_WEIGHTS]
@@ -227,12 +264,15 @@ if __name__ == "__main__":
     parser.add_argument('--output', type=str, default='output/model.onnx', help='Output ONNX model path')
     parser.add_argument('--quantize', action='store_true', help='Enable quantize')
     parser.add_argument('--test_img', type=str, default=None, help='Path to the test image')
+    parser.add_argument('--onnx_test_output', type=str, default="./output/onnx_img.jpg", help='Path to the test image')
+    parser.add_argument('--torch_test_output', type=str, default="./output/torch_img.jpg", help='Path to the test image')
     parser.add_argument('--model_path', type=str, default="./output/model.onnx", help='Path to the test image')
     parser.add_argument('--config_file', type=str, default='modules/layoutlmv3/layoutlmv3_base_inference.yaml', help='Path to the config file')
     parser.add_argument('--MODEL_WEIGHTS', type=str, default='models/Layout/model_final.pth', help='Path to the model weights')
     args = parser.parse_args()
     # 根据命令行参数调用相应的函数
     if args.test_img:
-        test_onnx(args.test_img, 800, 1333, args.model_path)
+        test_ori_torch_model(args)
+        test_onnx(args.test_img, 800, 1333, args.model_path, args.onnx_test_output)
     else:
         export_and_quantize(args)
