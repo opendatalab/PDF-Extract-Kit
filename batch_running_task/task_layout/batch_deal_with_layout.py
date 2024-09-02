@@ -1,75 +1,47 @@
 
 from rough_layout import *
-# from rough_layout_with_aync import * ## async is not safe, lets disable it 
 from get_data_utils import *
 RESULT_SAVE_PATH="opendata:s3://llm-pdf-text/pdf_gpu_output/scihub_shared"
-#RESULT_SAVE_PATH="tianning:s3://temp/debug"
 INPUT_LOAD_PATH="opendata:s3://llm-process-pperf/ebook_index_v4/scihub/v001/scihub"
-
+# from rough_layout_with_aync import * ## async is not safe, lets disable it 
+#RESULT_SAVE_PATH="tianning:s3://temp/debug"
 CURRENT_END_SIGN=".current_end.sign"
 from datetime import datetime,timedelta
 import socket   
 hostname= socket.gethostname()
 LOCKSERVER="http://10.140.52.123:8000" if hostname.startswith('SH') else "http://paraai-n32-h-01-ccs-master-2:32453"
+from batch_run_utils import BatchModeConfig, process_files,dataclass,obtain_processed_filelist
+from simple_parsing import ArgumentParser
+
+@dataclass
+class BatchLayoutConfig(BatchModeConfig):
+    do_not_det: bool = False
+    do_rec: bool = False
+    inner_batch_size: int = 16
+    batch_size: int = 16
+    num_workers: int = 4
+    accelerated_layout: bool = False
+    accelerated_mfd: bool = False
+    async_mode: bool = False
+    result_save_path: str=RESULT_SAVE_PATH
+    def from_dict(kargs):
+        return BatchLayoutConfig(**kargs)
+    def to_dict(self):
+        return self.__dict__
+
 if __name__ == '__main__':
-    import argparse, logging, os
-    import numpy as np
+
     from tqdm.auto import tqdm
     import traceback
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--root_path", type=str)
-    parser.add_argument("--index_part", type=int, default=0)
-    parser.add_argument('--num_parts', type=int, default=1)
-
-    parser.add_argument('--verbose', '-v', action='store_true', help='', default=False)
-    parser.add_argument('--redo',  action='store_true', help='', default=False)
-    parser.add_argument('--do_not_det',  action='store_true', help='', default=False)
-    parser.add_argument('--do_rec',  action='store_true', help='', default=False)
-    parser.add_argument('--shuffle',  action='store_true', help='', default=False)
-    parser.add_argument('--inner_batch_size', type=int, default=16)
-    parser.add_argument('--batch_size', type=int, default=16)
-    parser.add_argument('--num_workers', type=int, default=4)
-    parser.add_argument('--result_save_path', type=str, default=RESULT_SAVE_PATH)
-    parser.add_argument('--accelerated_layout',  action='store_true', help='', default=False)
-    parser.add_argument('--accelerated_mfd',  action='store_true', help='', default=False)
-    parser.add_argument('--async_mode',  action='store_true', help='', default=False)
-    
+    parser = ArgumentParser()
+    parser.add_arguments(BatchLayoutConfig, dest="config")
     args = parser.parse_args()
+    args = args.config   
     #args.check_lock = hostname.startswith('SH')
     assert not args.async_mode, "async_mode is not safe, please disable it"
-    root_path = args.root_path
-    if os.path.isdir(root_path):
-        ###### do not let the program scan the dir ########
-        ##### thus the only dir case is that use a dir path like data/archive_json/quant-ph_0004055
-        raise NotImplementedError
-        all_file_list = [root_path]
-    elif os.path.isfile(root_path):
-        if root_path.endswith('.jsonl'):
-            all_file_list = [root_path]
-        else:
-            with open(root_path,'r') as f:
-                all_file_list = [t.strip() for t in f.readlines()]
-    else:
-        raise NotImplementedError
-    index_part= args.index_part
-    num_parts = args.num_parts 
-    totally_paper_num = len(all_file_list)
-    if totally_paper_num > 1:
-        divided_nums = np.linspace(0, totally_paper_num - 1, num_parts+1)
-        divided_nums = [int(s) for s in divided_nums]
-        start_index = divided_nums[index_part]
-        end_index   = divided_nums[index_part + 1]
-    else:
-        start_index = 0
-        end_index   = 1
-        verbose = True
-    if args.shuffle:
-        np.random.shuffle(all_file_list)
-
-    all_file_list = all_file_list[start_index: end_index]
+    all_file_list = obtain_processed_filelist(args)
     
     if len(all_file_list)==0:
-        print(f"Index {index_part} has no file to process")
         exit()
     
     with open('configs/model_configs.yaml') as f:

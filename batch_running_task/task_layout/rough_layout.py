@@ -1,30 +1,26 @@
 
 
-import os 
+import os, warnings
 os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
-import warnings
-# Suppress all FutureWarnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
-
-from get_batch_yolo import mfd_process, get_batch_YOLO_model
-from get_batch_layout_model import get_layout_model
-from modules.no_paddle_ocr import ModifiedPaddleOCR
+### redirect to the parent folder of this file
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import *
-from utils import Timers
+from get_data_utils import *
+from scihub_pdf_dataset import PDFImageDataset, PageInfoDataset, custom_collate_fn,DataLoader,AddonDataset
+from task_layout.get_batch_yolo import mfd_process, get_batch_YOLO_model
+from task_layout.get_batch_layout_model import get_layout_model
+from task_layout.no_paddle_ocr import ModifiedPaddleOCR
 import numpy as np
 import torch
-import numpy as np
 from tqdm.auto import tqdm
 import yaml
 from dataaccelerate import DataPrefetcher 
 from ultralytics.utils import ops
 import copy
-from get_data_utils import *
 import traceback
-import logging
-
-from scihub_pdf_dataset import PDFImageDataset, PageInfoDataset, custom_collate_fn,DataLoader,AddonDataset
 
 def clean_layout_dets(layout_dets):
     rows = []
@@ -199,25 +195,26 @@ def deal_with_one_dataset(pdf_path, result_path, layout_model, mfd_model,
                     
                     
                     if do_text_rec:
-                        with timer('text_detection/collect_for_text_images'):
-                            text_image_batch, text_image_position,text_line_bbox = collect_text_image_and_its_coordinate(single_page_mfdetrec_res_this_batch, partition_per_batch, oimages,dt_boxes_list)
-                        with timer('text_detection/get_line_text_rec'):
-                            rec_res, elapse = ocrmodel.text_recognizer(text_image_batch)
-                        for line_box, rec_result,(partition_id,text_block_id, text_line_id) in zip(text_line_bbox, rec_res,text_image_position):
-                            text, score = rec_result
-                            pdf_id, page_id = pdf_and_page_id_this_batch[partition_id]
-                            pdf_path = dataset.metadata[pdf_id]['path']
-                            p1, p2, p3, p4 = line_box.tolist()
-                            #print(line_box)
-                            data_to_save[pdf_path][page_id].append(
-                                {
-                                    'category_id': 15,
-                                    'poly': p1 + p2 + p3 + p4,
-                                    'score': round(score, 2),
-                                    'text': text,
-                                }
+                        raise NotImplementedError("do_text_rec is not implemented")
+                        # with timer('text_detection/collect_for_text_images'):
+                        #     text_image_batch, text_image_position,text_line_bbox = collect_text_image_and_its_coordinate(single_page_mfdetrec_res_this_batch, partition_per_batch, oimages,dt_boxes_list)
+                        # with timer('text_detection/get_line_text_rec'):
+                        #     rec_res, elapse = ocrmodel.text_recognizer(text_image_batch)
+                        # for line_box, rec_result,(partition_id,text_block_id, text_line_id) in zip(text_line_bbox, rec_res,text_image_position):
+                        #     text, score = rec_result
+                        #     pdf_id, page_id = pdf_and_page_id_this_batch[partition_id]
+                        #     pdf_path = dataset.metadata[pdf_id]['path']
+                        #     p1, p2, p3, p4 = line_box.tolist()
+                        #     #print(line_box)
+                        #     data_to_save[pdf_path][page_id].append(
+                        #         {
+                        #             'category_id': 15,
+                        #             'poly': p1 + p2 + p3 + p4,
+                        #             'score': round(score, 2),
+                        #             'text': text,
+                        #         }
 
-                            )
+                        #     )
                     else:
                         for partition_id in range(len(partition_per_batch)-1):
                             pdf_path, page_id = pdf_and_page_id_this_batch[partition_id]
@@ -508,8 +505,9 @@ if __name__ == "__main__":
     #test_dataset("debug.jsonl", layout_model, mfd_model, ocrmodel)
     #page_num_map_whole = get_page_num_map_whole()
     page_num_map_whole = None
-    deal_with_page_info_dataset("part-66210c190659-000026.jsonl", 
-                                "part-66210c190659-000026.jsonl.stage_1.jsonl", 
+    filename = "part-66210c190659-012745.jsonl"
+    deal_with_page_info_dataset(filename, 
+                                f"{filename}.stage_1.jsonl", 
                                 layout_model, mfd_model, ocrmodel=ocrmodel, 
                                 inner_batch_size=inner_batch_size, batch_size=inner_batch_size,num_workers=8,
                                 do_text_det = True,

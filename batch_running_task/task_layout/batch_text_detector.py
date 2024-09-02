@@ -8,12 +8,13 @@ import json
 import torch
 from shapely.geometry import Polygon
 import pyclipper
-
-from .pytorchocr.base_ocr_v20 import BaseOCRV20
-from .pytorchocr.utils.utility import get_image_file_list, check_and_read_gif
-from .pytorchocr.data import create_operators, transform
-from .pytorchocr.postprocess import build_post_process
-from .pytorchocr import pytorchocr_utility as utility
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from pytorchocr.base_ocr_v20 import BaseOCRV20
+from pytorchocr.utils.utility import get_image_file_list, check_and_read_gif
+from pytorchocr.data import create_operators, transform
+from pytorchocr.postprocess import build_post_process
+from pytorchocr import pytorchocr_utility as utility
 from dataclasses import dataclass 
 
 
@@ -297,7 +298,7 @@ fast_config = {'use_gpu': True,
  'warmup': False,
  'image_dir': './doc/imgs/1.jpg',
  'det_algorithm': 'DB',
- 'det_model_path': 'weights/en_ptocr_v3_det_infer.pth',
+ 'det_model_path': 'models/pytorch_paddle_weight/en_ptocr_v3_det_infer.pth',
  'det_limit_side_len': 960,
  'det_limit_type': 'max',
  'det_db_thresh': 0.3,

@@ -12,65 +12,30 @@ LOCKSERVER="http://10.140.52.123:8000"
 from datetime import datetime,timedelta
 import socket   
 hostname= socket.gethostname()
+from batch_run_utils import BatchModeConfig, process_files,dataclass,obtain_processed_filelist
+from simple_parsing import ArgumentParser
+from tqdm.auto import tqdm
+import traceback
+
+@dataclass
+class BatchMFRConfig(BatchModeConfig):
+    inner_batch_size: int = 16
+    batch_size: int = 16
+    num_workers: int = 4
+    result_save_path: str=RESULT_SAVE_PATH
+    check_lock: bool = True
+
 if __name__ == '__main__':
-    import argparse, logging, os
-    import numpy as np
-    from tqdm.auto import tqdm
-    import traceback
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--root_path", type=str)
-    parser.add_argument("--index_part", type=int, default=0)
-    parser.add_argument('--num_parts', type=int, default=1)
-
-    parser.add_argument('--verbose', '-v', action='store_true', help='', default=False)
-    parser.add_argument('--redo',  action='store_true', help='', default=False)
-    parser.add_argument('--do_not_det',  action='store_true', help='', default=False)
-    parser.add_argument('--do_rec',  action='store_true', help='', default=False)
-    parser.add_argument('--shuffle',  action='store_true', help='', default=False)
-    parser.add_argument('--inner_batch_size', type=int, default=16)
-    parser.add_argument('--batch_size', type=int, default=16)
-    parser.add_argument('--num_workers', type=int, default=4)
-    parser.add_argument('--result_save_path', type=str, default=RESULT_SAVE_PATH)
-    parser.add_argument('--accelerated_layout',  action='store_true', help='', default=False)
-    parser.add_argument('--accelerated_mfd',  action='store_true', help='', default=False)
-    parser.add_argument('--async_mode',  action='store_true', help='', default=False)
+    task_name = "physics_part"
+    version   = "mfr_patch_bf16"
     
+    parser = ArgumentParser()
+    parser.add_arguments(BatchMFRConfig, dest="config")
     args = parser.parse_args()
-    args.check_lock = False #hostname.startswith('SH')
-    assert not args.async_mode, "async_mode is not safe, please disable it"
-    root_path = args.root_path
-    if os.path.isdir(root_path):
-        ###### do not let the program scan the dir ########
-        ##### thus the only dir case is that use a dir path like data/archive_json/quant-ph_0004055
-        raise NotImplementedError
-        all_file_list = [root_path]
-    elif os.path.isfile(root_path):
-        if root_path.endswith('.jsonl'):
-            all_file_list = [root_path]
-        else:
-            with open(root_path,'r') as f:
-                all_file_list = [t.strip() for t in f.readlines()]
-    else:
-        raise NotImplementedError
-    index_part= args.index_part
-    num_parts = args.num_parts 
-    totally_paper_num = len(all_file_list)
-    if totally_paper_num > 1:
-        divided_nums = np.linspace(0, totally_paper_num - 1, num_parts+1)
-        divided_nums = [int(s) for s in divided_nums]
-        start_index = divided_nums[index_part]
-        end_index   = divided_nums[index_part + 1]
-    else:
-        start_index = 0
-        end_index   = 1
-        verbose = True
-    if args.shuffle:
-        np.random.shuffle(all_file_list)
-
-    all_file_list = all_file_list[start_index: end_index]
+    args = args.config   
+    all_file_list = obtain_processed_filelist(args)
     
     if len(all_file_list)==0:
-        print(f"Index {index_part} has no file to process")
         exit()
     
     with open('configs/model_configs.yaml') as f:
@@ -82,8 +47,7 @@ if __name__ == '__main__':
     device    = model_configs['model_args']['device']
     dpi       = model_configs['model_args']['pdf_dpi']
 
-    task_name = "physics_part"
-    version   = "mfr_patch_bf16"
+    
     layout_model = None
     mfd_model    = None
     client = None

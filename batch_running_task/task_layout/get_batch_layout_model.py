@@ -1,5 +1,7 @@
 from detectron2.utils.logger import setup_logger
 setup_logger()
+import sys,os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 from modules.layoutlmv3.model_init import *
 from utils import Timers
 def inference(

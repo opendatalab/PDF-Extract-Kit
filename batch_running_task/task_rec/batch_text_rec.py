@@ -6,11 +6,13 @@ import numpy as np
 import time
 import json
 import torch
-from .pytorchocr.base_ocr_v20 import BaseOCRV20
-from .pytorchocr.utils.utility import get_image_file_list, check_and_read_gif
-from .pytorchocr.data import create_operators, transform
-from .pytorchocr.postprocess import build_post_process
-from .pytorchocr import pytorchocr_utility as utility
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from pytorchocr.base_ocr_v20 import BaseOCRV20
+from pytorchocr.utils.utility import get_image_file_list, check_and_read_gif
+from pytorchocr.data import create_operators, transform
+from pytorchocr.postprocess import build_post_process
+from pytorchocr import pytorchocr_utility as utility
 
 class TextRecognizer(BaseOCRV20):
     def __init__(self, args, **kwargs):
@@ -357,14 +359,14 @@ rec_args = args=Namespace(use_gpu=True, gpu_mem=500, warmup=False,
                           use_dilation=False, det_db_score_mode='fast', det_east_score_thresh=0.8, det_east_cover_thresh=0.1, det_east_nms_thresh=0.2, 
                           det_sast_score_thresh=0.5, det_sast_nms_thresh=0.2, det_sast_polygon=False, det_pse_thresh=0, det_pse_box_thresh=0.85, 
                           det_pse_min_area=16, det_pse_box_type='box', det_pse_scale=1, scales=[8, 16, 32], alpha=1.0, beta=1.0, 
-                          fourier_degree=5, det_fce_box_type='poly', rec_algorithm='CRNN', rec_model_path='weights/en_ptocr_v4_rec_infer.pth', 
+                          fourier_degree=5, det_fce_box_type='poly', rec_algorithm='CRNN', rec_model_path='models/pytorch_paddle_weight/en_ptocr_v4_rec_infer.pth', 
                           rec_image_inverse=True, rec_image_shape='3,48,320', rec_char_type='ch', rec_batch_num=6, max_text_length=25, 
                           use_space_char=True, drop_score=0.5, limited_max_width=1280, limited_min_width=16, 
-                          vis_font_path='/mnt/data/zhangtianning/projects/doc/fonts/simfang.ttf', 
-                          rec_char_dict_path='./pytorchocr/utils/en_dict.txt', use_angle_cls=False, cls_model_path=None, 
+                          vis_font_path=None, 
+                          rec_char_dict_path='batch_running_task/pytorchocr/utils/en_dict.txt', use_angle_cls=False, cls_model_path=None, 
                           cls_image_shape='3, 48, 192', label_list=['0', '180'], cls_batch_num=6, cls_thresh=0.9, enable_mkldnn=False, 
                           use_pdserving=False, e2e_algorithm='PGNet', e2e_model_path=None, e2e_limit_side_len=768, e2e_limit_type='max', 
-                          e2e_pgnet_score_thresh=0.5, e2e_char_dict_path='/mnt/data/zhangtianning/projects/pytorchocr/utils/ic15_dict.txt', 
+                          e2e_pgnet_score_thresh=0.5, e2e_char_dict_path='batch_running_task/pytorchocr/utils/ic15_dict.txt', 
                           e2e_pgnet_valid_set='totaltext', e2e_pgnet_polygon=True, e2e_pgnet_mode='fast', sr_model_path=None, 
                           sr_image_shape='3, 32, 128', sr_batch_num=1, det_yaml_path=None, rec_yaml_path='./configs/rec/PP-OCRv4/en_PP-OCRv4_rec.yml', 
                           cls_yaml_path=None, e2e_yaml_path=None, sr_yaml_path=None, use_mp=False, total_process_num=1, process_id=0, 

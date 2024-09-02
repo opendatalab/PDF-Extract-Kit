@@ -1,24 +1,42 @@
-import os
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
+import os,sys,warnings
+os.environ["TOKENIZERS_PARALLELISM"] = "false" 
+os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
+warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore', category=UserWarning)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from get_data_utils import *
-import numpy as np
 from tqdm.auto import tqdm
-from multiprocessing import Pool
-from functools import partial
 from torch.utils.data import Dataset, TensorDataset, DataLoader
 from dataaccelerate import DataPrefetcher 
 from scihub_pdf_dataset import MFRImageDataset,rec_collate_fn,deal_with_one_pdf,none_collate_fn,clean_pdf_path,Timers
-import yaml
+import yaml,re
 from torchvision import transforms
+from task_mfr.unimernet_modeling import DonutTokenizer
 try:
     client=build_client()
 except:
     client=None
 eps=1e-7
-
 import argparse
-from modules.post_process import latex_rm_whitespace
 import torch
+def latex_rm_whitespace(s: str):
+    """Remove unnecessary whitespace from LaTeX code.
+    """
+    text_reg = r'(\\(operatorname|mathrm|text|mathbf)\s?\*? {.*?})'
+    letter = '[a-zA-Z]'
+    noletter = '[\W_^\d]'
+    names = [x[0].replace(' ', '') for x in re.findall(text_reg, s)]
+    s = re.sub(text_reg, lambda match: str(names.pop(0)), s)
+    news = s
+    while True:
+        s = news
+        news = re.sub(r'(?!\\ )(%s)\s+?(%s)' % (noletter, noletter), r'\1\2', s)
+        news = re.sub(r'(?!\\ )(%s)\s+?(%s)' % (noletter, letter), r'\1\2', news)
+        news = re.sub(r'(%s)\s+?(%s)' % (letter, noletter), r'\1\2', news)
+        if news == s:
+            break
+    return s
+
 def mfr_model_init2(weight_dir, device='cpu',batch_size=128):
     args = argparse.Namespace(cfg_path="modules/UniMERNet/configs/demo.yaml", options=None)
     import unimernet.tasks as tasks
@@ -40,13 +58,12 @@ def mfr_model_init2(weight_dir, device='cpu',batch_size=128):
 
 def mfr_model_init(weight_dir, device='cpu',batch_size=128):
     from tensorrt_llm.runtime import MultimodalModelRunner
-    from clean_unimernet import DonutTokenizer
     from transformers import NougatProcessor,NougatImageProcessor
-    weight_dir ='/mnt/petrelfs/zhangtianning.di/projects/PDF-Extract-Kit/weights/unimernet_clean' 
+    weight_dir ='models/MFR/unimernet' 
     args  = argparse.Namespace(max_new_tokens=30, batch_size=batch_size, log_level='info', 
-                               visual_engine_dir=f'examples/multimodal/trt_engines.b{batch_size}/vision_encoder/', 
+                               visual_engine_dir=f'{weight_dir}/trt_engines.b{batch_size}/vision_encoder/', 
                                visual_engine_name='model.engine', 
-                               llm_engine_dir=f'examples/multimodal/trt_engines.b{batch_size}/unimernet/1-gpu/bfloat16', 
+                               llm_engine_dir=f'{weight_dir}/trt_engines.b{batch_size}/unimernet/1-gpu/bfloat16', 
                                hf_model_dir=weight_dir, 
                                input_text=None, num_beams=1, top_k=1, top_p=0.0, 
                                temperature=1.0, repetition_penalty=1.0, 
@@ -195,7 +212,7 @@ if __name__ == "__main__":
     images_dataset = MFRImageDataset("part-66210c190659-012745.jsonl",mfr_transform)
     images_dataset[0]
     patch_metadata_list =  fast_deal_with_one_dataset(images_dataset,mfr_model,
-                                               pdf_batch_size  =32,
+                                               pdf_batch_size  =2,
                           image_batch_size=image_batch_size,num_workers=8)
     write_jsonj_to_path(patch_metadata_list, "test_result/result.mfr.test3.jsonl", None)
         

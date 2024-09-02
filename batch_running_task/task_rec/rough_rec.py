@@ -1,13 +1,17 @@
 
+import os,sys,warnings
+os.environ["TOKENIZERS_PARALLELISM"] = "false" 
+os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
+warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore', category=UserWarning)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from get_data_utils import *
 import numpy as np
 from tqdm.auto import tqdm
-from multiprocessing import Pool
-from functools import partial
 import cv2
 from torch.utils.data import Dataset, TensorDataset, DataLoader
 from dataaccelerate import DataPrefetcher 
-from modules.batch_text_rec import TextRecognizer, rec_args
+from task_rec.batch_text_rec import TextRecognizer, rec_args
 import torch
 from scihub_pdf_dataset import RecImageDataset,rec_collate_fn,deal_with_one_pdf,none_collate_fn,clean_pdf_path,Timers
 try:
@@ -363,11 +367,11 @@ def fast_deal_with_one_dataset2(images_dataset:RecImageDataset,tex_recognizer:Te
 
 
 if __name__ == "__main__":
-    from modules.self_modify import ModifiedPaddleOCR
+    
     ocr_mode = 'batch'
     batch_size = 128
     num_workers= 8
-    metadata_filepath = "rec.test.jsonl"
+    metadata_filepath = "part-66210c190659-012745.jsonl"
     images_dataset    = RecImageDataset(metadata_filepath)
     
     if ocr_mode == 'batch':
@@ -378,7 +382,7 @@ if __name__ == "__main__":
         # patch_metadata_list = fast_deal_with_one_dataset(images_dataset,tex_recognizer,pdf_batch_size=32, image_batch_size=128 ,num_workers=num_workers)
         # write_jsonj_to_path(patch_metadata_list, "test_result/result.test1.jsonl", None)
     else:
-        
+        from modules.self_modify import ModifiedPaddleOCR
         
         dataset           = RecImageDataset(metadata_filepath)
         image_collecter   = DataLoader(dataset, batch_size=8,collate_fn=rec_collate_fn, 
