@@ -5,7 +5,7 @@
 output/*
 data/*
 temp*
-test*
+test-magic-pdf.py
 
 # python
 .ipynb_checkpoints

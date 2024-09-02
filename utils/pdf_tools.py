@@ -1,8 +1,7 @@
 import os
 
 from modules.extract_pdf import load_pdf_fitz
-
-from .logging_config import setup_logging
+from utils.config import setup_logging
 
 # Apply the logging configuration
 logger = setup_logging('pdf_tools')
@@ -84,8 +83,3 @@ def process_all_pdfs(all_pdfs: list, dpi: int = 200):
 
         logger.info(f"PDF index: {idx}, pages: {len(img_list)}")
         yield idx, single_pdf, img_list
-
-
-if __name__ == '__main__':
-    pdf_dir = "assets/examples/example.pdf"
-    check_pdf(pdf_dir)

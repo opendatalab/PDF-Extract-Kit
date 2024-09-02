@@ -1,13 +1,29 @@
 import os
+import yaml
 import pytz
 import logging
 import logging.config
 from datetime import datetime
 
-# Define the absolute path for the log file
-log_directory = os.path.dirname(os.path.abspath(__file__))
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+model_configs_path = os.path.join(parent_dir, 'configs/model_configs.yaml')
+
+################### MODEL CONFIGS ###################
+
+def load_config():
+    with open('configs/model_configs.yaml') as f:
+        model_configs = yaml.load(f, Loader=yaml.FullLoader)
+    return model_configs
+
+################### LOGGING CONFIG ###################
+
 # TODO: Define a suitable log_file_path
-log_file_path = os.path.join(log_directory, '../app_logs.log')
+log_file_path = os.path.join(parent_dir, 'app_logs.log')
+
+# TODO: Add to config file
+TIMEZONE: str = 'Europe/Madrid'# "Asia/Shanghai"
+timezone = pytz.timezone(TIMEZONE)  # Specify your time zone here
 
 
 class CustomFormatter(logging.Formatter):
@@ -25,11 +41,6 @@ class CustomFormatter(logging.Formatter):
             except TypeError:
                 s = dt.isoformat()
         return s
-
-# TODO: Add to config file
-TIMEZONE: str = 'Europe/Madrid'# "Asia/Shanghai"
-timezone = pytz.timezone(TIMEZONE)  # Specify your time zone here
-
 
 # Basic logging configuration
 LOGGING_CONFIG = {
@@ -76,8 +87,3 @@ def setup_logging(name: str = '__main__'):
     # Get the logger for this specific module
     logger = logging.getLogger(name)
     return logger
-
-# Call configuration immediately
-# setup_logging()
-
-
