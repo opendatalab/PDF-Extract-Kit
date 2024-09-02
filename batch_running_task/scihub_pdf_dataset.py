@@ -319,9 +319,11 @@ def get_croped_image(image_pil, bbox):
     croped_img = image_pil.crop((x_min, y_min, x_max, y_max))
     return croped_img
 
+from transformers import ImageProcessingMixin,ProcessorMixin
+            
 class MFRImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):
     error_count=0
-    def __init__(self, metadata_filepath,
+    def __init__(self, metadata_filepath,mfr_transform,
                  partion_num = 1,
                  partion_idx = 0):
         super().__init__()
@@ -329,9 +331,18 @@ class MFRImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):
         self.metadata= np.array_split(self.metadata, partion_num)[partion_idx]
         self.dpi = 200
         self.timer = Timers(False)
+        self.mfr_transform=mfr_transform
         self.client = build_client()
     def __len__(self):
         return len(self.metadata)
+    
+    def mfr_preprocessing(self,raw_image):
+        if isinstance(self.mfr_transform,(ImageProcessingMixin,ProcessorMixin)):
+            image_tensor = self.mfr_transform(raw_image, return_tensors="pt")['pixel_values'][0]
+        else:
+            image_tensor = self.mfr_transform(raw_image)
+
+        return image_tensor
     
     def extract_mfr_image(self, pdf_metadata):
         client = self.client
@@ -341,32 +352,34 @@ class MFRImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):
         width  = pdf_metadata['width']
         if pdf_path.startswith('s3'):
             pdf_path = "opendata:"+pdf_path
-        try:
-            with read_pdf_from_path(pdf_path, client) as pdf:
-                for pdf_page_metadata in pdf_metadata['doc_layout_result']:
-                    page_id = pdf_page_metadata['page_id']
+        
+        with read_pdf_from_path(pdf_path, client) as pdf:
+            for pdf_page_metadata in pdf_metadata['doc_layout_result']:
+                page_id = pdf_page_metadata['page_id']
+                try:
                     page    = pdf.load_page(page_id)
-                    ori_im  = process_pdf_page_to_image(page, 200, output_width=width,output_height=height)     
-                    bbox_id = 0
-                    for bbox_metadata in pdf_page_metadata['layout_dets']:
-                        if bbox_metadata['category_id'] not in [13, 14]:continue
-                        location= (clean_pdf_path(pdf_path),page_id,bbox_id)
-                        [xmin, ymin, xmax, ymin, xmax, ymax, xmin, ymax] = bbox_metadata['poly']
-                        bbox_img = get_croped_image(Image.fromarray(ori_im), [xmin, ymin, xmax, ymax])
-                        
-                        bbox_id+=1
-                        images_pool[location] = bbox_img
-            return (pdf_path,images_pool)
-        except KeyboardInterrupt:
-            raise
-        except:
-            traceback.print_exc()
-            tqdm.write(f"[Error]: {pdf_path}")
-            return (pdf_path,{})
+                except:
+                    continue
+                ori_im  = process_pdf_page_to_image(page, 200, output_width=width,output_height=height)     
+                for bbox_metadata in pdf_page_metadata['layout_dets']:
+                    if bbox_metadata['category_id'] not in [13, 14]:continue
+                    [xmin, ymin, xmax, ymin, xmax, ymax, xmin, ymax] = bbox_metadata['poly']
+                    bbox_id = tuple(bbox_metadata['poly'])
+                    location= (clean_pdf_path(pdf_path),page_id,bbox_id)
+                    bbox_img = get_croped_image(Image.fromarray(ori_im), [xmin, ymin, xmax, ymax])
+                    image_tensor = self.mfr_preprocessing(bbox_img)
+                    images_pool[location] = image_tensor
+        return (pdf_path,images_pool)
+        # except KeyboardInterrupt:
+        #     raise
+        # except:
+        #     traceback.print_exc()
+        #     tqdm.write(f"[Error]: {pdf_path}")
+        #     return (pdf_path,{})
 
     def __getitem__(self, index) :
         pdf_metadata = self.metadata[index]
-        return deal_with_one_pdf(pdf_metadata, self.client)
+        return self.extract_mfr_image(pdf_metadata)
 
 
 import traceback

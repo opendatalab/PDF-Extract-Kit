@@ -1,0 +1,2 @@
+nohup rclone ls cephdd:/llm-process-pperf/ebook_index_v4/scihub/v001/scihub/ > scihub.filelist &
+nohup rclone ls cephdd:llm-pdf-text/pdf_gpu_output/ebook_index_v4/scihub/v001/scihub/ > finished.filelist &

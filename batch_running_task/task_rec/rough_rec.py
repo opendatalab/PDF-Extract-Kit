@@ -281,7 +281,7 @@ def fast_deal_with_one_dataset2(images_dataset:RecImageDataset,tex_recognizer:Te
         no_image_pdf_list = []
         image_pool = {}
         current_group_bboxes = {}
-        for idx,(pdf_path, image_dict) in enumerate(tqdm(image_pool_list,position=0,leave=False, desc="Partiton current image pool")):
+        for idx,(pdf_path, image_dict) in enumerate(tqdm(image_pool_list,position=2,leave=False, desc="Partiton current image pool")):
             if len(image_dict)==0:
                 no_image_pdf_list.append(pdf_path)
                 #print(f"pdf {pdf_path} has no text image")
