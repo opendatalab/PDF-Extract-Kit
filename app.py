@@ -13,6 +13,7 @@ import torch
 import numpy as np
 import gc
 
+
 from paddleocr import draw_ocr
 from PIL import Image, ImageDraw, ImageFont
 from torchvision import transforms
@@ -28,6 +29,12 @@ from modules.extract_pdf import load_pdf_fitz
 from modules.layoutlmv3.model_init import Layoutlmv3_Predictor
 from modules.self_modify import ModifiedPaddleOCR
 from modules.post_process import get_croped_image, latex_rm_whitespace
+
+from utils.pdf_tools import check_pdf, process_all_pdfs
+from utils.logging_config import setup_logging
+
+# Apply the logging configuration
+logger = setup_logging('app')
 
 
 def mfd_model_init(weight):
@@ -80,29 +87,35 @@ class MathDataset(Dataset):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--pdf', type=str)
-    parser.add_argument('--output', type=str, default="output")
-    parser.add_argument('--batch-size', type=int, default=128)
-    parser.add_argument('--vis', action='store_true')
-    parser.add_argument('--render', action='store_true')
-    parser.add_argument('--timezone', type=str, default="Asia/Shanghai")
-    args = parser.parse_args()
-    print(args)
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument('--pdf', type=str)
+    # parser.add_argument('--output', type=str, default="output")
+    # parser.add_argument('--batch-size', type=int, default=128)
+    # parser.add_argument('--vis', action='store_true')
+    # parser.add_argument('--render', action='store_true')
+    # parser.add_argument('--timezone', type=str, default="Asia/Shanghai")
+    # args = parser.parse_args()
+    # print(args)
 
-    tz = pytz.timezone(args.timezone)
-    now = datetime.datetime.now(tz)
-    print(now.strftime('%Y-%m-%d %H:%M:%S'))
-    print('Started!')
+    # Params
+    pdf_path: str = '1706.03762.pdf'
+    output_dir: str = 'output'
+    batch_size: int = 128
+    vis: bool = False
+    render: bool = False
 
+    logger.info('Started!')
+    start_0 = time.time()
     ## ======== model init ========##
     with open('configs/model_configs.yaml') as f:
         model_configs = yaml.load(f, Loader=yaml.FullLoader)
+
     img_size = model_configs['model_args']['img_size']
     conf_thres = model_configs['model_args']['conf_thres']
     iou_thres = model_configs['model_args']['iou_thres']
     device = model_configs['model_args']['device']
     dpi = model_configs['model_args']['pdf_dpi']
+
     mfd_model = mfd_model_init(model_configs['model_args']['mfd_weight'])
     mfr_model, mfr_vis_processors = mfr_model_init(model_configs['model_args']['mfr_weight'], device=device)
     mfr_transform = transforms.Compose([mfr_vis_processors, ])
@@ -110,26 +123,16 @@ if __name__ == '__main__':
                              max_time=model_configs['model_args']['table_max_time'], device=device)
     layout_model = layout_model_init(model_configs['model_args']['layout_weight'])
     ocr_model = ModifiedPaddleOCR(show_log=True)
-    print(now.strftime('%Y-%m-%d %H:%M:%S'))
-    print('Model init done!')
+
+    logger.info(f'Model init done in {int(time.time() - start_0)}s!')
     ## ======== model init ========##
 
-    start = time.time()
-    if os.path.isdir(args.pdf):
-        all_pdfs = [os.path.join(args.pdf, name) for name in os.listdir(args.pdf)]
-    else:
-        all_pdfs = [args.pdf]
-    print("total files:", len(all_pdfs))
-    for idx, single_pdf in enumerate(all_pdfs):
-        try:
-            img_list = load_pdf_fitz(single_pdf, dpi=dpi)
-        except:
-            img_list = None
-            print("unexpected pdf file:", single_pdf)
-        if img_list is None:
-            continue
-        print("pdf index:", idx, "pages:", len(img_list))
+    start_0 = time.time()
+    all_pdfs = check_pdf(pdf_path)
+    for idx, single_pdf, img_list in process_all_pdfs(all_pdfs, dpi):
+
         # layout detection and formula detection
+        logger.debug('layout detection and formula detection')
         doc_layout_result = []
         latex_filling_list = []
         mf_image_list = []
@@ -163,8 +166,9 @@ if __name__ == '__main__':
 
         # Formula recognition, collect all formula images in whole pdf file, then batch infer them.
         a = time.time()
+        logger.debug('Formula recognition')
         dataset = MathDataset(mf_image_list, transform=mfr_transform)
-        dataloader = DataLoader(dataset, batch_size=args.batch_size, num_workers=32)
+        dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=32)
         mfr_res = []
         for imgs in dataloader:
             imgs = imgs.to(device)
@@ -176,6 +180,7 @@ if __name__ == '__main__':
         print("formula nums:", len(mf_image_list), "mfr time:", round(b - a, 2))
 
         # ocr and table recognition
+        logger.debug('ocr and table recognition')
         for idx, image in enumerate(img_list):
             pil_img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
             single_page_res = doc_layout_result[idx]['layout_dets']
@@ -219,13 +224,13 @@ if __name__ == '__main__':
                         res["timeout"] = True
                     res["latex"] = output[0]
 
-        output_dir = args.output
         os.makedirs(output_dir, exist_ok=True)
         basename = os.path.basename(single_pdf)[0:-4]
+        logger.debug(f'Save file: {basename}.json')
         with open(os.path.join(output_dir, f'{basename}.json'), 'w') as f:
             json.dump(doc_layout_result, f)
 
-        if args.vis:
+        if vis:
             color_palette = [
                 (255, 64, 255), (255, 255, 0), (0, 255, 255), (255, 215, 135), (215, 0, 95), (100, 0, 48), (0, 175, 0),
                 (95, 0, 95), (175, 95, 0), (95, 95, 0),
@@ -239,7 +244,7 @@ if __name__ == '__main__':
             vis_pdf_result = []
             for idx, image in enumerate(img_list):
                 single_page_res = doc_layout_result[idx]['layout_dets']
-                vis_img = Image.new('RGB', Image.fromarray(image).size, 'white') if args.render else Image.fromarray(
+                vis_img = Image.new('RGB', Image.fromarray(image).size, 'white') if render else Image.fromarray(
                     cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
                 draw = ImageDraw.Draw(vis_img)
                 for res in single_page_res:
@@ -249,7 +254,7 @@ if __name__ == '__main__':
                     label_name = id2names[label]
                     x_min, y_min = int(res['poly'][0]), int(res['poly'][1])
                     x_max, y_max = int(res['poly'][4]), int(res['poly'][5])
-                    if args.render and label in [13, 14, 15]:
+                    if render and label in [13, 14, 15]:
                         try:
                             if label in [13, 14]:  # render formula
                                 window_img = tex2pil(res['latex'])[0]
@@ -282,7 +287,4 @@ if __name__ == '__main__':
             except:
                 pass
 
-    now = datetime.datetime.now(tz)
-    end = time.time()
-    print(now.strftime('%Y-%m-%d %H:%M:%S'))
-    print('Finished! time cost:', int(end - start), 's')
+    logger.info(f'Finished! time cost: {int(time.time() - start_0)} s')
