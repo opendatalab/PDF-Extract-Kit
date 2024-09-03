@@ -1,26 +1,15 @@
 # refactoring pdf_extract.py
-
-import os
-import json
 import time
 
-from modules.self_modify import ModifiedPaddleOCR
+from app_tools.config import setup_logging
+from app_tools.pdf import PDFProcessor
+from app_tools.layout_analysis import LayoutAnalyzer
+from app_tools.formula_analysis import FormulaProcessor
+from app_tools.ocr_analysis import OCRProcessor
+from app_tools.table_analysis import TableProcessor
+from app_tools.visualize import get_visualize
+from app_tools.utils import save_file
 
-from utils.pdf_tools import PDFProcessor
-from utils.config import setup_logging
-
-from utils.model_tools import mfd_model_init
-from utils.model_tools import mfr_model_init
-from utils.model_tools import layout_model_init
-from utils.model_tools import tr_model_init
-
-from utils.recognition import formula_recognition
-from utils.recognition import ocr_recognition, table_recognition
-from utils.visualize import get_visualize
-
-from utils.detection import layout_detection, formula_detection
-
-# Apply the logging configuration
 logger = setup_logging('app')
 
 
@@ -34,43 +23,31 @@ if __name__ == '__main__':
     render: bool = False
 
     logger.info('Started!')
-    start_0 = time.time()
+    start = time.time()
     ## ======== model init ========##
-    mfd_model = mfd_model_init()
-    mfr_model, mfr_transform = mfr_model_init()
-    tr_model = tr_model_init()
-    layout_model = layout_model_init()
-    ocr_model = ModifiedPaddleOCR(show_log=True)
-    logger.info(f'Model init done in {int(time.time() - start_0)}s!')
+    analyzer = LayoutAnalyzer()
+    formulas = FormulaProcessor()
+    ocr_processor = OCRProcessor(show_log=True)
+    table_processor = TableProcessor()
+    logger.info(f'Model init done in {int(time.time() - start)}s!')
     ## ======== model init ========##
 
-    start_0 = time.time()
-
+    start = time.time()
     pdf_processor = PDFProcessor()
     all_pdfs = pdf_processor.check_pdf(pdf_path)
 
     for idx, single_pdf, img_list in pdf_processor.process_all_pdfs(all_pdfs):
 
-        # layout detection and formula detection
-        doc_layout_result = layout_detection(img_list, layout_model)
-        doc_layout_result, latex_filling_list, mf_image_list = formula_detection(img_list, doc_layout_result, mfd_model)
+        doc_layout_result = analyzer.detect_layout(img_list)
+        doc_layout_result = formulas.detect_recognize_formulas(img_list, doc_layout_result)
+        doc_layout_result = ocr_processor.recognize_ocr(img_list, doc_layout_result)
+        doc_layout_result = table_processor.recognize_tables(img_list, doc_layout_result)
 
-        # Formula recognition, collect all formula images in whole pdf file, then batch infer them.
-        formula_recognition(mf_image_list, latex_filling_list, mfr_model, mfr_transform, batch_size)
-
-        # ocr and table recognition
-        doc_layout_result = ocr_recognition(img_list, doc_layout_result, ocr_model)
-        doc_layout_result = table_recognition(img_list, doc_layout_result, tr_model)
-
-
-        os.makedirs(output_dir, exist_ok=True)
-        basename = os.path.basename(single_pdf)[0:-4]
+        basename = save_file(output_dir, single_pdf, doc_layout_result)
         logger.debug(f'Save file: {basename}.json')
-        with open(os.path.join(output_dir, f'{basename}.json'), 'w') as f:
-            json.dump(doc_layout_result, f)
 
         if vis:
             get_visualize(img_list, doc_layout_result, render, output_dir, basename)
 
-    logger.info(f'Finished! time cost: {int(time.time() - start_0)} s')
+    logger.info(f'Finished! time cost: {int(time.time() - start)} s')
     logger.info('----------------------------------------')

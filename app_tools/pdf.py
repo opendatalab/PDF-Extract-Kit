@@ -2,14 +2,14 @@ import os
 from typing import List, Optional, Generator
 
 from modules.extract_pdf import load_pdf_fitz
-from utils.config import load_config, setup_logging
+from app_tools.config import load_config, setup_logging
 
 
 class PDFProcessor:
     """
     Class PDFTools
 
-    This class provides a set of tools for working with PDF files.
+    This class provides a set of app_tools for working with PDF files.
 
     Methods:
     - __init__(config_path: Optional[str] = None): Initializes the PDFTools object.

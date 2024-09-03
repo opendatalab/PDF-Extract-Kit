@@ -4,7 +4,7 @@ import cv2
 from PIL import Image, ImageDraw, ImageFont
 
 from modules.latex2png import tex2pil, zhtext2pil
-from utils.config import setup_logging
+from app_tools.config import setup_logging
 
 # Apply the logging configuration
 logger = setup_logging('visualize')
@@ -21,7 +21,27 @@ id2names = ["title", "plain_text", "abandon", "figure", "figure_caption", "table
             "ocr_text"]
 
 def get_visualize(img_list: list, doc_layout_result, render: bool, output_dir, basename):
+    """
+    This function takes a list of images, the result of a document layout analysis, a boolean flag 'render', an output directory path, and a basename as input arguments. It generates visualizations of the document layout and saves them as a PDF file.
 
+    Parameters:
+    - img_list (list): A list of images. Each image should be a numpy array representing an image.
+    - doc_layout_result: The result of a document layout analysis. It should be a list of dictionaries, where each dictionary represents the layout details of a single page. Each dictionary should contain information such as the category ID, polygon coordinates, and text/latex content.
+    - render (bool): A boolean flag indicating whether to render the text/latex content in the visualizations.
+    - output_dir: The output directory where the PDF file will be saved.
+    - basename: The basename of the PDF file.
+
+    Returns:
+    None
+
+    Example Usage:
+    img_list = [image1, image2, ...]  # list of images
+    doc_layout_result = [...]  # list of layout dictionaries
+    render = True  # or False
+    output_dir = '/path/to/output/directory'
+    basename = 'output'
+    get_visualize(img_list, doc_layout_result, render, output_dir, basename)
+    """
     vis_pdf_result = []
     for idx, image in enumerate(img_list):
         single_page_res = doc_layout_result[idx]['layout_dets']
