@@ -6,16 +6,15 @@ import time
 
 from modules.self_modify import ModifiedPaddleOCR
 
-from utils.pdf_tools import check_pdf, process_all_pdfs
+from utils.pdf_tools import PDFProcessor
 from utils.config import setup_logging
 
-from utils.model_tools import load_config
 from utils.model_tools import mfd_model_init
 from utils.model_tools import mfr_model_init
 from utils.model_tools import layout_model_init
 from utils.model_tools import tr_model_init
 
-from utils.recognition import formula_recognition, ocr_table_recognition
+from utils.recognition import formula_recognition
 from utils.recognition import ocr_recognition, table_recognition
 from utils.visualize import get_visualize
 
@@ -37,29 +36,22 @@ if __name__ == '__main__':
     logger.info('Started!')
     start_0 = time.time()
     ## ======== model init ========##
-    model_configs = load_config()
-
-    img_size = model_configs['model_args']['img_size']
-    conf_thres = model_configs['model_args']['conf_thres']
-    iou_thres = model_configs['model_args']['iou_thres']
-    device = model_configs['model_args']['device']
-    dpi = model_configs['model_args']['pdf_dpi']
-
     mfd_model = mfd_model_init()
     mfr_model, mfr_transform = mfr_model_init()
     tr_model = tr_model_init()
     layout_model = layout_model_init()
     ocr_model = ModifiedPaddleOCR(show_log=True)
-
     logger.info(f'Model init done in {int(time.time() - start_0)}s!')
     ## ======== model init ========##
 
     start_0 = time.time()
-    all_pdfs = check_pdf(pdf_path)
-    for idx, single_pdf, img_list in process_all_pdfs(all_pdfs, dpi):
+
+    pdf_processor = PDFProcessor()
+    all_pdfs = pdf_processor.check_pdf(pdf_path)
+
+    for idx, single_pdf, img_list in pdf_processor.process_all_pdfs(all_pdfs):
 
         # layout detection and formula detection
-        logger.debug('layout detection and formula detection')
         doc_layout_result = layout_detection(img_list, layout_model)
         doc_layout_result, latex_filling_list, mf_image_list = formula_detection(img_list, doc_layout_result, mfd_model)
 

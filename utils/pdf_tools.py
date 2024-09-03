@@ -1,85 +1,139 @@
 import os
+from typing import List, Optional, Generator
 
 from modules.extract_pdf import load_pdf_fitz
-from utils.config import setup_logging
-
-# Apply the logging configuration
-logger = setup_logging('pdf_tools')
+from utils.config import load_config, setup_logging
 
 
-def check_pdf(pdf_path: str):
+class PDFProcessor:
     """
-    Checks if the given path is a directory or a single PDF file.
-    If it is a directory, it retrieves all the PDF files within the directory.
-    Otherwise, it treats the path as a single PDF file.
+    Class PDFTools
 
-    :param pdf_path: The path to the directory or PDF file.
-    :type pdf_path: str
-    :returns: A list of PDF file paths.
-    :rtype: list[str]
+    This class provides a set of tools for working with PDF files.
+
+    Methods:
+    - __init__(config_path: Optional[str] = None): Initializes the PDFTools object.
+    - load_config(config_path: Optional[str] = None) -> dict: Loads the configuration from a JSON file.
+    - setup_logging(name: str) -> Logger: Sets up the logging configuration.
+
+    Attributes:
+    - config: A dictionary containing the configuration settings.
+    - dpi: The DPI (dots per inch) for the PDF files.
+    - logger: The logger object for logging messages.
+
+
+    __init__(config_path: Optional[str] = None)
+        Initializes the PDFTools object.
+
+        Parameters:
+            config_path (Optional[str]): Path to the configuration file. If None, the default configuration file will be loaded.
+
+    load_config(config_path: Optional[str] = None) -> dict
+        Loads the configuration from a JSON file.
+
+        Parameters:
+            config_path (Optional[str]): Path to the configuration file. If None, the default configuration file will be loaded.
+
+        Returns:
+            dict: A dictionary containing the configuration settings.
+
+    setup_logging(name: str) -> Logger
+        Sets up the logging configuration.
+
+        Parameters:
+            name (str): The name of the logger.
+
+        Returns:
+            Logger: The logger object for logging messages.
+
+    Attributes:
+    - config (dict): A dictionary containing the configuration settings.
+    - dpi (int): The DPI (dots per inch) for the PDF files.
+    - logger (Logger): The logger object for logging messages.
     """
-    if os.path.isdir(pdf_path):
-        all_pdfs = [os.path.join(pdf_path, name) for name in os.listdir(pdf_path)]
-    else:
-        all_pdfs = [pdf_path]
-    logger.info(f"Total files: {len(all_pdfs)}")
-    return all_pdfs
 
+    def __init__(self, config_path: Optional[str] = None):
 
-def get_images(single_pdf: str, dpi: int = 200) -> list | None:
-    """
-    This function retrieves a list of images from a given PDF file.
-    It uses the `load_pdf_fitz()` function to load the PDF and convert its contents into images.
+        self.config = load_config(config_path) if config_path else load_config()
+        self.dpi = self.config['model_args']['pdf_dpi']
+        self.logger = setup_logging('pdf_tools')
 
-    Parameters:
-    - `single_pdf` (str): The path to the PDF file.
-    - `dpi` (int): The resolution at which the PDF should be converted to images. Default is 200.
+    def check_pdf(self, pdf_path: str) -> List[str]:
+        """
+        This method is used to check if a given file path is a directory or a single PDF file.
 
-    Returns:
-    - list or None: A list of images if the conversion was successful, otherwise None.
+        Parameters:
+        - pdf_path (str): The file path to check. It can be either a directory or a single PDF file path.
 
-    Raises:
-    - Any exceptions raised by the `load_pdf_fitz()` function are caught and logged, and the function returns None.
-    """
-    try:
-        img_list = load_pdf_fitz(single_pdf, dpi=dpi)
-    except Exception as e:
-        logger.error(f"Unexpected error with PDF file '{single_pdf}': {e}")
-        return None
-    return img_list
+        Returns:
+        - List[str]: A list of PDF file paths.
 
+        Example Usage:
+        ```
+        pdf_checker = PDFChecker()
+        result = pdf_checker.check_pdf('/path/to/pdfs')
+        print(result)
+        ```
 
-def process_all_pdfs(all_pdfs: list, dpi: int = 200):
-    """
-    Processes a list of PDF files and yields information about each PDF file.
+        Note: This method will return an empty list if no PDF files are found in the given directory or if the given file path is not a PDF file.
+        """
+        if os.path.isdir(pdf_path):
+            all_pdfs = [os.path.join(pdf_path, name) for name in os.listdir(pdf_path) if name.endswith('.pdf')]
+        else:
+            all_pdfs = [pdf_path]
+        self.logger.info(f"Total files: {len(all_pdfs)}")
+        return all_pdfs
 
-    Args:
-        all_pdfs (list): A list of paths to PDF files.
-        dpi (int, optional): DPI (dots per inch) value for converting PDF to images. Default is 200.
+    def get_images(self, single_pdf: str) -> Optional[List[str]]:
+        """
+        This method retrieves a list of images from a single PDF file.
 
-    Yields:
-        Tuple[int, str, List]: A tuple containing the following information:
-            - PDF index (int): Index of the PDF file in the list.
-            - PDF path (str): Path to the PDF file.
-            - PDF images (List): A list of images extracted from the PDF file.
+        Parameters:
+        - single_pdf: A string representing the path to the PDF file.
 
-    Notes:
-        - If an error occurs while processing a PDF file, it will be skipped and the next PDF file will be processed.
-        - The logger will output information about the PDF index and the number of pages in each PDF file.
+        Returns:
+        - Optional[List[str]]: A list of strings representing the images extracted from the PDF file. Returns None if there was an error during the extraction process.
 
-    Example:
-        >>> pdfs = [
-        ...     'path/to/file1.pdf',
-        ...     'path/to/file2.pdf',
-        ... ]
-        >>> for idx, pdf, images in process_all_pdfs(pdfs):
-        ...     print(f"PDF index: {idx}, PDF path: {pdf}, Number of images: {len(images)}")
-    """
-    for idx, single_pdf in enumerate(all_pdfs):
-        img_list = get_images(single_pdf, dpi)
+        Raises:
+        - None
 
-        if img_list is None:
-            continue
+        Example:
+            obj = MyClass()
+            images = obj.get_images('example.pdf')
+        """
+        try:
+            img_list = load_pdf_fitz(single_pdf, self.dpi)
+        except Exception as e:
+            self.logger.error(f"Unexpected error with PDF file '{single_pdf}': {e}")
+            return None
+        return img_list
 
-        logger.info(f"PDF index: {idx}, pages: {len(img_list)}")
-        yield idx, single_pdf, img_list
+    def process_all_pdfs(self, all_pdfs: List[str]) -> Generator[tuple[int, str, List[str]], None, None]:
+        """
+        This method `process_all_pdfs` processes a list of PDF files and returns a generator that yields a tuple for each PDF file. The tuple contains the index of the PDF file in the list, the path of the PDF file, and a list of image paths extracted from the PDF file.
+
+        Parameters:
+        - `self`: The current instance of the class.
+        - `all_pdfs`: A List of strings representing the paths of the PDF files to be processed.
+
+        Returns:
+        - `Generator[tuple[int, str, List[str]], None, None]`: A generator that yields a tuple for each PDF file. The tuple contains the index of the PDF file, the path of the PDF file, and a list of image paths extracted from the PDF file.
+
+        Example usage:
+        ```python
+        pdf_processor = PDFProcessor()
+        pdf_files = ["file1.pdf", "file2.pdf", "file3.pdf"]
+        for index, path, images in pdf_processor.process_all_pdfs(pdf_files):
+            print(f"Processing PDF index: {index}")
+            print(f"PDF path: {path}")
+            print(f"Images: {images}")
+        ```
+        """
+        for idx, single_pdf in enumerate(all_pdfs):
+            img_list = self.get_images(single_pdf)
+
+            if img_list is None:
+                continue
+
+            self.logger.info(f"PDF index: {idx}, pages: {len(img_list)}")
+            yield idx, single_pdf, img_list
