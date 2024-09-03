@@ -79,6 +79,7 @@ if __name__ == '__main__':
     parser.add_argument('--pdf', type=str)
     parser.add_argument('--output', type=str, default="output")
     parser.add_argument('--batch-size', type=int, default=128)
+    parser.add_argument('--num-workers', type=int, default=32)
     parser.add_argument('--vis', action='store_true')
     parser.add_argument('--render', action='store_true')
     args = parser.parse_args()
@@ -157,7 +158,7 @@ if __name__ == '__main__':
         # Formula recognition, collect all formula images in whole pdf file, then batch infer them.
         a = time.time()  
         dataset = MathDataset(mf_image_list, transform=mfr_transform)
-        dataloader = DataLoader(dataset, batch_size=args.batch_size, num_workers=32)
+        dataloader = DataLoader(dataset, batch_size=args.batch_size, num_workers=args.num_workers)
         mfr_res = []
         for imgs in dataloader:
             imgs = imgs.to(device)
