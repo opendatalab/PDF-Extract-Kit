@@ -65,7 +65,7 @@ def ocr_table_recognition(img_list: list, doc_layout_result, ocr_model, tr_model
         single_page_res = doc_layout_result[idx]['layout_dets']
         single_page_mfdetrec_res = []
         for res in single_page_res:
-            if int(res['category_id']) in [13, 14]:
+            if int(res['category_id']) in [13, 14]:  # categories formula
                 xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
                 xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
                 single_page_mfdetrec_res.append({
@@ -105,5 +105,78 @@ def ocr_table_recognition(img_list: list, doc_layout_result, ocr_model, tr_model
                 res["latex"] = output[0]
 
     logger.info(f'ocr and table recognition done in: {round(time.time() - start, 2)}')
+
+    return doc_layout_result
+
+
+def ocr_recognition(img_list: list, doc_layout_result, ocr_model):
+    logger.debug('ocr recognition')
+    start = time.time()
+
+    for idx, image in enumerate(img_list):
+        pil_img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+        single_page_res = doc_layout_result[idx]['layout_dets']
+        single_page_mfdetrec_res = []
+        for res in single_page_res:
+            if int(res['category_id']) in [13, 14]:  # categories formula
+                xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
+                xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
+                single_page_mfdetrec_res.append({
+                    "bbox": [xmin, ymin, xmax, ymax],
+                })
+        for res in single_page_res:
+            if int(res['category_id']) in [0, 1, 2, 4, 6, 7]:  # categories that need to do ocr
+                xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
+                xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
+                crop_box = [xmin, ymin, xmax, ymax]
+                cropped_img = Image.new('RGB', pil_img.size, 'white')
+                cropped_img.paste(pil_img.crop(crop_box), crop_box)
+                cropped_img = cv2.cvtColor(np.asarray(cropped_img), cv2.COLOR_RGB2BGR)
+                ocr_res = ocr_model.ocr(cropped_img, mfd_res=single_page_mfdetrec_res)[0]
+                if ocr_res:
+                    for box_ocr_res in ocr_res:
+                        p1, p2, p3, p4 = box_ocr_res[0]
+                        text, score = box_ocr_res[1]
+                        doc_layout_result[idx]['layout_dets'].append({
+                            'category_id': 15,
+                            'poly': p1 + p2 + p3 + p4,
+                            'score': round(score, 2),
+                            'text': text,
+                        })
+
+    logger.info(f'ocr recognition done in: {round(time.time() - start, 2)}')
+
+    return doc_layout_result
+
+
+def table_recognition(img_list, doc_layout_result, tr_model):
+    model_configs = load_config()
+    max_time = model_configs['model_args']['table_max_time']
+
+    logger.debug('table recognition')
+    start_0 = time.time()
+
+    for idx, image in enumerate(img_list):
+        pil_img = Image.fromarray(image)
+        single_page_res = doc_layout_result[idx]['layout_dets']
+
+        for jdx, res in enumerate(single_page_res):
+            if int(res['category_id']) == 5:  # do table recognition
+                xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
+                xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
+                crop_box = [xmin, ymin, xmax, ymax]
+                cropped_img = pil_img.crop(crop_box)
+
+                start = time.time()
+                with torch.no_grad():
+                    start_1 = time.time()
+                    output = tr_model(cropped_img) # It takes a lot of time
+                    logger.debug(f'{idx} - {jdx} tr_model generate in: {time.time() - start_1}s')
+
+                if (time.time() - start) > max_time:
+                    res["timeout"] = True
+                res["latex"] = output[0]
+
+    logger.info(f'table recognition done in: {round(time.time() - start_0, 2)}')
 
     return doc_layout_result

@@ -15,8 +15,8 @@ from utils.model_tools import mfr_model_init
 from utils.model_tools import layout_model_init
 from utils.model_tools import tr_model_init
 
-from utils.detection import layout_detection_and_formula
 from utils.recognition import formula_recognition, ocr_table_recognition
+from utils.recognition import ocr_recognition, table_recognition
 from utils.visualize import get_visualize
 
 from utils.detection import layout_detection, formula_detection
@@ -60,7 +60,6 @@ if __name__ == '__main__':
 
         # layout detection and formula detection
         logger.debug('layout detection and formula detection')
-        # doc_layout_result, latex_filling_list, mf_image_list = layout_detection_and_formula(img_list, layout_model, mfd_model)
         doc_layout_result = layout_detection(img_list, layout_model)
         doc_layout_result, latex_filling_list, mf_image_list = formula_detection(img_list, doc_layout_result, mfd_model)
 
@@ -68,7 +67,8 @@ if __name__ == '__main__':
         formula_recognition(mf_image_list, latex_filling_list, mfr_model, mfr_transform, batch_size)
 
         # ocr and table recognition
-        doc_layout_result = ocr_table_recognition(img_list, doc_layout_result, ocr_model, tr_model)
+        doc_layout_result = ocr_recognition(img_list, doc_layout_result, ocr_model)
+        doc_layout_result = table_recognition(img_list, doc_layout_result, tr_model)
 
 
         os.makedirs(output_dir, exist_ok=True)
@@ -81,3 +81,4 @@ if __name__ == '__main__':
             get_visualize(img_list, doc_layout_result, render, output_dir, basename)
 
     logger.info(f'Finished! time cost: {int(time.time() - start_0)} s')
+    logger.info('----------------------------------------')
