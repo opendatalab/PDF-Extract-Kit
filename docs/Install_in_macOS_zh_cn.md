@@ -87,3 +87,12 @@ DEVICE: mps
 ```bash
 python pdf_extract.py --pdf demo/demo1.pdf
 ```
+
+### 5.FAQ
+- 在部分较新的M芯片设备上，MPS加速开启失败
+  - 卸载torch和torchvision，重新安装nightly构建版torch和torchvision
+  - ```bash
+    pip uninstall torch torchvision
+    pip install --pre torch torchvision --index-url https://download.pytorch.org/whl/nightly/cpu
+    ```
+  - 参考来源 https://github.com/opendatalab/PDF-Extract-Kit/issues/23

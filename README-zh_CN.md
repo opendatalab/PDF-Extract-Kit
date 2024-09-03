@@ -1,4 +1,25 @@
+
+<p align="center">
+  <img src="assets/images/pdf-extract-kit_logo.png" width="220px" style="vertical-align:middle;">
+</p>
+
+
+
+<div align="center">
+
 [English](./README.md) | 简体中文
+
+[[Models (🤗Hugging Face)]](https://huggingface.co/wanderkid/PDF-Extract-Kit) | [[Models(<img src="./assets/images/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/OpenDataLab/PDF-Extract-Kit) 
+ 
+
+🔥🔥🔥 [MinerU：基于PDF-Extract-Kit的高效文档内容提取工具](https://github.com/opendatalab/MinerU)
+
+</div>
+
+<p align="center">
+    👋 join us on <a href="https://discord.gg/JYsXDXXN" target="_blank">Discord</a> and <a href="https://r.vansin.top/?r=MinerU" target="_blank">WeChat</a>
+</p>
+
 
 ## 整体介绍
 
@@ -6,14 +27,21 @@ PDF文档中包含大量知识信息，然而提取高质量的PDF内容并非�
 - 布局检测：使用[LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3)模型进行区域检测，如`图像`，`表格`,`标题`,`文本`等；
 - 公式检测：使用[YOLOv8](https://github.com/ultralytics/ultralytics)进行公式检测，包含`行内公式`和`行间公式`；
 - 公式识别：使用[UniMERNet](https://github.com/opendatalab/UniMERNet)进行公式识别；
+- 表格识别：使用[StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy)进行表格识别；
 - 光学字符识别：使用[PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)进行文本识别；
 
 > **注意：** *由于文档类型的多样性，现有开源的布局检测和公式检测很难处理多样性的PDF文档，为此我们内容采集多样性数据进行标注和训练，使得在各类文档上取得精准的检测效果，细节参考[布局检测](#layout-anchor)和[公式检测](#mfd-anchor)部分。对于公式识别，UniMERNet方法可以媲美商业软件，在各种类型公式识别上均匀很高的质量。对于OCR，我们采用PaddleOCR，对中英文OCR效果不错。*
 
-
 PDF内容提取框架如下图所示
 
 ![](assets/demo/pipeline_v2.png)
+
+
+## 新闻和更新
+- `2024.08.01` 🎉🎉🎉 新增了[StructEqTable](demo/TabRec/StructEqTable/README_TABLE.md)表格识别模块用于表格内容提取，欢迎使用！
+- `2024.07.01` 🎉🎉🎉 我们发布了`PDF-Extract-Kit`，一个用于高质量PDF内容提取的综合工具包，包括`布局检测`、`公式检测`、`公式识别`和`OCR`。
+```
+
 
 
 <details>
@@ -77,7 +105,9 @@ PDF内容提取框架如下图所示
 
 ## 评测指标
 
-现有开源模型多基于Arxiv论文类型数据进行训练，面对多样性的PDF文档，提前质量远不能达到实用需求。相比之下，我们的模型经过多样化数据训练，可以适应各种类型文档提取。
+现有开源模型多基于Arxiv论文类型数据进行训练，面对多样性的PDF文档，提取质量远不能达到实用需求。相比之下，我们的模型经过多样化数据训练，可以适应各种类型文档提取。
+
+评测代码及详细信息请看[这里](./assets/validation/README-zh_CN.md)。
 
 <span id="layout-anchor"></span>
 ### 布局检测
@@ -181,12 +211,18 @@ PDF内容提取框架如下图所示
 
 ### 公式识别
 
-公式识别我们使用的是[Unimernet](https://github.com/opendatalab/UniMERNet)的权重，没有进一步的SFT训练，其精度验证结果可以在其GitHub页面获取。
+![BLEU](https://github.com/opendatalab/VIGC/assets/69186975/ec8eb3e2-4ccc-4152-b18c-e86b442e2dcc)
 
+公式识别我们使用的是[UniMERNet](https://github.com/opendatalab/UniMERNet)的权重，没有进一步的SFT训练，其精度验证结果可以在其GitHub页面获取。
+
+### 表格识别
+![StructEqTable](assets/demo/table_expamle.png)
+
+表格识别我们使用的是[StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy)的权重，用于将表格转换为LaTeX。相比于PP-StructureV2的表格识别，StructEqTable的识别能力更强，针对复杂表格也能够有不错的效果，但目前可能主要适用于学术论文中的数据，速度也有较大的提升空间，我们仍在不断迭代优化中。在一周内我们会将表格识别的功能同步更新到[MinerU](https://github.com/opendatalab/MinerU)中。
 
 ## 使用教程
 
-### 环境安装
+### 环境安装 (Linux)
 
 ```bash
 conda create -n pipeline python=3.10
@@ -233,17 +269,68 @@ python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
 - `--vis` 是否对结果可视化，是则会把检测的结果可视化出来，主要是检测框和类别
 - `--render` 是否把识别得的结果渲染出来，包括公式的latex代码，以及普通文本，都会渲染出来放在检测框中。注意：此过程非常耗时，另外也需要提前安装`xelatex`和`imagemagic`。
 
+> 本项目专注使用模型对`多样性`文档进行`高质量`内容提取，不涉及提取后内容拼接成新文档，如PDF转Markdown。如果有此类需求，请参考我们另一个Github项目: [MinerU](https://github.com/opendatalab/MinerU)
+
+
+## 待办事项
+
+- [x] **表格解析**：开发能够将表格图像转换成对应的LaTeX/Markdown格式源码的功能。  
+- [ ] **化学方程式检测**：实现对化学方程式的自动检测。  
+- [ ] **化学方程式/图解识别**：开发识别并解析化学方程式的模型。  
+- [ ] **阅读顺序排序模型**：构建模型以确定文档中文本的正确阅读顺序。  
+
+**PDF-Extract-Kit** 旨在提供高质量PDF文件的提取能力。我们鼓励社区提出具体且有价值的需求，并欢迎大家共同参与，以不断改进PDF-Extract-Kit工具，推动科研及产业发展。
+
 
 ## 协议
 
 本仓库的代码依照 [Apache-2.0](LICENSE) 协议开源。
 
-使用模型权重时，请遵循对应的模型协议：[LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3) / [UniMERNet](https://github.com/opendatalab/UniMERNet) / [YOLOv8](https://github.com/ultralytics/ultralytics) / [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR).
+使用模型权重时，请遵循对应的模型协议：[LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3) / [UniMERNet](https://github.com/opendatalab/UniMERNet) / [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy) / [YOLOv8](https://github.com/ultralytics/ultralytics) / [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR).
 
 
 ## 致谢
 
    - [LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3): 布局检测模型
    - [UniMERNet](https://github.com/opendatalab/UniMERNet): 公式识别模型
+   - [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy): 表格识别模型
    - [YOLOv8](https://github.com/ultralytics/ultralytics): 公式检测模型
    - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR模型
+
+
+## Citation
+
+如果你觉得我们模型/代码/技术报告对你有帮助，请给我们⭐和引用📝,谢谢 :)  
+```bibtex
+@misc{wang2024unimernet,
+      title={UniMERNet: A Universal Network for Real-World Mathematical Expression Recognition}, 
+      author={Bin Wang and Zhuangcheng Gu and Chao Xu and Bo Zhang and Botian Shi and Conghui He},
+      year={2024},
+      eprint={2404.15254},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+
+@article{he2024opendatalab,
+  title={Opendatalab: Empowering general artificial intelligence with open datasets},
+  author={He, Conghui and Li, Wei and Jin, Zhenjiang and Xu, Chao and Wang, Bin and Lin, Dahua},
+  journal={arXiv preprint arXiv:2407.13773},
+  year={2024}
+}
+```
+
+
+## Star历史
+
+<a>
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date" />
+ </picture>
+</a>
+
+## 友情链接
+- [LabelU(轻量级多模态标注工具）](https://github.com/opendatalab/labelU)
+- [LabelLLM（开源LLM对话标注平台）](https://github.com/opendatalab/LabelLLM)
+- [Miner U（一站式高质量数据提取工具）](https://github.com/opendatalab/MinerU)

@@ -1,4 +1,23 @@
+
+<p align="center">
+  <img src="assets/images/pdf-extract-kit_logo.png" width="220px" style="vertical-align:middle;">
+</p>
+
+<div align="center">
+
 English | [简体中文](./README-zh_CN.md)
+
+[[Models (🤗Hugging Face)]](https://huggingface.co/opendatalab/PDF-Extract-Kit) | [[Models(<img src="./assets/images/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/OpenDataLab/PDF-Extract-Kit) 
+ 
+🔥🔥🔥 [MinerU: Efficient Document Content Extraction Tool Based on PDF-Extract-Kit](https://github.com/opendatalab/MinerU)
+
+</div>
+
+<p align="center">
+    👋 join us on <a href="https://discord.gg/JYsXDXXN" target="_blank">Discord</a> and <a href="https://r.vansin.top/?r=MinerU" target="_blank">WeChat</a>
+</p>
+
+
 
 ## Overview
 
@@ -6,6 +25,7 @@ PDF documents contain a wealth of knowledge, yet extracting high-quality content
 - **Layout Detection**: Using the [LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3) model for region detection, such as `images`, `tables`, `titles`, `text`, etc.;
 - **Formula Detection**: Using [YOLOv8](https://github.com/ultralytics/ultralytics) for detecting formulas, including `inline formulas` and `isolated formulas`;
 - **Formula Recognition**: Using [UniMERNet](https://github.com/opendatalab/UniMERNet) for formula recognition;
+- **Table Recognition**: Using [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy) for table recognition;
 - **Optical Character Recognition**: Using [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) for text recognition;
 
 > **Note:** *Due to the diversity of document types, existing open-source layout and formula detection models struggle with diverse PDF documents. Therefore, we have collected diverse data for annotation and training to achieve precise detection effects on various types of documents. For details, refer to the sections on [Layout Detection](#layout-anchor) and [Formula Detection](#mfd-anchor). For formula recognition, the UniMERNet method rivals commercial software in quality across various types of formulas. For OCR, we use PaddleOCR, which performs well for both Chinese and English.*
@@ -66,6 +86,10 @@ The types included in `category_id` are as follows:
 ```
 </details>
 
+## News and Update
+- `2024.08.01` 🎉🎉🎉 Added the [StructEqTable](demo/TabRec/StructEqTable/README_TABLE.md) module for table content extraction. Welcome to use it!
+- `2024.07.01` 🎉🎉🎉 We released `PDF-Extract-Kit`, a comprehensive toolkit for high-quality PDF content extraction, including `layout detection`, `formula detection`, `formula recognition`, and `OCR`.
+
 
 ## Visualization of Results
 
@@ -77,6 +101,8 @@ By annotating a variety of PDF documents, we have trained robust models for `lay
 ## Evaluation Metrics
 
 Existing open-source models are often trained on data from Arxiv papers and fall short when facing diverse PDF documents. In contrast, our models, trained on diverse data, are capable of adapting to various document types for extraction.
+
+The introduction of Validation process can be seen [here](./assets/validation/README.md).
 
 <span id="layout-anchor"></span>
 ### Layout Detection
@@ -178,8 +204,15 @@ We have compared our model with the open-source formula detection model [Pix2Tex
 </table>
 
 ### Formula Recognition
+![BLEU](https://github.com/opendatalab/VIGC/assets/69186975/ec8eb3e2-4ccc-4152-b18c-e86b442e2dcc)
 
-The formula recognition we used is based on the weights downloaded from [Unimernet](https://github.com/opendatalab/UniMERNet), without any further SFT training, and the accuracy validation results can be obtained on its GitHub page.
+The formula recognition we used is based on the weights downloaded from [UniMERNet](https://github.com/opendatalab/UniMERNet), without any further SFT training, and the accuracy validation results can be obtained on its GitHub page.
+
+### Table Recognition
+![StructEqTable](assets/demo/table_expamle.png)
+
+The table recognition we used is based on the weights downloaded from [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy), a solution that converts images of Table into LaTeX. Compared to the table recognition capability of PP-StructureV2, StructEqTable demonstrates stronger recognition performance, delivering good results even with complex tables, which may currently be best suited for data within research papers. There is also significant room for improvement in terms of speed, and we are continuously iterating and optimizing. Within a week, we will update the table recognition capability to [MinerU](https://github.com/opendatalab/MinerU).
+
 
 ## Installation Guide
 
@@ -215,6 +248,9 @@ If you intend to run this project on Windows, please refer to [Using PDF-Extract
 
 If you intend to run this project on macOS, please refer to [Using PDF-Extract-Kit on macOS](docs/Install_in_macOS_en.md).
 
+## Running in Google Colab
+
+If you intend to experience this project on Google Colab, please <a href="https://colab.research.google.com/gist/zhchbin/f7ca974b3594befe59893241d6ad6374/pdf-extract-kit.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
 ## Run Extraction Script
 
@@ -227,17 +263,64 @@ Parameter explanations:
 - `--output`: Path where the results are saved, default is "output".
 - `--vis`: Whether to visualize the results; if yes, detection results including bounding boxes and categories will be visualized.
 - `--render`: Whether to render the recognized results, including LaTeX code for formulas and plain text, which will be rendered and placed in the detection boxes. Note: This process is very time-consuming, and also requires prior installation of `xelatex` and `imagemagic`.
+- `--batch-size`: Batch size for dataloader. Larger batch sizes are recommended, but smaller sizes require less GPU memory. Default is 128.
+
+> This project is dedicated to using models for high-quality content extraction from documents on diversity. It does not involve reassembling the extracted content into new documents, such as converting PDFs to Markdown. For those needs, please refer to our other GitHub project: [MinerU](https://github.com/opendatalab/MinerU)
+
+## TODO List
+
+- [x] **Table Parsing**: Develop a feature to convert table images into corresponding LaTeX/Markdown format source code.
+- [ ] **Chemical Equation Detection**: Implement automatic detection of chemical equations.
+- [ ] **Chemical Equation/Diagram Recognition**: Develop a model to recognize and parse chemical equations and diagrams.
+- [ ] **Reading Order Sorting Model**: Build a model to determine the correct reading order of text in documents.
+
+**PDF-Extract-Kit** aims to provide high-quality PDF extraction capabilities. We encourage the community to propose specific and valuable requirements and welcome everyone to participate in continuously improving the PDF-Extract-Kit tool to advance scientific research and industrial development.
 
 ## License
 
 This repository is licensed under the [Apache-2.0 License](LICENSE).
 
-Please follow the model licenses to use the corresponding model weights: [LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3) / [UniMERNet](https://github.com/opendatalab/UniMERNet) / [YOLOv8](https://github.com/ultralytics/ultralytics) / [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR).
+Please follow the model licenses to use the corresponding model weights: [LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3) / [UniMERNet](https://github.com/opendatalab/UniMERNet) / [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy) / [YOLOv8](https://github.com/ultralytics/ultralytics) / [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR).
 
 
 ## Acknowledgement
 
    - [LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3): Layout detection model
    - [UniMERNet](https://github.com/opendatalab/UniMERNet): Formula recognition model
+   - [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy): Table recognition model
    - [YOLOv8](https://github.com/ultralytics/ultralytics): Formula detection model
    - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR model
+
+## Citation
+If you find our models / code / papers useful in your research, please consider giving ⭐ and citations 📝, thx :)  
+```bibtex
+@misc{wang2024unimernet,
+      title={UniMERNet: A Universal Network for Real-World Mathematical Expression Recognition}, 
+      author={Bin Wang and Zhuangcheng Gu and Chao Xu and Bo Zhang and Botian Shi and Conghui He},
+      year={2024},
+      eprint={2404.15254},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+@article{he2024opendatalab,
+  title={Opendatalab: Empowering general artificial intelligence with open datasets},
+  author={He, Conghui and Li, Wei and Jin, Zhenjiang and Xu, Chao and Wang, Bin and Lin, Dahua},
+  journal={arXiv preprint arXiv:2407.13773},
+  year={2024}
+}
+```
+
+## Star History
+
+<a>
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=opendatalab/PDF-Extract-Kit&type=Date" />
+ </picture>
+</a>
+
+## Links
+- [LabelU (A Lightweight Multi-modal Data Annotation Tool)](https://github.com/opendatalab/labelU)
+- [LabelLLM (An Open-source LLM Dialogue Annotation Platform)](https://github.com/opendatalab/LabelLLM)
+- [Miner U (A One-stop Open-source High-quality Data Extraction Tool)](https://github.com/opendatalab/MinerU)
