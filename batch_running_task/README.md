@@ -2,9 +2,9 @@
 This fold include a series infra-accelerate modules for origin PDF parsing, including:
 - intergrated preprocessing into dataloader
 - fast_postprocessing
-- torch.compile
-- torch.compile with tensorRT
+- torch.compile + bf16
 - tensorRT
+- Torch-TensorRT[https://pytorch.org/TensorRT/]
 
 Those engine is tested on a 80,000,000 pdf dataset and get a 5-10x speedup compared with the origin pdf parsing engine. Basicly, it can reach 6-10 pages per second on a single A100 GPU.
 
@@ -42,7 +42,8 @@ Check the unit case:1000pdf takes around 20-30min
     
 ### MFD
     MFD(Math Formula Detection) is a simple YOLO model build through `ultralytics`. It has a good tensorRT convert tool chain. See https://docs.ultralytics.com/modes/export/ and convension/MDF/convert.py
-
+    Download the engine via `huggingface-cli download --resume-download --local-dir-use-symlinks False LLM4SCIENCE/ultralytics-YOLO-MFD --local-dir models/MFD`. The `batchsize` and `tensorRT version==10.3.0` must match! if you want to use the `trt_engine` directly.
+    
 ### PaddleOCR-Det
     PaddleOCR-Det is the best text detecter around the world. But original paddle det only support one image per batch. In our detection task, every image is normlized into same size, so the original paddle det does not fit our task. Refer to `https://github.com/WenmuZhou/PytorchOCR`, Zhou has convert the paddleOCR into pytorch. It allow us use batch detection in pytorch now.
 
@@ -53,14 +54,17 @@ Check the unit case:1000pdf takes around 20-30min
     The async detection is a way to async postprocess and GPU inference. It works perfectly. But in slurm system, there is `exit` error when run the script, this will make your machine `CPU soft lock`. So, I do not recommend to use this script in slurm system.
 
 ## Recognition (OCR)
-    Check the unit case:1000pdf takes around 2-5min
+    Check the unit case:1000 pdf takes around 2-5 min
     ```
         python batch_running_task/task_rec/rough_rec.py
     ```
     PaddleOCR-Rec is the best text recognizer around the world. The original paddle rec support batch image processing. And the origin paddleOCR "is already very fast".
     However, you can see I still use `PytorchOCR` in this part. Just want to provide a non-paddle solution. 
+    Download the engine via `huggingface-cli download --resume-download --local-dir-use-symlinks False LLM4SCIENCE/pytorch_paddle_weight --local-dir models/pytorch_paddle_weight `. The `batchsize` and `tensorRT version==10.3.0` must match! if you want to use the `trt_engine` directly.
+    
+
 ## Math formula recognition (MFR)
-    Check the unit case: 1000pdf takes around 2-5min
+    Check the unit case: 1000 pdf takes around 2-5min
     ```
         python batch_running_task/task_mfr/rough_mfr.py
     ```
@@ -68,7 +72,7 @@ Check the unit case:1000pdf takes around 20-30min
     - Notice `TensorRT-LLM` will default install `mpi4py=4.*.*` which will require `mpi.so40`. The conda `conda install -c conda-forge openmpi` can only support `openmpi==3.*.*'. So you need to install `openmpi` from source. Or, you can just `pip install mpi4py==3.*`.
     - Notice you should `srun --mpi=pmi2` when run script in slurm.
 
-    Download the engine via `huggingface-cli download --resume-download --local-dir-use-symlinks False LLM4SCIENCE/unimernet --local-dir models/MFR/unimernet`
+    Download the engine via `huggingface-cli download --resume-download --local-dir-use-symlinks False LLM4SCIENCE/unimernet --local-dir models/MFR/unimernet`. The `batchsize` and `tensorRT version==10.3.0` must match! if you want to use the `trt_engine` directly.
 
     The different between `LLM4SCIENCE/unimernet` and `wanderkid/unimernet` is we delete the `counting` module in weight file. (it only works in training). And it is a pure nougat model.
 
