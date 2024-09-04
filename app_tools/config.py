@@ -12,7 +12,7 @@ model_configs_path = os.path.join(parent_dir, 'configs/model_configs.yaml')
 ################### MODEL CONFIGS ###################
 
 def load_config():
-    with open('configs/model_configs.yaml') as f:
+    with open(model_configs_path) as f:
         model_configs = yaml.load(f, Loader=yaml.FullLoader)
     return model_configs
 
@@ -22,7 +22,7 @@ def load_config():
 log_file_path = os.path.join(parent_dir, 'app_logs.log')
 
 # TODO: Add to config file
-TIMEZONE: str = 'Europe/Madrid'# "Asia/Shanghai"
+TIMEZONE: str = "Asia/Shanghai" # 'Europe/Madrid'
 timezone = pytz.timezone(TIMEZONE)  # Specify your time zone here
 
 

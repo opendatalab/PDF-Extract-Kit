@@ -32,16 +32,10 @@ class LayoutAnalyzer:
     """
     def __init__(self, config_path: Optional[str] = None):
         """
-        Initializes an instance of the software developer class.
+        Initializes an instance and init model.
 
         Args:
             config_path (Optional[str]): The path to the configuration file. Defaults to None.
-
-        Attributes:
-            logger: The logger instance for logging messages.
-            config: The configuration settings loaded from the configuration file.
-            model: The initialized model for the software developer.
-
         """
         self.logger = setup_logging('layout_analysis')
         self.config = load_config(config_path) if config_path else load_config()
@@ -104,14 +98,14 @@ class LayoutAnalyzer:
         start = time.time()
 
         for idx, image in enumerate(img_list):
-            img_H, img_W = image.shape[0], image.shape[1]
+            img_h, img_w = image.shape[0], image.shape[1]
 
             layout_res = self.model(image, ignore_catids=[])
 
             layout_res['page_info'] = {
                 'page_no': idx,
-                'height': img_H,
-                'width': img_W
+                'height': img_h,
+                'width': img_w
             }
             doc_layout_result.append(layout_res)
 
@@ -125,15 +119,11 @@ class LayoutAnalyzer:
 
     def clear_model(self):
         """
-        This method clears the model from memory by deleting the model object and freeing up GPU memory using torch.cuda.empty_cache(). It also collects garbage to release any unreferenced memory.
-
-        This method does not take any input parameters.
-
-        This method does not return any values.
+        This method clears the model from memory by deleting the model object and freeing up GPU memory using torch.cuda.empty_cache().
+        It also collects garbage to release any unreferenced memory.
 
         Example usage:
             obj.clear_model()
-
         """
         self.logger.info('Clearing the model from memory.')
 

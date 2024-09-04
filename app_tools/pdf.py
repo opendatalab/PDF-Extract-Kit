@@ -37,15 +37,6 @@ class PDFProcessor:
         Returns:
             dict: A dictionary containing the configuration settings.
 
-    setup_logging(name: str) -> Logger
-        Sets up the logging configuration.
-
-        Parameters:
-            name (str): The name of the logger.
-
-        Returns:
-            Logger: The logger object for logging messages.
-
     Attributes:
     - config (dict): A dictionary containing the configuration settings.
     - dpi (int): The DPI (dots per inch) for the PDF files.

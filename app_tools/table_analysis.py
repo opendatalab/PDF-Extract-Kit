@@ -10,20 +10,14 @@ from app_tools.config import load_config, setup_logging
 class TableProcessor:
     """
     This class represents a Table Processor that is used for table recognition in documents. The `TableProcessor` class has the following methods:
-
-    - `__init__(self, config_path: str = None)`: Initializes a Table Processor object. It takes an optional `config_path` parameter which specifies the path to a configuration file. If no `config_path` is provided, the default configuration will be used. This method also initializes a logger and loads the configuration. It calls the `_init_tr_model` method to initialize the table recognition model.
-
-    - `_init_tr_model(self)`: Initializes the table recognition model. It retrieves the model weight, maximum time, and device from the configuration. It then builds the model using the specified weight and maximum time. If the device is set to 'cuda', the model is moved to the GPU. The initialized table recognition model is returned.
-
-    - `recognize_tables(self, img_list: list, doc_layout_result: list) -> list`: Performs table recognition on a list of images. It takes `img_list` as input, which is a list of images to process. It also takes `doc_layout_result`, which is a list containing layout results for each image. This method iterates over each image and its corresponding layout results. If a layout result has a 'category_id' of 5, indicating it is a table, the image is cropped and passed to the table recognition model. The output of the model is stored in the layout result as 'latex'. If the table recognition operation takes longer than the maximum time specified in the configuration, the layout result will have a 'timeout' flag set to True. The updated `doc_layout_result` is returned.
-
-    - `clear_memory(self)`: Clears the table recognition model from memory. This method deletes the table recognition model, clears the GPU cache, and performs garbage collection to free up memory.
-
-    Note: The code does not include the implementation of functions like `setup_logging`, `load_config`, `build_model`, and the import statements for the necessary libraries.
     """
     def __init__(self, config_path: str = None):
         """
-        This class initializes an instance of the software with the provided configuration path.
+        Initializes a Table Processor object.
+        It takes an optional `config_path` parameter which specifies the path to a configuration file.
+        If no `config_path` is provided, the default configuration will be used.
+        This method also initializes a logger and loads the configuration.
+        It calls the `_init_tr_model` method to initialize the table recognition model.
 
         Attributes:
         - logger: The logger instance for logging debug and error messages.
@@ -44,11 +38,8 @@ class TableProcessor:
         """
         Initializes the translation model.
 
-        This method initializes the translation model by setting the weight, maximum time, and device attributes based on the provided configuration. It also builds the model using the `build_model` function.
-
-        Parameters:
-            - self : object
-                The instance of the class that this method is called upon.
+        This method initializes the translation model by setting the weight, maximum time, and device attributes based on the provided configuration.
+        It also builds the model using the `build_model` function.
 
         Returns:
             - tr_model : object
@@ -74,11 +65,15 @@ class TableProcessor:
         Returns:
         - A modified version of doc_layout_result with table recognition results added
 
-        The method initializes the table recognition process and sets the maximum time for the recognition. It then iterates through each image in img_list and retrieves the layout details for that image from doc_layout_result.
+        The method initializes the table recognition process and sets the maximum time for the recognition.
+        It then iterates through each image in img_list and retrieves the layout details for that image from doc_layout_result.
 
-        For each layout detail, if the category_id is 5 (indicating that it is a table), the method crops the image based on the polygon coordinates of the layout detail and performs table recognition on the cropped image.
+        For each layout detail, if the category_id is 5 (indicating that it is a table),
+        the method crops the image based on the polygon coordinates of the layout detail and performs table recognition on the cropped image.
 
-        The table recognition operation might take significant time, so a timeout check is performed to determine if the recognition process exceeds the maximum time. If it does, the timeout flag is set to True in the layout detail.
+        The table recognition operation might take significant time,
+        so a timeout check is performed to determine if the recognition process exceeds the maximum time.
+        If it does, the timeout flag is set to True in the layout detail.
 
         The recognized LaTeX output is assigned to the "latex" property of the layout detail.
 
@@ -99,7 +94,7 @@ class TableProcessor:
                 if int(res['category_id']) == 5:  # Perform table recognition
                     xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
                     xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
-                    crop_box = [xmin, ymin, xmax, ymax]
+                    crop_box = (xmin, ymin, xmax, ymax)
                     cropped_img = pil_img.crop(crop_box)
 
                     start = time.time()
@@ -120,13 +115,8 @@ class TableProcessor:
         """
         Clears the table recognition model from memory.
 
-        This method clears the table recognition model from memory by deleting the model object and releasing the memory occupied by the model. It also clears the CUDA cache and performs garbage collection.
-
-        Parameters:
-            None
-
-        Returns:
-            None
+        This method clears the table recognition model from memory by deleting the model object and releasing the memory occupied by the model.
+        It also clears the CUDA cache and performs garbage collection.
 
         Example:
             clear_memory()

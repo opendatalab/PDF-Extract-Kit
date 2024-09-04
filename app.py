@@ -1,5 +1,6 @@
 # refactoring pdf_extract.py
 import time
+import argparse
 
 from app_tools.config import setup_logging
 from app_tools.pdf import PDFProcessor
@@ -14,13 +15,14 @@ logger = setup_logging('app')
 
 
 if __name__ == '__main__':
-
-    # Params
-    pdf_path: str = '1706.03762.pdf'
-    output_dir: str = 'output'
-    batch_size: int = 128
-    vis: bool = False
-    render: bool = False
+    parser = argparse.ArgumentParser(description="Process PDF files and render output images.")
+    parser.add_argument('--pdf', type=str, required=True, help="Path to the input PDF file")
+    parser.add_argument('--output', type=str, default="output", help="Output directory or filename prefix (default: 'output')")
+    parser.add_argument('--batch-size', type=int, default=128, help="Batch size for processing (default: 128)")
+    parser.add_argument('--vis', action='store_true', help="Enable visualization mode")
+    parser.add_argument('--render', action='store_true', help="Enable rendering mode")
+    args = parser.parse_args()
+    logger.info("Arguments: %s", args)
 
     logger.info('Started!')
     start = time.time()
@@ -34,20 +36,23 @@ if __name__ == '__main__':
 
     start = time.time()
     pdf_processor = PDFProcessor()
-    all_pdfs = pdf_processor.check_pdf(pdf_path)
+    all_pdfs = pdf_processor.check_pdf(args.pdf)
 
     for idx, single_pdf, img_list in pdf_processor.process_all_pdfs(all_pdfs):
 
         doc_layout_result = analyzer.detect_layout(img_list)
-        doc_layout_result = formulas.detect_recognize_formulas(img_list, doc_layout_result)
+        doc_layout_result = formulas.detect_recognize_formulas(img_list, doc_layout_result, args.batch_size)
         doc_layout_result = ocr_processor.recognize_ocr(img_list, doc_layout_result)
         doc_layout_result = table_processor.recognize_tables(img_list, doc_layout_result)
 
-        basename = save_file(output_dir, single_pdf, doc_layout_result)
+        basename = save_file(args.output, single_pdf, doc_layout_result)
         logger.debug(f'Save file: {basename}.json')
 
-        if vis:
-            get_visualize(img_list, doc_layout_result, render, output_dir, basename)
+        if args.vis:
+            logger.info("Visualization mode enabled")
+            get_visualize(img_list, doc_layout_result, args.render, args.output, basename)
+        else:
+            logger.info("Visualization mode disabled")
 
     logger.info(f'Finished! time cost: {int(time.time() - start)} s')
     logger.info('----------------------------------------')

@@ -4,12 +4,15 @@ import json
 
 def save_file(output_dir, single_pdf, doc_layout_result):
     """
-    Save the document layout result as a JSON file in the specified output directory.
+    This function saves the document layout result as a JSON file in a specified output directory.
 
-    :param output_dir: The directory where the JSON file should be saved.
-    :param single_pdf: The path of the single PDF file.
-    :param doc_layout_result: The document layout result to be saved.
-    :return: The base name of the saved JSON file.
+    Parameters:
+    - output_dir (str): The directory where the JSON file will be saved.
+    - single_pdf (str): The path to the single PDF file.
+    - doc_layout_result (dict): The document layout result that will be saved as a JSON file.
+
+    Returns:
+    - basename (str): The basename of the single PDF file.
     """
     os.makedirs(output_dir, exist_ok=True)
     basename = os.path.basename(single_pdf)[0:-4]

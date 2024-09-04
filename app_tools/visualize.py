@@ -20,13 +20,17 @@ id2names = ["title", "plain_text", "abandon", "figure", "figure_caption", "table
             "isolate_formula", "formula_caption", " ", " ", " ", "inline_formula", "isolated_formula",
             "ocr_text"]
 
-def get_visualize(img_list: list, doc_layout_result, render: bool, output_dir, basename):
+def get_visualize(img_list: list, doc_layout_result: list, render: bool, output_dir: str, basename: str):
     """
-    This function takes a list of images, the result of a document layout analysis, a boolean flag 'render', an output directory path, and a basename as input arguments. It generates visualizations of the document layout and saves them as a PDF file.
+    This function takes a list of images, the result of a document layout analysis, a boolean flag 'render', an output directory path, and a basename as input arguments.
+    It generates visualizations of the document layout and saves them as a PDF file.
 
     Parameters:
     - img_list (list): A list of images. Each image should be a numpy array representing an image.
-    - doc_layout_result: The result of a document layout analysis. It should be a list of dictionaries, where each dictionary represents the layout details of a single page. Each dictionary should contain information such as the category ID, polygon coordinates, and text/latex content.
+    - doc_layout_result: The result of a document layout analysis. It should be a list of dictionaries,
+                        where each dictionary represents the layout details of a single page.
+                        Each dictionary should contain information such as the category ID, polygon coordinates,
+                        and text/latex content.
     - render (bool): A boolean flag indicating whether to render the text/latex content in the visualizations.
     - output_dir: The output directory where the PDF file will be saved.
     - basename: The basename of the PDF file.
@@ -43,14 +47,19 @@ def get_visualize(img_list: list, doc_layout_result, render: bool, output_dir, b
     get_visualize(img_list, doc_layout_result, render, output_dir, basename)
     """
     vis_pdf_result = []
+
     for idx, image in enumerate(img_list):
         single_page_res = doc_layout_result[idx]['layout_dets']
-        vis_img = Image.new('RGB', Image.fromarray(image).size, 'white') if render else Image.fromarray(
-            cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+
+        if render:
+            vis_img = Image.new('RGB', Image.fromarray(image).size, 'white')
+        else:
+            vis_img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
         draw = ImageDraw.Draw(vis_img)
+
         for res in single_page_res:
             label = int(res['category_id'])
-            if label > 15:  # categories that do not need visualize
+            if label > 15:  # categories that do not need to visualize
                 continue
             label_name = id2names[label]
             x_min, y_min = int(res['poly'][0]), int(res['poly'][1])
@@ -60,21 +69,23 @@ def get_visualize(img_list: list, doc_layout_result, render: bool, output_dir, b
                     if label in [13, 14]:  # render formula
                         window_img = tex2pil(res['latex'])[0]
                     else:
-                        if True:  # render chinese
-                            window_img = zhtext2pil(res['text'])
-                        else:  # render english
-                            window_img = tex2pil([res['text']], tex_type="text")[0]
+                        window_img = zhtext2pil(res['text'])
+                        # This code is unreachable
+                        # if True:  # render chinese
+                        #     window_img = zhtext2pil(res['text'])
+                        # else:  # render english
+                        #     window_img = tex2pil([res['text']], tex_type="text")[0]
                     ratio = min((x_max - x_min) / window_img.width, (y_max - y_min) / window_img.height) - 0.05
                     window_img = window_img.resize(
                         (int(window_img.width * ratio), int(window_img.height * ratio)))
                     vis_img.paste(window_img, (int(x_min + (x_max - x_min - window_img.width) / 2),
                                                int(y_min + (y_max - y_min - window_img.height) / 2)))
                 except Exception as e:
-                    logger.error(f"got exception on {text}, error info: {e}")
+                    logger.error(f"got exception on {res['text']}, error info: {e}")
 
-            draw.rectangle([x_min, y_min, x_max, y_max], fill=None, outline=color_palette[label], width=1)
-            fontText = ImageFont.truetype("assets/fonts/simhei.ttf", 15, encoding="utf-8")
-            draw.text((x_min, y_min), label_name, color_palette[label], font=fontText)
+            draw.rectangle((x_min, y_min, x_max, y_max), fill=None, outline=color_palette[label], width=1)
+            font_text = ImageFont.truetype("assets/fonts/simhei.ttf", 15, encoding="utf-8")
+            draw.text((x_min, y_min), label_name, color_palette[label], font=font_text)
 
         width, height = vis_img.size
         width, height = int(0.75 * width), int(0.75 * height)

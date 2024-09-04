@@ -10,7 +10,8 @@ from app_tools.config import setup_logging
 
 class OCRProcessor:
     """
-    This class represents an OCR Processor. It is responsible for performing OCR recognition on a list of images based on certain conditions defined in the code.
+    This class represents an OCR Processor.
+    It is responsible for performing OCR recognition on a list of images based on certain conditions defined in the code.
 
         Attributes:
             logger: Logger object for logging OCR analysis.
@@ -30,8 +31,6 @@ class OCRProcessor:
 
         Attributes:
             show_log (bool): A boolean value indicating whether to display log messages. Default is True.
-            logger: The logger object used for logging.
-            ocr_model: An instance of the ModifiedPaddleOCR class.
         """
         self.logger = setup_logging('ocr_analysis')
         self.ocr_model = ModifiedPaddleOCR(show_log=show_log)
@@ -42,22 +41,23 @@ class OCRProcessor:
 
         Parameters:
         - `img_list` (list): A list of images in numpy array format.
-        - `doc_layout_result` (list): A list containing the document layout results, each result representing a page in the document. Each page result should have a 'layout_dets' field.
+        - `doc_layout_result` (list): A list containing the document layout results, each result representing a page in the document.
 
         Returns:
         - `doc_layout_result` (list): The updated document layout result list with recognized text appended.
 
-        The method first converts each input image from the RGB color space to the BGR color space using OpenCV's `cv2.cvtColor` method. It then iterates over each image and its corresponding layout details in the document layout result.
-
-        For each layout detail, the method checks if the category ID is either 13 or 14, which correspond to formula categories. If found, the bounding box coordinates of the layout detail are extracted and added to the `single_page_mfdetrec_res` list.
-
-        Next, the method checks if the category ID is one of [0, 1, 2, 4, 6, 7], which represent categories that require OCR. If found, the bounding box coordinates are extracted, and a region of interest (ROI) is cropped from the image using the `pil_img.crop` method. This ROI image is then converted back to the BGR color space.
-
-        The `self.ocr_model.ocr` method is then called, passing the cropped image along with the `single_page_mfdetrec_res` list, to perform OCR. The OCR result is obtained as a list of bounding boxes and their corresponding recognized text.
-
-        If the OCR result is not empty, the method iterates over each bounding box and text pair in the result. The four corner points of the bounding box are extracted, along with the confidence score and the recognized text. A new layout detail is created with a category ID of 15 (corresponding to recognized text), and this detail is added to the `doc_layout_result`.
-
-        Finally, the method logs the time taken for OCR recognition and returns the updated `doc_layout_result` list.
+        1. Converts each input image from RGB color space to BGR color space using OpenCV's `cv2.cvtColor` method.
+        2. Iterates over each image and its corresponding layout details in the document layout output.
+        3. For each layout detail, checks whether the category ID is 13 or 14, which correspond to formula categories.
+            If found, the bounding box coordinates of the layout detail are extracted and added to the `single_page_mfdetrec_res` list.
+        4. Checks whether the category ID is one of [0, 1, 2, 4, 6, 7], which represent categories that require OCR.
+            If found, the bounding box coordinates are extracted, and a region of interest (ROI) is cropped from the image using the `pil_img.crop` method. This ROI image is converted back to BGR color space.
+        5. The `self.ocr_model.ocr` method is called, passing the cropped image along with the `single_page_mfdetrec_res` list, to perform the OCR.
+            The OCR result is returned as a list of bounding boxes and their corresponding recognized text.
+        6. If the OCR result is not empty, the method iterates over each bounding box and text pair in the result.
+            The four corner points of the bounding box are extracted, along with the confidence score and the recognized text.
+            A new layout detail with a category ID of 15 (corresponding to the recognized text) is created, and this detail is added to the `doc_layout_result`.
+        7. The time taken for the OCR recognition is recorded and the updated `doc_layout_result` list is returned.
         """
         self.logger.debug('OCR recognition - init')
         start = time.time()
@@ -79,7 +79,7 @@ class OCRProcessor:
                 if int(res['category_id']) in [0, 1, 2, 4, 6, 7]:  # Categories that need OCR
                     xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
                     xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
-                    crop_box = [xmin, ymin, xmax, ymax]
+                    crop_box = (xmin, ymin, xmax, ymax)
                     cropped_img = Image.new('RGB', pil_img.size, 'white')
                     cropped_img.paste(pil_img.crop(crop_box), crop_box)
                     cropped_img = cv2.cvtColor(np.asarray(cropped_img), cv2.COLOR_RGB2BGR)

@@ -10,7 +10,7 @@ from torchvision import transforms
 from ultralytics import YOLO
 from unimernet.common.config import Config
 import unimernet.tasks as tasks
-from unimernet.processors import load_processor
+from unimernet.processors import load_processor  ## TODO: WARNING 'load_processor' is not declared in __all__
 from modules.post_process import get_croped_image, latex_rm_whitespace
 
 from app_tools.config import load_config, setup_logging
@@ -18,26 +18,6 @@ from app_tools.config import load_config, setup_logging
 logger = setup_logging('formula_analysis')
 
 class MathDataset(Dataset):
-    """
-    MathDataset class
-
-    A class representing a dataset for mathematical operations.
-
-    Attributes:
-        image_paths (list): A list of image paths.
-        transform (callable): A function or transformation to apply to the images.
-
-    Methods:
-        __init__(self, image_paths, transform=None):
-            Initializes a new instance of the MathDataset class.
-
-        __len__(self):
-            Returns the length of the dataset.
-
-        __getitem__(self, idx):
-            Gets the item at the specified index from the dataset.
-
-    """
     def __init__(self, image_paths, transform=None):
         self.image_paths = image_paths
         self.transform = transform
@@ -46,27 +26,33 @@ class MathDataset(Dataset):
         return len(self.image_paths)
 
     def __getitem__(self, idx):
+        if idx >= len(self.image_paths) or idx < 0:
+            raise IndexError("Index out of range")
+
         # if not pil image, then convert to pil image
         if isinstance(self.image_paths[idx], str):
-            raw_image = Image.open(self.image_paths[idx])
+            try:
+                raw_image = Image.open(self.image_paths[idx])
+            except IOError as e:
+                raise IOError(f"Error opening image: {self.image_paths[idx]}") from e
         else:
             raw_image = self.image_paths[idx]
+
+        # apply transformation if any
         if self.transform:
-            image = self.transform(raw_image)
-        return image
+            return self.transform(raw_image)
+        return raw_image
 
 
 class FormulaProcessor:
     """
-    Initializes a new instance of the FormulaProcessor class.
+    The FormulaProcessor class is designed to handle formula detection and recognition in images.
+    It is initialized with an optional configuration file and provides methods to detect and recognize formulas in images.
 
-    Parameters:
-
-    - config_path (str): The path to the configuration file. If not provided, the default configuration file will be used.
     """
     def __init__(self, config_path: str = None):
         """
-        This class represents a software developer. It initializes the developer object with a given config_path or loads the default configuration if no path is provided. It also initializes the mfd_model, mfr_model, mfr_transform, latex_filling_list, and mf_image_list properties.
+        It initializes the mfd_model, mfr_model, mfr_transform, latex_filling_list, and mf_image_list properties.
 
         Attributes:
             - config: The configuration loaded from the config_path or default configuration.
@@ -81,10 +67,6 @@ class FormulaProcessor:
 
         Parameters:
             - config_path (str): The path to the configuration file (optional).
-
-        Example usage:
-            developer = Developer()
-            developer = Developer("path/to/config")
 
         Note:
             - The config_path parameter is optional. If not provided, the default configuration will be used.
@@ -117,12 +99,6 @@ class FormulaProcessor:
         Initializes the MFR model by loading the weights and setting the device.
 
         Returns:
-            A tuple containing the MFR model and the transformation to apply to input images.
-
-        Parameters:
-            None
-
-        Returns:
             Tuple: A tuple containing the MFR model (`torch.nn.Module`) and the transformation (`transforms.Compose`).
         """
         weight_dir = self.config['model_args']['mfr_weight']
@@ -146,17 +122,11 @@ class FormulaProcessor:
 
         Parameters:
         - img_list: A list of images to detect formulas from.
-        - doc_layout_result: A list of dictionaries representing the document layout result. Each dictionary contains the layout details of a single page.
+        - doc_layout_result: A list of dictionaries representing the document layout result.
+                             Each dictionary contains the layout details of a single page.
 
         Returns:
         - A list of dictionaries representing the updated document layout result with the detected formulas.
-
-        Example Usage:
-
-        img_list = [image1, image2, image3]
-        doc_layout_result = [{'page_id': 1, 'layout_dets': []}, {'page_id': 2, 'layout_dets': []}]
-        detected_formulas = detect_formulas(img_list, doc_layout_result)
-        print(detected_formulas)
         """
         img_size = self.config['model_args']['img_size']
         conf_thres = self.config['model_args']['conf_thres']
@@ -191,22 +161,24 @@ class FormulaProcessor:
 
     def recognize_formulas(self, batch_size: int = 128):
         """
-        This method `recognize_formulas` is used to recognize formulas from a given batch of images. It takes an optional parameter `batch_size` which determines the number of images to process in each batch. The default value for `batch_size` is 128.
+        This method is used to recognize formulas in a batch of images.
 
-        The method starts by retrieving the device from the configuration settings. Then it logs a debug message indicating the start of formula recognition process and records the start time.
+        This method performs formula recognition by iterating over a dataset of images.
+        It uses a pre-trained model to generate predictions for each image in the dataset.
+        The recognized formulas are then stored in a list.
+        Finally, the method logs the number of formulas recognized and the time taken for formula recognition.
 
-        Next, it creates a `MathDataset` object using the `mf_image_list` and `mfr_transform` as arguments. This dataset is then used to create a `DataLoader` object with the specified `batch_size` and 32 worker threads.
+        The method takes an optional argument `batch_size` that specifies the number of images to process in each batch.
+        This can be useful for managing memory usage. The default batch size is 128.
 
-        The method initializes an empty list `mfr_res` to store the formula recognition results.
+        Parameters:
+        - batch_size: An integer specifying the batch size. Default is 128.
 
-        It then iterates over the batches of images in the dataloader. In each iteration, it moves the images to the specified device. It then generates the formula predictions using the `mfr_model` by passing the images as input. The formula predictions are obtained from the `output` dictionary using the key `'pred_str'`. These predictions are then appended to the `mfr_res` list.
+        Returns:
+            None
 
-        Finally, it loops over the `latex_filling_list` and the `mfr_res` lists simultaneously. For each pair of items, it updates the `latex` property of the corresponding entry in the `res` dictionary by removing any leading or trailing white spaces.
-
-        After processing all the batches, it logs an information message indicating the number of formulas and the total time taken for formula recognition.
-
-        Note: The logger used in the code is assumed to be an instance of a logger class that supports the `debug` and `info` methods. The `logger` object is not defined in this code snippet.
-
+        Note:
+            - The method assumes that the pre-trained model and the image dataset have already been initialized and assigned to the appropriate instance variables.
         """
         device = self.config['model_args']['device']
 
@@ -229,7 +201,10 @@ class FormulaProcessor:
         """
         Detect and recognize formulas in document layout results.
 
-        This method takes a list of images, a list of document layout results, and an optional batch size. It detects formulas in the document layout results by calling the `detect_formulas` method. Then, it recognizes the detected formulas using the `recognize_formulas` method. Finally, it returns the updated document layout results.
+        This method takes a list of images, a list of document layout results, and an optional batch size.
+        It detects formulas in the document layout results by calling the `detect_formulas` method.
+        Then, it recognizes the detected formulas using the `recognize_formulas` method.
+        Finally, it returns the updated document layout results.
 
         Parameters:
         - `img_list` (List): A list of images.
