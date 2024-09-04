@@ -230,6 +230,22 @@ def collect_paragraph_image_and_its_coordinate_from_detection_batch(detection_im
         partition_per_batch.append(len(canvas_tensor_this_batch))
     return canvas_tensor_this_batch, partition_per_batch,canvas_idxes_this_batch,single_page_mfdetrec_res_this_batch
 
+def convert_boxes(boxes, original_width, original_height, target_width, target_height):
+    """Convert bounding boxes to a new resolution."""
+    width_ratio = target_width / original_width
+    height_ratio = target_height / original_height
+    
+    converted_boxes = []
+    for box in boxes:
+        x_min, y_min, x_max, y_max = box
+        new_x_min = x_min * width_ratio
+        new_y_min = y_min * height_ratio
+        new_x_max = x_max * width_ratio
+        new_y_max = y_max * height_ratio
+        converted_boxes.append((new_x_min, new_y_min, new_x_max, new_y_max))
+    
+    return converted_boxes
+
 import time, math
 class _DummyTimer:
     """A dummy timer that does nothing."""

@@ -1,8 +1,9 @@
 
 from get_data_utils import *
 from torch.utils.data import IterableDataset,get_worker_info,DataLoader, Dataset
-from utils import Timers
+from utils import Timers,convert_boxes
 import torch
+from utils import collect_paragraph_image_and_its_coordinate
 
 def clean_pdf_path(pdf_path):
     return pdf_path[len("opendata:"):] if pdf_path.startswith("opendata:") else pdf_path
@@ -163,6 +164,149 @@ class RecImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):
         pdf_metadata = self.metadata[index]
         return deal_with_one_pdf(pdf_metadata, self.client)
 
+class DetImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):
+    error_count=0
+    def __init__(self, metadata_filepath, 
+                 det_pre_transform,
+                 partion_num = 1,
+                 partion_idx = 0):
+        super().__init__()
+        self.metadata= self.smart_read_json(metadata_filepath)
+        self.metadata= np.array_split(self.metadata, partion_num)[partion_idx]
+        self.dpi = 200
+        self.timer = Timers(False)
+        self.det_pre_transform = det_pre_transform
+        self.client = build_client()
+    
+    def __len__(self):
+        return len(self.metadata)
+    
+    def extract_det_image(self, pdf_id):
+        client = self.client
+        images_pool = {}
+        pdf_metadata = self.metadata[pdf_id]
+        pdf_path = pdf_metadata['path']
+        output_width =1472 #pdf_metadata['width']#1472
+        output_height=1920 #pdf_metadata['height']#1920
+        if pdf_path.startswith('s3'):
+            pdf_path = "opendata:"+pdf_path
+        detimages = []
+        rough_layout_this_batch = []
+        with read_pdf_from_path(pdf_path, client) as pdf:
+            for pdf_page_metadata in pdf_metadata['doc_layout_result']:
+                page_id = pdf_page_metadata['page_id']
+                try:
+                    page    = pdf.load_page(page_id)
+                except:
+                    continue
+                layout_dets = []
+                for res in pdf_page_metadata["layout_dets"]:
+                    xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
+                    xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
+                    bbox= [xmin, ymin, xmax, ymax]
+                    bbox= convert_boxes([bbox], pdf_metadata['width'], pdf_metadata['height'], output_width, output_height)[0]
+                    res = res.copy()
+                    xmin, ymin, xmax, ymax = bbox
+                    res['poly'] = [xmin, ymin, xmax, ymin, xmax, ymax, xmin, ymax]
+                    res['pdf_path']=clean_pdf_path(pdf_path)
+                    res['page_id'] =page_id
+                    layout_dets.append(res)
+                if len(layout_dets)>0:
+                    oimage  = process_pdf_page_to_image(page, 200, output_width=output_width,output_height=output_height) 
+                    original_image = oimage
+                    det_images = torch.from_numpy(self.det_pre_transform(original_image)[0])  
+                    rough_layout_this_batch.append(layout_dets)
+                    detimages.append(det_images)
+
+        return (detimages,rough_layout_this_batch)
+    
+
+    def __getitem__(self, index) :
+        
+        return self.extract_det_image(index)
+
+class DetPageInfoImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):    
+    error_count=0
+    def __init__(self, metadata_filepath, 
+                 det_pre_transform,
+                 partion_num = 1,
+                 partion_idx = 0,
+                 page_num_for_name=None):
+        super().__init__()
+        if page_num_for_name is None:
+            filename = metadata_filepath.split("/")[-1].replace('.jsonl','.json')
+            page_num_for_name_path = f"opendata:s3://llm-pdf-text/pdf_gpu_output/scihub_shared/page_num_map/{filename}"
+            page_num_for_name_list = self.smart_read_json(page_num_for_name_path)
+            page_num_for_name={}
+            for pdf_path, page_num in page_num_for_name_list:
+                if pdf_path.startswith("s3:"): pdf_path = "opendata:"+ pdf_path
+                page_num_for_name[pdf_path] = page_num
+            tqdm.write(f"we load page_num_for_name from {page_num_for_name_path}")
+        metadata= self.smart_read_json(metadata_filepath)
+        metadata= np.array_split(metadata, partion_num)[partion_idx]
+        tqdm.write("we filte out good metadata")
+        self.metadata   = []
+        self.pdf_id_and_page_id_pair = []
+        for row in metadata:
+            if row['path'].startswith("s3:"): row['path'] = "opendata:"+ row['path']
+            if row['path'] not in page_num_for_name:continue
+            if page_num_for_name[row['path']]<=0:continue
+            
+            path     = row['path']
+
+            page_num = page_num_for_name[path]
+            row['page_num'] = page_num_for_name[path]
+            for page_id in range(page_num):
+                self.pdf_id_and_page_id_pair.append((len(self.metadata), page_id)) 
+            self.metadata.append(row)
+        self.dpi = 200
+        self.det_pre_transform = det_pre_transform
+        self.timer = Timers(False)
+    def __len__(self):
+        return len(self.pdf_id_and_page_id_pair)
+    
+    def get_pdf_by_pdf_id(self,pdf_id):
+        pdf_path  = self.metadata[pdf_id]['path']
+        return self.get_pdf_buffer(pdf_path)
+
+    def extract_det_image(self, index):
+        current_pdf_index, current_page_index = self.pdf_id_and_page_id_pair[index]
+        pdf_metadata = self.metadata[current_pdf_index]
+        pdf_path = clean_pdf_path(pdf_metadata['path'])
+        output_width =1472 #pdf_metadata['width']#1472
+        output_height=1920 #pdf_metadata['height']#1920
+        detimages = []
+        rough_layout_this_batch = []
+        for pdf_page_metadata in pdf_metadata['doc_layout_result']:
+            page_id = pdf_page_metadata['page_id']
+            if page_id != current_page_index:continue
+            layout_dets = []
+            for res in pdf_page_metadata["layout_dets"]:
+                xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
+                xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
+                bbox= [xmin, ymin, xmax, ymax]
+                bbox= convert_boxes([bbox], pdf_metadata['width'], pdf_metadata['height'], output_width, output_height)[0]
+                res = res.copy()
+                xmin, ymin, xmax, ymax = bbox
+                res['poly'] = [xmin, ymin, xmax, ymin, xmax, ymax, xmin, ymax]
+                res['pdf_path']=clean_pdf_path(pdf_path)
+                res['page_id'] =page_id
+                layout_dets.append(res)
+            if len(layout_dets)>0:
+                page  = self.get_pdf_by_pdf_id(current_pdf_index).load_page(current_page_index)
+                oimage  = process_pdf_page_to_image(page, 200, output_width=output_width,output_height=output_height) 
+                original_image = oimage
+                det_images = torch.from_numpy(self.det_pre_transform(original_image)[0])  
+                rough_layout_this_batch.append(layout_dets)
+                detimages.append(det_images)
+
+        return (detimages,rough_layout_this_batch)
+    
+
+    def __getitem__(self, index) :
+        
+        return self.extract_det_image(index)
+    
 class PageInfoDataset(Dataset,DatasetUtils,ImageTransformersUtils):
     error_count=0
     #client = build_client()
@@ -541,7 +685,27 @@ def rec_collate_fn(batches):
     return location_abs,images_list
 
 def none_collate_fn(batches):
-    
-
     return batches
     
+from typing import List, Tuple
+def concat_collate_fn(batches: List[Tuple[torch.Tensor,torch.Tensor]]):
+    list_1 = []
+    list_2 = []
+    for tensor1, tensor2 in batches:
+        if tensor1 is None:continue
+        list_1.append(tensor1)
+        list_2.append(tensor2)
+    if len(list_1)==0:
+        return [], []
+    return torch.cat(list_1), torch.cat(list_2)
+
+def tuple_list_collate_fn(batches: List[Tuple[List,List]]):
+    list_1 = []
+    list_2 = []
+    for tensor1, tensor2 in batches:
+        if len(tensor1)==0:continue
+        list_1.extend(tensor1)
+        list_2.extend(tensor2)
+    if len(list_1)==0:
+        return None, []
+    return torch.stack(list_1), list_2

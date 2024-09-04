@@ -546,6 +546,20 @@ def fast_torch_postprocess_multiprocess(pred_batch, shape_list, config):
     #     boxes_batch = list(executor.map(boxes_from_bitmap_wrapper, zip(pred_batch,segmentation_batch,src_w_list,src_h_list,configlist)))
     return boxes_batch
 
+def deal_with_on_contours(contour, score_table, height, width, dest_height, dest_width, config):
+    points, sside = get_mini_boxes(contour)
+    if sside < config.min_size:return
+    points =np.array(points)
+    score  = box_score_fast(score_table, points.reshape(-1, 2))
+    if config.box_thresh > score:return
+    box = unclip(points,config.unclip_ratio).reshape(-1, 1, 2)
+    box, sside = get_mini_boxes(box)
+    if sside < config.min_size + 2:return
+    box = np.array(box)
+    box[:, 0] = np.clip(np.round(box[:, 0] / width * dest_width), 0, dest_width)
+    box[:, 1] = np.clip(np.round(box[:, 1] / height * dest_height), 0, dest_height)
+    return box, score
+
 def boxes_from_contours(pred, contours, dest_width, dest_height,config):
     '''
     _bitmap: single map with shape (1, H, W),
@@ -565,20 +579,6 @@ def boxes_from_contours(pred, contours, dest_width, dest_height,config):
         boxes.append(box)
         scores.append(score)
     return np.array(boxes), scores
-
-def deal_with_on_contours(contour, score_table, height, width, dest_height, dest_width, config):
-    points, sside = get_mini_boxes(contour)
-    if sside < config.min_size:return
-    points =np.array(points)
-    score  = box_score_fast(score_table, points.reshape(-1, 2))
-    if config.box_thresh > score:return
-    box = unclip(points,config.unclip_ratio).reshape(-1, 1, 2)
-    box, sside = get_mini_boxes(box)
-    if sside < config.min_size + 2:return
-    box = np.array(box)
-    box[:, 0] = np.clip(np.round(box[:, 0] / width * dest_width), 0, dest_width)
-    box[:, 1] = np.clip(np.round(box[:, 1] / height * dest_height), 0, dest_height)
-    return box, score
 
 def boxes_from_bitmap(pred, _bitmap, dest_width, dest_height,config:PostProcessConfig):
     '''

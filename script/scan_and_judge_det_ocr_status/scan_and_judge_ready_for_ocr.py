@@ -1,7 +1,8 @@
+import sys,os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from get_data_utils import *
 import json
 from tqdm.auto import tqdm
-
 from simple_parsing import ArgumentParser
 from batch_run_utils import obtain_processed_filelist, process_files,save_analysis, BatchModeConfig
 import time
@@ -20,6 +21,7 @@ def clean_pdf_path(pdf_path):
     return pdf_path[len("opendata:"):] if pdf_path.startswith("opendata:") else pdf_path
 def get_page_info_path(metadata_file):
     metadata_file_name = os.path.basename(metadata_file)
+    
     if metadata_file.startswith("opendata:") or metadata_file.startswith("s3:"):
         page_information_file_path= os.path.join(PageInformationROOT, metadata_file_name.replace(".jsonl",".json"))
     else:
@@ -37,9 +39,11 @@ def get_origin_path(metadata_file):
         origin_path= os.path.join(root, "metadata", metadata_file_name)
     return origin_path
 
-client = None
+client = build_client()
 def process_file(metadata_file, args:BatchModeConfig):
     pdf_path_map_to_page_num = []
+    if metadata_file.startswith("s3:"):
+        metadata_file = "opendata:"+metadata_file
     metadata_file_name = os.path.basename(metadata_file)
     page_information_file_path= get_page_info_path(metadata_file)
     metadata_list   = read_json_from_path(metadata_file,client)

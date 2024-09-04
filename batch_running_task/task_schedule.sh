@@ -5,7 +5,7 @@ PENDINGLIMIT=2
 # Function to get the count of pending tasks
 user=`whoami`
 partition='AI4Chem'
-filelist='physics_collection/sci_index_files.remain.filelist'
+filelist='scihub_collection/sci_hub.need_det.filelist'
 jobname='ParseSciHUB'
 get_pending_count() {
     squeue -u $user -p $partition -n $jobname | grep PD | wc -l
@@ -23,7 +23,7 @@ get_running_count() {
 
 # Function to submit a task
 submit_task() {
-    sbatch --quotatype=spot -p $partition -N1 -c8 --gres=gpu:1 run_rec.sh $filelist 0 100
+    sbatch --quotatype=spot -p $partition -N1 -c8 --gres=gpu:1 batch_running_task/task_det/run_det.sh $filelist 0 100
 }
 
 # Function to cancel extra pending tasks

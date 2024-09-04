@@ -9,7 +9,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import *
 from get_data_utils import *
-from scihub_pdf_dataset import PDFImageDataset, PageInfoDataset, custom_collate_fn,DataLoader,AddonDataset
+from scihub_pdf_dataset import PDFImageDataset, PageInfoDataset, custom_collate_fn,DataLoader,AddonDataset,clean_pdf_path
 from task_layout.get_batch_yolo import mfd_process, get_batch_YOLO_model
 from task_layout.get_batch_layout_model import get_layout_model
 from task_layout.no_paddle_ocr import ModifiedPaddleOCR
@@ -87,13 +87,17 @@ def inference_det(canvas_tensor_this_batch,det_model,det_inner_batch_size):
         ### do inner_batch_size batch forward
         dt_boxaes_batch_list = []
         for i in range(0, len(canvas_tensor_this_batch), det_inner_batch_size):
-            dt_boxaes_batch = det_model(canvas_tensor_this_batch[i:i+det_inner_batch_size])
+            data = canvas_tensor_this_batch[i:i+det_inner_batch_size]
+            if isinstance(data, list): data = torch.stack(data)
+            dt_boxaes_batch = det_model(data)
             dt_boxaes_batch = dt_boxaes_batch['maps'].cpu()[:,0]
             dt_boxaes_batch_list.append(dt_boxaes_batch) 
         dt_boxaes_batch_list= torch.cat(dt_boxaes_batch_list)
     return dt_boxaes_batch_list
 
-def det_postprocess(dt_boxaes_batch,ocrmodel):
+def det_postprocess(dt_boxaes_batch,ocrmodel,oriheight=1920,oriwidth=1472):
+    assert oriheight == 1920
+    assert oriwidth  == 1472
     dt_boxaes_batch=dt_boxaes_batch.numpy()
     post_result = ocrmodel.batch_det_model.fast_postprocess(dt_boxaes_batch, np.array([(1920,1472, 0.5, 0.5)]*len(dt_boxaes_batch)) )
     # print(post_result[0]['points'].shape)
@@ -437,7 +441,7 @@ def fast_dealwith_one_dataset(dataset,layout_model, mfd_model, ocrmodel,
     
 
 def save_result(data_to_save,dataset,result_path):
-    pdf_to_metadata = {t['path']:t for t in dataset.metadata}
+    pdf_to_metadata = {clean_pdf_path(t['path']):t for t in dataset.metadata}
  
     new_data_to_save = []
     for pdf_path, layout_dets_per_page in data_to_save.items():
@@ -452,14 +456,14 @@ def save_result(data_to_save,dataset,result_path):
         new_pdf_dict["doc_layout_result"]=[]
         for page_id in range(max(pages)+1): ### those , before, we may lost whole the last page for layoutV1-5 result
             if page_id not in layout_dets_per_page:
-                print(f"WARNING: page {page_id} of PDF: {pdf_path} fail to parser!!! ")
+                print(f"WARNING: page {page_id} of PDF (availabel keys is {layout_dets_per_page.keys()}): {pdf_path} fail to parser!!! ")
                 now_row = {"page_id": page_id, "status": "fail", "layout_dets":[]}
             else:
                 now_row = {"page_id": page_id, "layout_dets":layout_dets_per_page[page_id]}
             new_pdf_dict["doc_layout_result"].append(now_row)
         new_data_to_save.append(new_pdf_dict)
     if "s3:" in new_data_to_save and dataset.client is None:dataset.client=build_client()
-
+    if result_path.startswith("s3:"):result_path = "opendata:"+result_path
     write_jsonl_to_path(new_data_to_save, result_path, dataset.client)
 
 def test_dataset(pdf_path, layout_model, mfd_model, ocrmodel):
