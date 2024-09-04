@@ -86,7 +86,8 @@ class VIT_Backbone(Backbone):
             config.has_spatial_attention_bias = False
             config.has_relative_attention_bias = False
             self.backbone = LayoutLMv3Model(config, detection=True,
-                                               out_features=out_features, image_only=image_only)
+                                               out_features=out_features, 
+                                               image_only=image_only)
         else:
             self.backbone = model_func(img_size=img_size,
                                        out_features=out_features,
@@ -103,13 +104,17 @@ class VIT_Backbone(Backbone):
             dict[str->Tensor]: names and the corresponding features
         """
         if "layoutlmv3" in self.name:
-            return self.backbone.forward(
-                input_ids=x["input_ids"] if "input_ids" in x else None,
-                bbox=x["bbox"] if "bbox" in x else None,
-                images=x["images"] if "images" in x else None,
-                attention_mask=x["attention_mask"] if "attention_mask" in x else None,
-                # output_hidden_states=True,
-            )
+            if isinstance(x,torch.Tensor):
+                return self.backbone.forward(images=x)
+            else:
+
+                return self.backbone.forward(
+                    input_ids=x["input_ids"] if "input_ids" in x else None,
+                    bbox=x["bbox"] if "bbox" in x else None,
+                    images=x["images"] if "images" in x else None,
+                    attention_mask=x["attention_mask"] if "attention_mask" in x else None,
+                    # output_hidden_states=True,
+                )
         assert x.dim() == 4, f"VIT takes an input of shape (N, C, H, W). Got {x.shape} instead!"
         return self.backbone.forward_features(x)
 

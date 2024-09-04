@@ -66,11 +66,14 @@ def setup(args):
     """
     cfg = get_cfg()
     # add_coat_config(cfg)
+    
     add_vit_config(cfg)
     cfg.merge_from_file(args.config_file)
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.2  # set threshold for this model
     cfg.merge_from_list(args.opts)
+    
     cfg.freeze()
+    
     default_setup(cfg, args)
     
     register_coco_instances(
@@ -116,7 +119,7 @@ class Layoutlmv3_Predictor(object):
         self.mapping = ["title", "plain text", "abandon", "figure", "figure_caption", "table", "table_caption", "table_footnote", "isolate_formula", "formula_caption"]
         MetadataCatalog.get(cfg.DATASETS.TRAIN[0]).thing_classes = self.mapping
         self.predictor = DefaultPredictor(cfg)
-        
+    
     def __call__(self, image, ignore_catids=[]):
         page_layout_result = {
             "layout_dets": []
@@ -139,3 +142,4 @@ class Layoutlmv3_Predictor(object):
                 "score": scores[bbox_idx]
             })
         return page_layout_result
+    

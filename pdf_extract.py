@@ -73,6 +73,43 @@ class MathDataset(Dataset):
             image = self.transform(raw_image)
         return image
 
+# def parser_per_image(image):
+
+
+def rough_layout(layout_model, image):
+    layout_res = layout_model(image, ignore_catids=[])
+    return layout_res
+
+from dataclasses import dataclass
+
+@dataclass
+class FineGrainedConfig:
+    conf_thres: float = 0.3
+    iou_thres: float = 0.5
+    verbose: bool = False
+
+def fine_grained_layout(mfd_model,image, layout_res, config:FineGrainedConfig):
+    latex_filling_list = []
+    mf_image_list      = []
+    mfd_res            = mfd_model.predict(image, imgsz=img_size, conf=config.conf_thres, iou=config.iou_thres, verbose=config.verbose)[0]
+    for xyxy, conf, cla in zip(mfd_res.boxes.xyxy.cpu(), 
+                               mfd_res.boxes.conf.cpu(), 
+                               mfd_res.boxes.cls.cpu() ):
+        xmin, ymin, xmax, ymax = [int(p.item()) for p in xyxy]
+        new_item = {
+            'category_id': 13 + int(cla.item()),
+            'poly': [xmin, ymin, xmax, ymin, xmax, ymax, xmin, ymax],
+            'score': round(float(conf.item()), 2),
+            'latex': '',
+        }
+        layout_res['layout_dets'].append(new_item)
+        latex_filling_list.append(new_item)
+        bbox_img = get_croped_image(Image.fromarray(image), [xmin, ymin, xmax, ymax])
+        mf_image_list.append(bbox_img)
+        
+    return latex_filling_list, mf_image_list
+
+from tqdm.auto import tqdm
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -93,6 +130,7 @@ if __name__ == '__main__':
     with open('configs/model_configs.yaml') as f:
         model_configs = yaml.load(f, Loader=yaml.FullLoader)
     img_size = model_configs['model_args']['img_size']
+
     conf_thres = model_configs['model_args']['conf_thres']
     iou_thres = model_configs['model_args']['iou_thres']
     device = model_configs['model_args']['device']
@@ -113,6 +151,7 @@ if __name__ == '__main__':
     else:
         all_pdfs = [args.pdf]
     print("total files:", len(all_pdfs))
+    fineconfig = FineGrainedConfig()
     for idx, single_pdf in enumerate(all_pdfs):
         try:
             img_list = load_pdf_fitz(single_pdf, dpi=dpi)
@@ -126,7 +165,7 @@ if __name__ == '__main__':
         doc_layout_result = []
         latex_filling_list = []
         mf_image_list = []
-        for idx, image in enumerate(img_list):
+        for idx, image in tqdm(enumerate(img_list)):
             img_H, img_W = image.shape[0], image.shape[1]
             layout_res = layout_model(image, ignore_catids=[])
             mfd_res = mfd_model.predict(image, imgsz=img_size, conf=conf_thres, iou=iou_thres, verbose=True)[0]
@@ -188,6 +227,7 @@ if __name__ == '__main__':
                     cropped_img = Image.new('RGB', pil_img.size, 'white')
                     cropped_img.paste(pil_img.crop(crop_box), crop_box)
                     cropped_img = cv2.cvtColor(np.asarray(cropped_img), cv2.COLOR_RGB2BGR)
+                    print(cropped_img.shape)
                     ocr_res = ocr_model.ocr(cropped_img, mfd_res=single_page_mfdetrec_res)[0]
                     if ocr_res:
                         for box_ocr_res in ocr_res:

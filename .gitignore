@@ -1,17 +1,20 @@
 *.ipynb*
 *.ipynb
-
+models
 # local data
 output/*
 data/*
 temp*
 test*
-
+weights
 # python
 .ipynb_checkpoints
 *.ipynb
 **/__pycache__/
-
+*.filelist
+*.jsonl
+analysis
+physics_collection
 # logs
 *.log
 *.out

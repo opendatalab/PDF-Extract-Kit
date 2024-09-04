@@ -1,0 +1,15 @@
+Architecture:
+  model_type: table
+  algorithm: TableAttn
+  Backbone:
+    name: MobileNetV3
+    scale: 1.0
+    model_name: large
+    disable_se: True
+  Head:
+    name: TableAttentionHead
+    hidden_size: 256
+    l2_decay: 0.00001
+    loc_type: 2
+    max_elem_length: 800
+    in_max_len: 512
