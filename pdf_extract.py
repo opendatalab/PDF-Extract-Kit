@@ -10,6 +10,7 @@ import shutil
 import torch
 import numpy as np
 import gc
+import sys
 
 from paddleocr import draw_ocr
 from PIL import Image, ImageDraw, ImageFont
@@ -74,7 +75,7 @@ class MathDataset(Dataset):
         return image
 
 
-if __name__ == '__main__':
+def main(cli_args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--pdf', type=str)
     parser.add_argument('--output', type=str, default="output")
@@ -82,7 +83,7 @@ if __name__ == '__main__':
     parser.add_argument('--num-workers', type=int, default=32)
     parser.add_argument('--vis', action='store_true')
     parser.add_argument('--render', action='store_true')
-    args = parser.parse_args()
+    args = parser.parse_args(cli_args)
     print(args)
     
     tz = pytz.timezone('Asia/Shanghai')
@@ -273,3 +274,7 @@ if __name__ == '__main__':
     end = time.time()
     print(now.strftime('%Y-%m-%d %H:%M:%S'))
     print('Finished! time cost:', int(end-start), 's')
+
+if __name__ == '__main__':
+    print("Calling script from command line")
+    main(sys.argv[1:])
