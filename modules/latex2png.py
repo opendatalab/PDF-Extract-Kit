@@ -175,7 +175,7 @@ def zhtext2pil(zh_string, word_size=18):
     word_num = len(zh_string)
     img = Image.new('RGB', ((word_size-3)*word_num, word_size), 'white')
     draw = ImageDraw.Draw(img)
-    fontText = ImageFont.truetype("simhei.ttf", 15, encoding="utf-8")
+    fontText = ImageFont.truetype("assets/fonts/simhei.ttf", 15, encoding="utf-8")
     draw.text((0, 1), zh_string, (0, 0, 0), font=fontText)
     # draw.rectangle([0, 0, img.size[0]-1, img.size[1]-1], fill=None, outline=(255,0,0), width=1)
     return img
