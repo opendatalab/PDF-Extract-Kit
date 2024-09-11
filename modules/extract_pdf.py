@@ -9,16 +9,15 @@ def load_pdf_fitz(pdf_path, dpi=72):
     doc = fitz.open(pdf_path)
     for i in range(len(doc)):
         page = doc[i]
-        pix = page.get_pixmap(matrix=fitz.Matrix(dpi/72, dpi/72))
-        image = Image.frombytes('RGB', (pix.width, pix.height), pix.samples)
+        mat = fitz.Matrix(dpi / 72, dpi / 72)
+        pm = page.get_pixmap(matrix=mat, alpha=False)
 
-        # if width or height > 3000 pixels, don't enlarge the image
-        if pix.width > 3000 or pix.height > 3000:
-            pix = page.get_pixmap(matrix=fitz.Matrix(1, 1), alpha=False)
-            image = Image.frombytes('RGB', (pix.width, pix.height), pix.samples)
+        # If the width or height exceeds 9000 after scaling, do not scale further.
+        if pm.width > 9000 or pm.height > 9000:
+            pm = page.get_pixmap(matrix=fitz.Matrix(1, 1), alpha=False)
 
-        # images.append(image)
-        images.append(np.array(image)[:,:,::-1])
+        img = Image.frombytes("RGB", (pm.width, pm.height), pm.samples)
+        images.append(np.array(img))
     return images
 
 
