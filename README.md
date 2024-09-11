@@ -7,7 +7,7 @@
 
 English | [简体中文](./README-zh_CN.md)
 
-[[Models (🤗Hugging Face)]](https://huggingface.co/wanderkid/PDF-Extract-Kit) | [[Models(<img src="./assets/images/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/wanderkid/PDF-Extract-Kit) 
+[[Models (🤗Hugging Face)]](https://huggingface.co/opendatalab/PDF-Extract-Kit) | [[Models(<img src="./assets/images/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/OpenDataLab/PDF-Extract-Kit) 
  
 🔥🔥🔥 [MinerU: Efficient Document Content Extraction Tool Based on PDF-Extract-Kit](https://github.com/opendatalab/MinerU)
 
@@ -257,6 +257,7 @@ Parameter explanations:
 - `--output`: Path where the results are saved, default is "output".
 - `--vis`: Whether to visualize the results; if yes, detection results including bounding boxes and categories will be visualized.
 - `--render`: Whether to render the recognized results, including LaTeX code for formulas and plain text, which will be rendered and placed in the detection boxes. Note: This process is very time-consuming, and also requires prior installation of `xelatex` and `imagemagic`.
+- `--batch-size`: Batch size for dataloader. Larger batch sizes are recommended, but smaller sizes require less GPU memory. Default is 128.
 
 > This project is dedicated to using models for high-quality content extraction from documents on diversity. It does not involve reassembling the extracted content into new documents, such as converting PDFs to Markdown. For those needs, please refer to our other GitHub project: [MinerU](https://github.com/opendatalab/MinerU)
 
