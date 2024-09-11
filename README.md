@@ -214,23 +214,17 @@ The formula recognition we used is based on the weights downloaded from [UniMERN
 The table recognition we used is based on the weights downloaded from [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy), a solution that converts images of Table into LaTeX. Compared to the table recognition capability of PP-StructureV2, StructEqTable demonstrates stronger recognition performance, delivering good results even with complex tables, which may currently be best suited for data within research papers. There is also significant room for improvement in terms of speed, and we are continuously iterating and optimizing. Within a week, we will update the table recognition capability to [MinerU](https://github.com/opendatalab/MinerU).
 
 
-## Installation Guide
+## Installation Guide(Linux)
 
 ```bash
 conda create -n pipeline python=3.10
 
 pip install -r requirements.txt
 
-pip install --extra-index-url https://miropsota.github.io/torch_packages_builder detectron2==0.6+pt2.3.1cu121
+pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-linux_x86_64.whl
 ```
 
-After installation, you may encounter some version conflicts leading to version changes. If you encounter version-related errors, you can try the following commands to reinstall specific versions of the libraries.
-
-```bash
-pip install pillow==8.4.0
-```
-
-In addition to version conflicts, you may also encounter errors where torch cannot be invoked. First, uninstall the following library and then reinstall cuda12 and cudnn.
+After installation, you may also encounter errors where torch cannot be invoked. First, uninstall the following library and then reinstall cuda12 and cudnn.
 
 ```bash
 pip uninstall nvidia-cusparse-cu12
@@ -255,7 +249,7 @@ If you intend to experience this project on Google Colab, please <a href="https:
 ## Run Extraction Script
 
 ```bash 
-python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
+python pdf_extract.py --pdf assets/examples/example.pdf
 ```
 
 Parameter explanations:

@@ -102,7 +102,7 @@ if __name__ == '__main__':
     mfr_transform = transforms.Compose([mfr_vis_processors, ])
     tr_model = tr_model_init(model_configs['model_args']['tr_weight'], max_time=model_configs['model_args']['table_max_time'], device=device)
     layout_model = layout_model_init(model_configs['model_args']['layout_weight'])
-    ocr_model = ModifiedPaddleOCR(show_log=True)
+    ocr_model = ModifiedPaddleOCR(show_log=True, det_db_box_thresh=0.3)
     print(now.strftime('%Y-%m-%d %H:%M:%S'))
     print('Model init done!')
     ## ======== model init ========##
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     else:
         all_pdfs = [args.pdf]
     print("total files:", len(all_pdfs))
-    for idx, single_pdf in enumerate(all_pdfs):
+    for pdf_idx, single_pdf in enumerate(all_pdfs):
         try:
             img_list = load_pdf_fitz(single_pdf, dpi=dpi)
         except:
@@ -121,7 +121,7 @@ if __name__ == '__main__':
             print("unexpected pdf file:", single_pdf)
         if img_list is None:
             continue
-        print("pdf index:", idx, "pages:", len(img_list))
+        print("pdf index:", pdf_idx, "pages:", len(img_list))
         # layout detection and formula detection
         doc_layout_result = []
         latex_filling_list = []
@@ -157,7 +157,9 @@ if __name__ == '__main__':
         # Formula recognition, collect all formula images in whole pdf file, then batch infer them.
         a = time.time()  
         dataset = MathDataset(mf_image_list, transform=mfr_transform)
-        dataloader = DataLoader(dataset, batch_size=args.batch_size, num_workers=32)
+
+        dataloader = DataLoader(dataset, batch_size=args.batch_size, num_workers=0)
+
         mfr_res = []
         for imgs in dataloader:
             imgs = imgs.to(device)
@@ -167,51 +169,103 @@ if __name__ == '__main__':
             res['latex'] = latex_rm_whitespace(latex)
         b = time.time()
         print("formula nums:", len(mf_image_list), "mfr time:", round(b-a, 2))
+
+        def crop_img(input_res, input_pil_img, padding_x=0, padding_y=0):
+            crop_xmin, crop_ymin = int(input_res['poly'][0]), int(input_res['poly'][1])
+            crop_xmax, crop_ymax = int(input_res['poly'][4]), int(input_res['poly'][5])
+            # Create a white background with an additional width and height of 50
+            crop_new_width = crop_xmax - crop_xmin + padding_x * 2
+            crop_new_height = crop_ymax - crop_ymin + padding_y * 2
+            return_image = Image.new('RGB', (crop_new_width, crop_new_height), 'white')
+
+            # Crop image
+            crop_box = (crop_xmin, crop_ymin, crop_xmax, crop_ymax)
+            cropped_img = input_pil_img.crop(crop_box)
+            return_image.paste(cropped_img, (padding_x, padding_y))
+            return_list = [padding_x, padding_y, crop_xmin, crop_ymin, crop_xmax, crop_ymax, crop_new_width, crop_new_height]
+            return return_image, return_list
             
         # ocr and table recognition
         for idx, image in enumerate(img_list):
-            pil_img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-            single_page_res = doc_layout_result[idx]['layout_dets']
-            single_page_mfdetrec_res = []
-            for res in single_page_res:
-                if int(res['category_id']) in [13, 14]:
-                    xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
-                    xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
-                    single_page_mfdetrec_res.append({
-                        "bbox": [xmin, ymin, xmax, ymax],
-                    })
-            for res in single_page_res:
-                if int(res['category_id']) in [0, 1, 2, 4, 6, 7]:  #categories that need to do ocr
-                    xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
-                    xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
-                    crop_box = [xmin, ymin, xmax, ymax]
-                    cropped_img = Image.new('RGB', pil_img.size, 'white')
-                    cropped_img.paste(pil_img.crop(crop_box), crop_box)
-                    cropped_img = cv2.cvtColor(np.asarray(cropped_img), cv2.COLOR_RGB2BGR)
-                    ocr_res = ocr_model.ocr(cropped_img, mfd_res=single_page_mfdetrec_res)[0]
-                    if ocr_res:
-                        for box_ocr_res in ocr_res:
-                            p1, p2, p3, p4 = box_ocr_res[0]
-                            text, score = box_ocr_res[1]
-                            doc_layout_result[idx]['layout_dets'].append({
-                                'category_id': 15,
-                                'poly': p1 + p2 + p3 + p4,
-                                'score': round(score, 2),
-                                'text': text,
-                            })
-                elif int(res['category_id']) == 5: # do table recognition
-                    xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
-                    xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
-                    crop_box = [xmin, ymin, xmax, ymax]
-                    cropped_img = pil_img.convert("RGB").crop(crop_box)
-                    start = time.time()
-                    with torch.no_grad():
-                        output = tr_model(cropped_img)
-                    end = time.time()
-                    if (end-start) > model_configs['model_args']['table_max_time']:
-                        res["timeout"] = True
-                    res["latex"] = output[0]
 
+            layout_res = doc_layout_result[idx]['layout_dets']
+            pil_img = Image.fromarray(image)
+
+            ocr_res_list = []
+            table_res_list = []
+            single_page_mfdetrec_res = []
+
+            for res in layout_res:
+                if int(res['category_id']) in [13, 14]:
+                    single_page_mfdetrec_res.append({
+                        "bbox": [int(res['poly'][0]), int(res['poly'][1]),
+                                 int(res['poly'][4]), int(res['poly'][5])],
+                    })
+                elif int(res['category_id']) in [0, 1, 2, 4, 6, 7]:
+                    ocr_res_list.append(res)
+                elif int(res['category_id']) in [5]:
+                    table_res_list.append(res)
+
+            ocr_start = time.time()
+            # Process each area that requires OCR processing
+            for res in ocr_res_list:
+                new_image, useful_list = crop_img(res, pil_img, padding_x=50, padding_y=50)
+                paste_x, paste_y, xmin, ymin, xmax, ymax, new_width, new_height = useful_list
+                # Adjust the coordinates of the formula area
+                adjusted_mfdetrec_res = []
+                for mf_res in single_page_mfdetrec_res:
+                    mf_xmin, mf_ymin, mf_xmax, mf_ymax = mf_res["bbox"]
+                    # Adjust the coordinates of the formula area to the coordinates relative to the cropping area
+                    x0 = mf_xmin - xmin + paste_x
+                    y0 = mf_ymin - ymin + paste_y
+                    x1 = mf_xmax - xmin + paste_x
+                    y1 = mf_ymax - ymin + paste_y
+                    # Filter formula blocks outside the graph
+                    if any([x1 < 0, y1 < 0]) or any([x0 > new_width, y0 > new_height]):
+                        continue
+                    else:
+                        adjusted_mfdetrec_res.append({
+                            "bbox": [x0, y0, x1, y1],
+                        })
+
+                # OCR recognition
+                new_image = cv2.cvtColor(np.asarray(new_image), cv2.COLOR_RGB2BGR)
+                ocr_res = ocr_model.ocr(new_image, mfd_res=adjusted_mfdetrec_res)[0]
+
+                # Integration results
+                if ocr_res:
+                    for box_ocr_res in ocr_res:
+                        p1, p2, p3, p4 = box_ocr_res[0]
+                        text, score = box_ocr_res[1]
+
+                        # Convert the coordinates back to the original coordinate system
+                        p1 = [p1[0] - paste_x + xmin, p1[1] - paste_y + ymin]
+                        p2 = [p2[0] - paste_x + xmin, p2[1] - paste_y + ymin]
+                        p3 = [p3[0] - paste_x + xmin, p3[1] - paste_y + ymin]
+                        p4 = [p4[0] - paste_x + xmin, p4[1] - paste_y + ymin]
+
+                        layout_res.append({
+                            'category_id': 15,
+                            'poly': p1 + p2 + p3 + p4,
+                            'score': round(score, 2),
+                            'text': text,
+                        })
+
+            ocr_cost = round(time.time() - ocr_start, 2)
+            print(f"ocr cost: {ocr_cost}")
+
+            table_start = time.time()
+            for res in table_res_list:
+                new_image, _ = crop_img(res, pil_img)
+
+                single_table_start = time.time()
+                with torch.no_grad():
+                    output = tr_model(new_image)
+                if (time.time() - single_table_start) > model_configs['model_args']['table_max_time']:
+                    res["timeout"] = True
+                res["latex"] = output[0]
+            table_cost = round(time.time() - table_start, 2)
+            print(f"table cost: {table_cost}")
 
         output_dir = args.output
         os.makedirs(output_dir, exist_ok=True)
@@ -229,7 +283,7 @@ if __name__ == '__main__':
             vis_pdf_result = []
             for idx, image in enumerate(img_list):
                 single_page_res = doc_layout_result[idx]['layout_dets']
-                vis_img = Image.new('RGB', Image.fromarray(image).size, 'white') if args.render else Image.fromarray(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+                vis_img = Image.new('RGB', Image.fromarray(image).size, 'white') if args.render else Image.fromarray(image)
                 draw = ImageDraw.Draw(vis_img)
                 for res in single_page_res:
                     label = int(res['category_id'])

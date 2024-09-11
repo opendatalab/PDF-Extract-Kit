@@ -14,9 +14,9 @@
 - 安装ImageMagick
   - https://docs.wand-py.org/en/latest/guide/install.html#install-imagemagick-on-windows
 - 需要修改的配置
-  - PDF-Extract-Kit/pdf_extract.py:148 
+  - PDF-Extract-Kit/pdf_extract.py:L148  根据显卡的显存大小来调整`batch_size`, 如果遇到了显存不足的报错，可以尝试减小`batch_size`.
     ```python
-    dataloader = DataLoader(dataset, batch_size=128, num_workers=0)
+    dataloader = DataLoader(dataset, batch_size=64, num_workers=0)
     ```
     
 ## 在cpu环境使用
@@ -37,11 +37,11 @@ pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/d
 
 ### 3.修改config, 使用cpu推理
 
-PDF-Extract-Kit/configs/model_configs.yaml:2
+PDF-Extract-Kit/configs/model_configs.yaml:L2
 ```yaml
 device: cpu
 ```
-PDF-Extract-Kit/modules/layoutlmv3/layoutlmv3_base_inference.yaml:72
+PDF-Extract-Kit/modules/layoutlmv3/layoutlmv3_base_inference.yaml:L72
 ```yaml
 DEVICE: cpu
 ```
@@ -49,7 +49,7 @@ DEVICE: cpu
 ### 4.运行
 
 ```bash
-python pdf_extract.py --pdf demo/demo1.pdf
+python pdf_extract.py --pdf assets/examples/example.pdf
 ```
 
 ## 在gpu环境使用
@@ -61,7 +61,7 @@ python pdf_extract.py --pdf demo/demo1.pdf
   https://developer.nvidia.com/cuda-11-8-0-download-archive
   - cuDNN v8.7.0 (November 28th, 2022), for CUDA 11.x
   https://developer.nvidia.com/rdp/cudnn-archive
-- 确认显卡显存是否够用，最低6GB，推荐16GB及以上 
+- 确认显卡显存是否够用，最低8GB，推荐16GB及以上 
   - 如果显存小于16GB，请将[预处理](#预处理)中需要修改的配置中batch_size酌情调低至"64"或"32"
 
 
@@ -82,13 +82,13 @@ pip install https://github.com/opendatalab/PDF-Extract-Kit/blob/main/assets/whl/
 pip install --force-reinstall torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu118
 ```
 
-### 3.修改config, 使用cuda推理
+### 3.修改config, 使用cuda推理(layout和公式)
 
-PDF-Extract-Kit/configs/model_configs.yaml:2
+PDF-Extract-Kit/configs/model_configs.yaml:L2
 ```yaml
 device: cuda
 ```
-PDF-Extract-Kit/modules/layoutlmv3/layoutlmv3_base_inference.yaml:72
+PDF-Extract-Kit/modules/layoutlmv3/layoutlmv3_base_inference.yaml:L72
 ```yaml
 DEVICE: cuda
 ```
@@ -96,5 +96,11 @@ DEVICE: cuda
 ### 4.运行
 
 ```bash
-python pdf_extract.py --pdf demo/demo1.pdf
+python pdf_extract.py --pdf assets/examples/example.pdf
+```
+
+### 5.显存大于等于16GB时，可开启ocr加速
+确认自己显存大于等于16GB时，可通过以下命令安装paddlepaddle-gpu，安装完成后自动开启ocr加速
+```bash
+pip install paddlepaddle-gpu==2.6.1
 ```
