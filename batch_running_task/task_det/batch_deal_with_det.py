@@ -9,10 +9,11 @@ RESULT_SAVE_PATH="opendata:s3://llm-pdf-text/pdf_gpu_output/scihub_shared"
 #RESULT_SAVE_PATH="tianning:s3://temp/debug"
 INPUT_LOAD_PATH="opendata:s3://llm-process-pperf/ebook_index_v4/scihub/v001/scihub"
 CURRENT_END_SIGN=".current_end.sign"
-LOCKSERVER="http://10.140.52.123:8000"
-from datetime import datetime,timedelta
 import socket   
 hostname= socket.gethostname()
+LOCKSERVER="http://10.140.52.123:8000" if hostname.startswith('SH') else "http://paraai-n32-h-01-ccs-master-2:32453"
+from datetime import datetime,timedelta
+
 from batch_run_utils import BatchModeConfig, process_files,dataclass,obtain_processed_filelist
 from simple_parsing import ArgumentParser
 from tqdm.auto import tqdm
