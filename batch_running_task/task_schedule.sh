@@ -1,11 +1,12 @@
 
 #!/bin/bash
-TASKLIMIT=60
+TASKLIMIT=100
 PENDINGLIMIT=2
 # Function to get the count of pending tasks
 user=`whoami`
 partition='AI4Chem'
-filelist='scihub_collection/sci_hub.need_det.filelist'
+jobscript="batch_running_task/task_layout/run_layout_for_missing_page.sh"
+filelist='scihub_collection/analysis/not_complete_pdf_page_id.pairlist.filelist'
 jobname='ParseSciHUB'
 get_pending_count() {
     squeue -u $user -p $partition -n $jobname | grep PD | wc -l
@@ -23,7 +24,7 @@ get_running_count() {
 
 # Function to submit a task
 submit_task() {
-    sbatch --quotatype=spot -p $partition -N1 -c8 --gres=gpu:1 batch_running_task/task_det/run_det.sh $filelist 0 100
+    sbatch --quotatype=spot -p $partition -N1 -c8 --gres=gpu:1 $jobscript $filelist 0 1
 }
 
 # Function to cancel extra pending tasks

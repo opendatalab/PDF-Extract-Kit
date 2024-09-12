@@ -427,6 +427,8 @@ class BatchTextDetector(TextDetector):
                                    max_candidates=self.postprocess_op.max_candidates, 
                                    min_size=self.postprocess_op.min_size, 
                                    box_thresh=self.postprocess_op.box_thresh)
+
+        #raise NotImplementedError(f"{config}")
         if isinstance(preds, dict):
             preds = preds['maps'][:, 0, :, :]
 

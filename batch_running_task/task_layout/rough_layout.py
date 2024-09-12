@@ -9,7 +9,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import *
 from get_data_utils import *
-from scihub_pdf_dataset import PDFImageDataset, PageInfoDataset, custom_collate_fn,DataLoader,AddonDataset,clean_pdf_path
+from scihub_pdf_dataset import PDFImageDataset, PageInfoDataset, PageInfoWithPairDataset, custom_collate_fn,DataLoader,AddonDataset,clean_pdf_path
 from task_layout.get_batch_yolo import mfd_process, get_batch_YOLO_model
 from task_layout.get_batch_layout_model import get_layout_model
 from task_layout.no_paddle_ocr import ModifiedPaddleOCR
@@ -279,6 +279,30 @@ def deal_with_page_info_dataset(pdf_path, result_path, layout_model, mfd_model,
                                             timer= timer)
     save_result(data_to_save,dataset,result_path)
 
+def deal_with_page_info_dataset_for_missing_page(pdf_path, result_path, layout_model, mfd_model, 
+                          ocrmodel=None, inner_batch_size=4, 
+                          batch_size=32,num_workers=8,
+                          do_text_det=False,
+                          do_text_rec=False,
+                          timer=Timers(False),
+                          partion_num = 1,
+                          partion_idx = 0,page_num_for_name=None):
+    dataset    = PageInfoWithPairDataset(pdf_path,layout_model.predictor.aug,layout_model.predictor.input_format,
+                                 mfd_pre_transform=mfd_process(mfd_model.predictor.args.imgsz,mfd_model.predictor.model.stride,mfd_model.predictor.model.pt),
+                                 det_pre_transform=ocrmodel.batch_det_model.prepare_image,
+                                 return_original_image=do_text_rec,
+                                 partion_num = partion_num,
+                                 partion_idx = partion_idx,page_num_for_name=page_num_for_name
+                                 )
+    data_to_save = fast_dealwith_one_dataset(dataset,layout_model, mfd_model, ocrmodel,
+                                            inner_batch_size=inner_batch_size,
+                                            batch_size=batch_size,
+                                            num_workers=num_workers,
+                                            do_text_det=do_text_det,
+                                            do_text_rec=do_text_rec,
+                                            timer= timer)
+    save_result(data_to_save,dataset,result_path,add_on_mode=True)
+
 def deal_with_page_addon_dataset(metadata_path, pdfid_and_pageid_list, result_path, layout_model, mfd_model, 
                           ocrmodel=None, inner_batch_size=4, 
                           batch_size=32,num_workers=8,
@@ -440,7 +464,7 @@ def fast_dealwith_one_dataset(dataset,layout_model, mfd_model, ocrmodel,
     ### next, we construct each result for each pdf in pdf wise and remove the page_id by the list position 
     
 
-def save_result(data_to_save,dataset,result_path):
+def save_result(data_to_save,dataset,result_path,add_on_mode=False):
     pdf_to_metadata = {clean_pdf_path(t['path']):t for t in dataset.metadata}
  
     new_data_to_save = []
@@ -455,6 +479,7 @@ def save_result(data_to_save,dataset,result_path):
  
         new_pdf_dict["doc_layout_result"]=[]
         for page_id in range(max(pages)+1): ### those , before, we may lost whole the last page for layoutV1-5 result
+            if add_on_mode and page_id not in layout_dets_per_page:continue
             if page_id not in layout_dets_per_page:
                 print(f"WARNING: page {page_id} of PDF (availabel keys is {layout_dets_per_page.keys()}): {pdf_path} fail to parser!!! ")
                 now_row = {"page_id": page_id, "status": "fail", "layout_dets":[]}
@@ -491,7 +516,7 @@ if __name__ == "__main__":
     device    = model_configs['model_args']['device']
     dpi       = model_configs['model_args']['pdf_dpi']
 
-    accelerated = True
+    accelerated = False
     layout_model = get_layout_model(model_configs,accelerated)
     
     total_memory = get_gpu_memory()
@@ -502,21 +527,49 @@ if __name__ == "__main__":
     else:
         inner_batch_size = 2
     print(f"totally gpu memory is {total_memory} we use inner batch size {inner_batch_size}")
-    mfd_model    = get_batch_YOLO_model(model_configs,inner_batch_size) 
+    mfd_model    = get_batch_YOLO_model(model_configs,inner_batch_size,use_tensorRT=True) 
     ocrmodel = None
     ocrmodel = ocr_model = ModifiedPaddleOCR(show_log=True)
     timer = Timers(False,warmup=5)
     #test_dataset("debug.jsonl", layout_model, mfd_model, ocrmodel)
     #page_num_map_whole = get_page_num_map_whole()
     page_num_map_whole = None
-    filename = "part-66210c190659-012745.jsonl"
-    deal_with_page_info_dataset(filename, 
-                                f"{filename}.stage_1.jsonl", 
-                                layout_model, mfd_model, ocrmodel=ocrmodel, 
-                                inner_batch_size=inner_batch_size, batch_size=inner_batch_size,num_workers=8,
-                                do_text_det = True,
-                                do_text_rec = False,
-                                timer=timer,page_num_for_name=page_num_map_whole)
+    #filename = "part-66210c190659-012745.jsonl"
+    # deal_with_page_info_dataset(filename, 
+    #                             f"{filename}.stage_1.jsonl", 
+    #                             layout_model, mfd_model, ocrmodel=ocrmodel, 
+    #                             inner_batch_size=inner_batch_size, batch_size=inner_batch_size,num_workers=8,
+    #                             do_text_det = True,
+    #                             do_text_rec = False,
+    #                             timer=timer,page_num_for_name=page_num_map_whole)
+
+    with open('test.pairlist','r') as f:
+        for line in f:
+            splited_line = line.split()
+            pdf_path = splited_line[0]
+            json_str = " ".join(splited_line[1:])
+            page_num_for_name = json.loads(json_str)
+            break
+    do_text_det = True
+    do_text_rec = False     
+    batch_size = 16
+    num_workers= 4
+
+    dataset    = PageInfoWithPairDataset(pdf_path,layout_model.predictor.aug,layout_model.predictor.input_format,
+                                 mfd_pre_transform=mfd_process(mfd_model.predictor.args.imgsz,mfd_model.predictor.model.stride,mfd_model.predictor.model.pt),
+                                 det_pre_transform=ocrmodel.batch_det_model.prepare_image,
+                                 return_original_image=do_text_rec,
+                                 partion_num = 1,
+                                 partion_idx = 0,page_num_for_name=page_num_for_name
+                                 )
+    data_to_save = fast_dealwith_one_dataset(dataset,layout_model, mfd_model, ocrmodel,
+                                            inner_batch_size=inner_batch_size,
+                                            batch_size=batch_size,
+                                            num_workers=num_workers,
+                                            do_text_det=do_text_det,
+                                            do_text_rec=do_text_rec,
+                                            timer= timer)
+    save_result(data_to_save,dataset,"test_result/result.addon.jsonl")
     
     
     

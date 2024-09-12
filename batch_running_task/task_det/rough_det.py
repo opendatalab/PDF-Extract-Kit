@@ -34,7 +34,7 @@ def deal_with_one_dataset(pdf_path, result_path, text_detector,det_pre_transform
     images_dataset = DetPageInfoImageDataset(pdf_path,det_pre_transform,partion_num = partion_num, partion_idx = partion_idx)
     data_to_save =  fast_deal_with_one_dataset(images_dataset,text_detector, pdf_batch_size  =pdf_batch_size, 
                                                 image_batch_size=image_batch_size,num_workers=num_workers)
-    save_result(data_to_save, images_dataset,result_path)
+    save_result(data_to_save, images_dataset,result_path,add_on_mode=True)
 
 
 class DetDataPrefetcher(DataPrefetcher):
@@ -61,13 +61,14 @@ def gpu_inference(canvas_tensor_this_batch,text_detector,det_inner_batch_size,or
             if isinstance(data, list): data = torch.stack(data)
             data=data.cuda()
             dt_boxaes_batch = det_model(data)
+
             dt_boxaes_batch = dt_boxaes_batch['maps'].cpu()[:,0]
             dt_boxes_result   = det_postprocess(dt_boxaes_batch,text_detector,oriheight,oriwidth)
             dt_boxes_result_list.extend(dt_boxes_result) 
         return dt_boxes_result_list
     
 
-def fast_deal_with_one_dataset(images_dataset:DetImageDataset,text_detector:ModifiedPaddleOCR,
+def fast_deal_with_one_dataset(images_dataset:DetPageInfoImageDataset,text_detector:ModifiedPaddleOCR,
                           pdf_batch_size  =32,
                           image_batch_size=256,
                           num_workers=8):
@@ -88,6 +89,7 @@ def fast_deal_with_one_dataset(images_dataset:DetImageDataset,text_detector:Modi
     #for batch in dataloader:
         ########## format data ################
         detimages, rough_layout_this_batch = batch
+        update_seq_len = len(detimages) if detimages is not None else 0
         if detimages is not None and len(detimages)>0:
             canvas_tensor_this_batch, partition_per_batch,_,_ = collect_paragraph_image_and_its_coordinate(detimages, rough_layout_this_batch,2)
             location = []
@@ -119,11 +121,11 @@ def fast_deal_with_one_dataset(images_dataset:DetImageDataset,text_detector:Modi
                         }
                     )
             model_train.append(time.time() - last_record_time)
-        last_record_time =time.time()
-        update_seq_len = len(detimages)
+            
         if pbar:
             pbar.update(update_seq_len)
             pbar.set_description(f"[Data][{np.mean(data_loading[-10:]):.2f}] [Model][{np.mean(model_train[-10:]):.2f}]")
+        last_record_time =time.time()                
         if pbar is None:
             pbar = tqdm(total=len(images_dataset)-update_seq_len,position=2,desc="pages",leave=False, bar_format='{l_bar}{bar}{r_bar}')
         batch = featcher.next()
@@ -137,6 +139,6 @@ if __name__ == "__main__":
     metadata_filepath = "part-66210c190659-012745.jsonl"
     text_detector     = ModifiedPaddleOCR()
     images_dataset    = DetPageInfoImageDataset(metadata_filepath,det_pre_transform=text_detector.batch_det_model.prepare_image)
-    data_to_save      = fast_deal_with_one_dataset(images_dataset,text_detector,pdf_batch_size=32, image_batch_size=128 ,num_workers=num_workers)
+    data_to_save      = fast_deal_with_one_dataset(images_dataset,text_detector,pdf_batch_size=2, image_batch_size=128 ,num_workers=num_workers)
     #print(data_to_save)
     save_result(data_to_save, images_dataset, "test_result/result.det.jsonl")

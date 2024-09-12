@@ -316,6 +316,16 @@ class PageInfoDataset(Dataset,DatasetUtils,ImageTransformersUtils):
                  partion_idx = 0,
                  page_num_for_name=None):
         super().__init__()
+        self.build_pdf_id_and_page_id_pair(metadata_filepath,page_num_for_name,partion_num,partion_idx)
+        self.dpi = 200
+        self.aug = aug
+        self.input_format = input_format
+        self.mfd_pre_transform = mfd_pre_transform
+        self.return_original_image = return_original_image
+        self.det_pre_transform = det_pre_transform
+        self.timer = timer
+    
+    def build_pdf_id_and_page_id_pair(self,metadata_filepath,page_num_for_name,partion_num,partion_idx):
         if page_num_for_name is None:
             filename = metadata_filepath.split("/")[-1].replace('.jsonl','.json')
             page_num_for_name_path = f"opendata:s3://llm-pdf-text/pdf_gpu_output/scihub_shared/page_num_map/{filename}"
@@ -342,22 +352,18 @@ class PageInfoDataset(Dataset,DatasetUtils,ImageTransformersUtils):
             for page_id in range(page_num):
                 self.pdf_id_and_page_id_pair.append((len(self.metadata), page_id)) 
             self.metadata.append(row)
-        
-        self.dpi = 200
-        self.aug = aug
-        self.input_format = input_format
-        self.mfd_pre_transform = mfd_pre_transform
-        self.return_original_image = return_original_image
-        self.det_pre_transform = det_pre_transform
-        self.timer = timer
-    
+
     def __len__(self):
         return len(self.pdf_id_and_page_id_pair)
     
     
     def get_pdf_by_pdf_id(self,pdf_id):
         pdf_path  = self.metadata[pdf_id]['path']
-        return self.get_pdf_buffer(pdf_path)
+        try:
+            return self.get_pdf_buffer(pdf_path)
+        except Exception as e:
+            raise(f'page={pdf_id} not in {pdf_path}:', e)
+        
     
     def retreive_resource(self,index):
         current_pdf_index, current_page_index = self.pdf_id_and_page_id_pair[index]
@@ -394,6 +400,16 @@ class PageInfoDataset(Dataset,DatasetUtils,ImageTransformersUtils):
             out = self[random_index]
         return out 
 
+class PageInfoWithPairDataset(PageInfoDataset):
+    def build_pdf_id_and_page_id_pair(self,metadata_filepath,pdf_id_and_page_id_pair,partion_num,partion_idx):
+        ### this time the page_num_for_name is just the pdf_id_and_page_id_pair
+        
+        metadata= self.smart_read_json(metadata_filepath)
+        metadata= np.array_split(metadata, partion_num)[partion_idx]
+        self.metadata   = metadata
+        self.pdf_id_and_page_id_pair = pdf_id_and_page_id_pair
+        
+    
 class AddonDataset(Dataset,DatasetUtils,ImageTransformersUtils):
     error_count = 0
     dpi = 200

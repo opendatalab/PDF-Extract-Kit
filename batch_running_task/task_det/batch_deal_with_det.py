@@ -111,7 +111,7 @@ if __name__ == '__main__':
                     date_format = "%Y-%m-%d %H:%M:%S"
                     date = datetime.strptime(date_string, date_format)
                     deltatime = datetime.now() - date
-                    if deltatime < timedelta(hours=0.5):
+                    if deltatime < timedelta(hours=1):
                         tqdm.write(f"\n [Skip]: {filename_with_partion} is locked by {date_string} created at {last_start_time} [now is {deltatime}]\n ")
                         continue
                 
@@ -120,13 +120,13 @@ if __name__ == '__main__':
             print(f"now we deal with {inputs_path} to {result_path}")
             os.makedirs(os.path.dirname(result_path), exist_ok=True)
             
+
             if ocrmodel is None:
                 ocrmodel = ModifiedPaddleOCR()
-                det_pre_transform=ocrmodel.batch_det_model.prepare_image
-            
+                
             
             deal_with_one_dataset(inputs_path, result_path, 
-                                    ocrmodel,det_pre_transform,
+                                    ocrmodel,ocrmodel.batch_det_model.prepare_image,
                         pdf_batch_size =args.page_num_per_batch, 
                         image_batch_size=128,
                         num_workers = args.num_workers,
