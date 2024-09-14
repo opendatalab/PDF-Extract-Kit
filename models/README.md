@@ -9,7 +9,7 @@ git lfs install
 To download the `PDF-Extract-Kit` model from Hugging Face, use the following command:
 
 ```bash
-git lfs clone https://huggingface.co/wanderkid/PDF-Extract-Kit
+git lfs clone https://huggingface.co/opendatalab/PDF-Extract-Kit
 ```
 
 Ensure that Git LFS is enabled during the clone to properly download all large files.
@@ -28,14 +28,14 @@ pip install modelscope
 ```python
 # Use the following Python code to download the model using the ModelScope SDK:
 from modelscope import snapshot_download
-model_dir = snapshot_download('wanderkid/PDF-Extract-Kit')
+model_dir = snapshot_download('opendatalab/PDF-Extract-Kit')
 ```
 
 #### Git Download
 Alternatively, you can use Git to clone the model repository from ModelScope:
 
 ```bash
-git clone https://www.modelscope.cn/wanderkid/PDF-Extract-Kit.git
+git clone https://www.modelscope.cn/opendatalab/PDF-Extract-Kit.git
 ```
 
 

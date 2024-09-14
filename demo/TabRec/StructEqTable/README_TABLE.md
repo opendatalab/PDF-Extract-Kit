@@ -13,7 +13,7 @@ In addition, the current version of the model **supports both Chinese and Englis
 See [MinerU](https://github.com/opendatalab/MinerU) for the final end-to-end solution, which will integrate the table recognition within a week.
 
 ## Model Download
-The weights file for StructEqTable can be downloaded from [modelscope](https://www.modelscope.cn/models/wanderkid/PDF-Extract-Kit/files) and [huggingface](https://huggingface.co/wanderkid/PDF-Extract-Kit/tree/main/models/TabRec/StructEqTable)
+The weights file for StructEqTable can be downloaded from [modelscope](https://www.modelscope.cn/models/opendatalab/PDF-Extract-Kit/files) and [huggingface](https://huggingface.co/opendatalab/PDF-Extract-Kit/tree/main/models/TabRec/StructEqTable)
 
 Put model files here:
 
