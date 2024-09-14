@@ -272,10 +272,9 @@ Parameter explanations:
 
 ## License
 
-This repository is licensed under the [Apache-2.0 License](LICENSE).
+The project is released under the [AGPL-3.0 license](LICENSE.md).
 
-Please follow the model licenses to use the corresponding model weights: [LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3) / [UniMERNet](https://github.com/opendatalab/UniMERNet) / [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy) / [YOLOv8](https://github.com/ultralytics/ultralytics) / [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR).
-
+As this project incorporates YOLO code and PyMuPDF for file processing, both of which are licensed under AGPL-3.0, the entire repository adheres to the AGPL-3.0 license to ensure compliance with the licensing requirements of these dependencies.
 
 ## Acknowledgement
 

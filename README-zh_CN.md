@@ -278,17 +278,16 @@ python pdf_extract.py --pdf assets/examples/example.pdf
 
 ## 协议
 
-本仓库的代码依照 [Apache-2.0](LICENSE) 协议开源。
+本项目采用 [AGPL-3.0](LICENSE.md) 协议开源。
 
-使用模型权重时，请遵循对应的模型协议：[LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3) / [UniMERNet](https://github.com/opendatalab/UniMERNet) / [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy) / [YOLOv8](https://github.com/ultralytics/ultralytics) / [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR).
-
+由于本项目中使用了 YOLO 代码和 PyMuPDF 进行文件处理，这些组件都需要遵循 AGPL-3.0 协议。因此，为了确保遵守这些依赖项的许可证要求，本仓库整体采用 AGPL-3.0 协议。
 
 ## 致谢
 
    - [LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3): 布局检测模型
    - [UniMERNet](https://github.com/opendatalab/UniMERNet): 公式识别模型
    - [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy): 表格识别模型
-   - [YOLOv8](https://github.com/ultralytics/ultralytics): 公式检测模型
+   - [YOLO](https://github.com/ultralytics/ultralytics): 公式检测模型
    - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR模型
 
 
