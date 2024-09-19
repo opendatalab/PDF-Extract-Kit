@@ -24,6 +24,8 @@ class BatchLayoutConfig(BatchModeConfig):
     accelerated_mfd: bool = False
     async_mode: bool = False
     result_save_path: str=RESULT_SAVE_PATH
+    use_lock: bool = True
+    debug:bool = False
     def from_dict(kargs):
         return BatchLayoutConfig(**kargs)
     def to_dict(self):

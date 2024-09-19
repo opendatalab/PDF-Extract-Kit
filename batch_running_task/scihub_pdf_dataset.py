@@ -1,9 +1,34 @@
 
 from get_data_utils import *
+from utils import collect_mfdetrec_res_per_page, formula_in_text
 from torch.utils.data import IterableDataset,get_worker_info,DataLoader, Dataset
 from utils import Timers,convert_boxes
 import torch
 from utils import collect_paragraph_image_and_its_coordinate
+
+def update_det_boxes(dt_boxes, mfdetrec_res):
+    new_dt_boxes = dt_boxes
+    for mf_box in mfdetrec_res:
+        flag, left_box, right_box = False, None, None
+        for idx, text_box in enumerate(new_dt_boxes):
+            if 'bbox' in mf_box:
+                bbox = mf_box['bbox']
+            elif 'poly' in mf_box:
+                xmin, ymin = int(mf_box['poly'][0]), int(mf_box['poly'][1])
+                xmax, ymax = int(mf_box['poly'][4]), int(mf_box['poly'][5])
+                bbox= [xmin, ymin, xmax, ymax]
+            else:
+                raise NotImplementedError("mf_box should have bbox or poly")
+            ret, left_box, right_box = formula_in_text(bbox, text_box)
+            if ret:
+                new_dt_boxes.pop(idx)
+                if left_box is not None:
+                    new_dt_boxes.append(left_box)
+                if right_box is not None:
+                    new_dt_boxes.append(right_box)
+                break
+            
+    return new_dt_boxes
 
 def clean_pdf_path(pdf_path):
     return pdf_path[len("opendata:"):] if pdf_path.startswith("opendata:") else pdf_path
@@ -146,6 +171,8 @@ class PDFImageDataset(IterableDataset,DatasetUtils,ImageTransformersUtils):
             raise StopIteration
         return output
         
+
+
 class RecImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):
     error_count=0
     def __init__(self, metadata_filepath,
@@ -162,7 +189,67 @@ class RecImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):
     
     def __getitem__(self, index) :
         pdf_metadata = self.metadata[index]
-        return deal_with_one_pdf(pdf_metadata, self.client)
+        return self.get_cropped_image_list_via_remove_mfd_part(pdf_metadata, self.client)
+
+    @staticmethod
+    def collect_location_and_dt_box_from_page_metadata(pdf_path, pdf_page_metadata):
+        location_keys = []
+        page_id = pdf_page_metadata['page_id']
+        mfd_res_list = collect_mfdetrec_res_per_page(pdf_page_metadata['layout_dets']) # List[Dict]  [{'bbox':[a,b,c,d]}, {'bbox':[a,b,c,d]}] 
+        for bbox_metadata in pdf_page_metadata['layout_dets']:
+            if bbox_metadata['category_id']!=15:continue
+            bbox_id  = tuple(bbox_metadata['poly'])
+            tmp_box  = np.array(bbox_metadata['poly']).reshape(-1, 2)
+            tmp_box  = sorted_boxes(tmp_box[None])[0].astype('float32')
+            dt_boxes = [tmp_box]
+            if mfd_res_list:
+                dt_boxes = update_det_boxes(dt_boxes, mfd_res_list)
+                # logger.debug("split text box by formula, new dt_boxes num : {}, elapsed : {}".format(len(dt_boxes), aft-bef))
+            if len(dt_boxes) == 1 and bbox_metadata.get('text',"")!="":
+                #print("we can skip this one because it has no formula, and origin ocr is corr")
+                continue
+                ## this mean we do not need modify it, lets skip
+            
+            for dt_box in dt_boxes:
+                #print(dt_box)
+                ### from dt_box to get bbox
+                sub_box_id = (dt_box[0][0],dt_box[0][1],dt_box[1][0],dt_box[1][1],dt_box[2][0],dt_box[2][1],dt_box[3][0],dt_box[3][1])
+                location= (clean_pdf_path(pdf_path),page_id,bbox_id,sub_box_id)
+                location_keys.append(location)
+        return location_keys
+    
+
+    def get_cropped_image_list_via_remove_mfd_part(self,pdf_metadata,client):
+
+        images_pool = {}
+        pdf_path = pdf_metadata['path']
+        height = pdf_metadata['height']
+        width  = pdf_metadata['width']
+        
+        if pdf_path.startswith('s3'):
+            pdf_path = "opendata:"+pdf_path
+        try:
+            with read_pdf_from_path(pdf_path, client) as pdf:
+                
+                for pdf_page_metadata in pdf_metadata['doc_layout_result']:
+                    page_id = pdf_page_metadata['page_id']
+                    page    = pdf.load_page(page_id)
+                    ori_im  = process_pdf_page_to_image(page, 200, output_width=width,output_height=height)     
+                    location_keys = self.collect_location_and_dt_box_from_page_metadata(pdf_path, pdf_page_metadata)
+                    for location in location_keys:
+                        _,_,_,sub_box_id = location
+                        dt_box = np.array(sub_box_id).reshape(-1, 2)
+                        img_crop = get_rotate_crop_image(ori_im, dt_box, padding=10)
+                        images_pool[location] = img_crop
+
+            return (pdf_path,images_pool)
+        except KeyboardInterrupt:
+            raise
+        except:
+            traceback.print_exc()
+            raise
+            tqdm.write(f"[Error]: {pdf_path}")
+            return (pdf_path,{})
 
 class DetImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):
     error_count=0
@@ -407,8 +494,13 @@ class PageInfoWithPairDataset(PageInfoDataset):
         metadata= self.smart_read_json(metadata_filepath)
         metadata= np.array_split(metadata, partion_num)[partion_idx]
         self.metadata   = metadata
-        self.pdf_id_and_page_id_pair = pdf_id_and_page_id_pair
-        
+        track_id_to_pdf_id = {metadata[i]['track_id']:i for i in range(len(metadata))}
+        self.pdf_id_and_page_id_pair=[]
+        for pdf_id, page_id in pdf_id_and_page_id_pair:
+            if isinstance(pdf_id, str):
+                pdf_id = track_id_to_pdf_id[pdf_id]
+            self.pdf_id_and_page_id_pair.append((pdf_id, page_id))
+ 
     
 class AddonDataset(Dataset,DatasetUtils,ImageTransformersUtils):
     error_count = 0

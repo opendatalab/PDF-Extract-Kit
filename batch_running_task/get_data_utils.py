@@ -89,7 +89,13 @@ def write_jsonl_to_path(data, path, client):
         if thedir:
             os.makedirs(thedir, exist_ok=True)
         with open(path,'w') as f:
-            f.write(byte_object)
+            for d in data:
+                try:
+                    byte_object = json.dumps(d)
+                except:
+
+                    raise NotImplementedError(f"fail to dump {d}")
+                f.write(byte_object)
 
 
 import boto3
@@ -348,3 +354,150 @@ def get_page_num_map_whole():
     for result in results:
         page_num_map_whole.update(result)
     return page_num_map_whole
+
+output_width =1472 #pdf_metadata['width']#1472
+output_height=1920 #pdf_metadata['height']#1920
+import sys
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+
+from batch_running_task.utils import convert_boxes
+def build_dict(pdf_metadata_list, track_id_key = "track_id"):
+    pdf_metadata_dict = {}
+    for pdf_metadata in pdf_metadata_list:
+        track_id = pdf_metadata[track_id_key]
+        height   = pdf_metadata.get('height', 1920)
+        width    = pdf_metadata.get('width',1472)
+        if height == output_height and width == output_width:
+            pass
+        else:
+            ### lets do the bbox convertion
+            doc_layout_result=pdf_metadata['doc_layout_result']
+            for pdf_page_metadata in doc_layout_result:
+                page_id = pdf_page_metadata['page_id']
+                layout_dets = []
+                for res in pdf_page_metadata["layout_dets"]:
+                    new_res = res.copy()
+                    xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
+                    xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
+                    bbox= [xmin, ymin, xmax, ymax]
+                    bbox= convert_boxes([bbox], pdf_metadata['width'], pdf_metadata['height'], output_width, output_height)[0]
+                    poly= [bbox[0], bbox[1], bbox[2], bbox[1], bbox[2], bbox[3], bbox[0], bbox[3]]
+                    res['poly'] = poly
+        page_id_to_metadata = {pdf_page_metadata['page_id']: pdf_page_metadata for pdf_page_metadata in pdf_metadata['doc_layout_result']}
+        pdf_metadata_dict[track_id] = page_id_to_metadata
+            
+    return pdf_metadata_dict
+
+def read_data_with_patch(result_path, client):
+    if result_path.startswith("s3:"):
+        result_path = "opendata:"+result_path
+    pdf_path_map_to_page_num = []
+    #assert "layoutV" in result_path
+    filename   = os.path.basename(result_path)
+    patch_path = os.path.join(os.path.dirname(os.path.dirname(result_path)),"det_patch_good",filename)
+    missingpath= os.path.join(os.path.dirname(os.path.dirname(result_path)),"fix_missing_page_version2",filename)
+    mfr_patchpath  = os.path.join(os.path.dirname(os.path.dirname(result_path)),"mfr_patch",filename)
+    mfr_patch_bf16path = os.path.join(os.path.dirname(os.path.dirname(result_path)),"mfr_patch_bf16",filename)
+    rec_patchpath  = os.path.join(os.path.dirname(os.path.dirname(result_path)),"rec_patch",filename)
+
+    assert check_path_exists(result_path,client)
+    #tqdm.write("reading result")
+    result  = read_json_from_path(result_path,client)
+    result_dict      = build_dict(result)
+    
+    patch_add_dict   = build_dict(read_json_from_path(patch_path,client)) if check_path_exists(patch_path,client) else {}
+    
+    missing_dict     = build_dict(read_json_from_path(missingpath,client)) if check_path_exists(missingpath,client) else {}
+    mfr_patch_dict     = build_dict(read_json_from_path(mfr_patchpath,client)) if check_path_exists(mfr_patchpath,client) else {}
+    mfr_patch_bf16_dict     = build_dict(read_json_from_path(mfr_patch_bf16path,client)) if check_path_exists(mfr_patch_bf16path,client) else {}
+    rec_patch_dict     = build_dict(read_json_from_path(rec_patchpath,client)) if check_path_exists(rec_patchpath,client) else {}
+    
+    #tqdm.write("reading done")
+    if len(patch_add_dict) == 0 and len(missing_dict) == 0:
+        #tqdm.write(f"no patch and missing for {result_path}")
+        pass
+    else:
+
+        for track_id, pdf_metadata in result_dict.items():
+            for patch_dict in [patch_add_dict, missing_dict]:
+                if track_id in patch_dict:
+                    patch_pdf_metadata = patch_dict[track_id]
+                    for page_id, pdf_page_metadata in patch_pdf_metadata.items():
+                        if page_id in pdf_metadata:
+                            ## then merge page result
+                            pdf_metadata[page_id]["layout_dets"].extend(pdf_page_metadata["layout_dets"])
+                        else:
+                            pdf_metadata[page_id] = pdf_page_metadata  
+        for pdf_metadata in result:
+            track_id = pdf_metadata['track_id']
+            pdf_metadata['height'] = output_height
+            pdf_metadata['width'] = output_width
+            doc_layout_result = []
+            for page_id, pdf_page_metadata in result_dict[track_id].items():
+                doc_layout_result.append(pdf_page_metadata)
+            pdf_metadata['doc_layout_result'] = doc_layout_result       
+    return result
+
+def read_data_with_mfr(result_path, client):
+    if result_path.startswith("s3:"):
+        result_path = "opendata:"+result_path
+
+    filename   = os.path.basename(result_path)
+
+    mfr_patchpath  = os.path.join(os.path.dirname(os.path.dirname(result_path)),"mfr_patch",filename)
+    mfr_patch_bf16path = os.path.join(os.path.dirname(os.path.dirname(result_path)),"mfr_patch_bf16",filename)
+    rec_patchpath  = os.path.join(os.path.dirname(os.path.dirname(result_path)),"rec_patch",filename)
+
+    assert check_path_exists(result_path,client)
+    #tqdm.write("reading result")
+    result      = read_json_from_path(result_path,client)
+    
+    mfr_patch_dict     = build_dict(read_json_from_path(mfr_patchpath,client),track_id_key = 'path')      if check_path_exists(mfr_patchpath,client) else {}
+    mfr_patch_bf16_dict= build_dict(read_json_from_path(mfr_patch_bf16path,client),track_id_key = 'path') if check_path_exists(mfr_patch_bf16path,client) else {}
+    #tqdm.write("reading done")
+    #tqdm.write("adding patch and missing")
+    for pdf_metadata in tqdm(result, desc="adding patch and missing", leave=False, position=3):
+        track_id = pdf_metadata['path']
+        if track_id in mfr_patch_bf16_dict:
+            current_mfr_patch = mfr_patch_bf16_dict[track_id]
+        elif track_id in mfr_patch_dict:
+            current_mfr_patch = mfr_patch_dict[track_id]
+        else:
+            continue
+        for pdf_page_metadata in pdf_metadata['doc_layout_result']:
+            page_id = pdf_page_metadata['page_id']
+            bbox_count = 0
+            for bbox_metadata in pdf_page_metadata['layout_dets']:
+                if bbox_metadata['category_id'] not in [13, 14]:continue
+                bbox_count+=1
+            if bbox_count == 0: continue
+            patch_mfr_list = current_mfr_patch[page_id]["layout_dets"]
+            assert len(patch_mfr_list) == bbox_count, f"pdf={track_id} page={page_id} => bbox count {bbox_count} not equal to patch count {len(patch_mfr_list)}"
+            bbox_id = 0
+            for bbox_metadata in pdf_page_metadata['layout_dets']:
+                if bbox_metadata['category_id'] not in [13, 14]:continue
+                bbox_metadata.update(patch_mfr_list[bbox_id])
+                bbox_id += 1
+    
+    rec_patch_dict     = build_dict(read_json_from_path(rec_patchpath,client),track_id_key = 'path')      if check_path_exists(rec_patchpath,client) else {}
+    for pdf_metadata in tqdm(result, desc="[REC] adding patch and missing", leave=False, position=3):
+        track_id = pdf_metadata['path']
+        if track_id in rec_patch_dict:
+            current_rec_patch = rec_patch_dict[track_id]
+        else:
+            continue
+        for pdf_page_metadata in pdf_metadata['doc_layout_result']:
+            page_id = pdf_page_metadata['page_id']
+            bbox_count = 0
+            for bbox_metadata in pdf_page_metadata['layout_dets']:
+                if bbox_metadata['category_id'] != 15:continue
+                bbox_count+=1
+            if bbox_count == 0: continue
+            patch_rec_list = current_rec_patch[page_id]["layout_dets"]
+            assert len(patch_rec_list) == bbox_count, f"pdf={track_id} page={page_id} => bbox count {bbox_count} not equal to patch count {len(patch_rec_list)}"
+            bbox_id = 0
+            for bbox_metadata in pdf_page_metadata['layout_dets']:
+                if bbox_metadata['category_id'] != 15:continue
+                bbox_metadata.update(patch_rec_list[bbox_id])
+                bbox_id += 1
+    return result

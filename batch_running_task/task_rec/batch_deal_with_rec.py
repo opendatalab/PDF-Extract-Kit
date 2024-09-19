@@ -24,7 +24,7 @@ class BatchRECConfig(BatchModeConfig):
     num_workers: int = 4
     result_save_path: str=RESULT_SAVE_PATH
     check_lock: bool = True
-
+    update_origin: bool = False
 if __name__ == '__main__':
     task_name = "physics_part"
     version   = "mfr_patch_bf16"
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     dpi       = model_configs['model_args']['pdf_dpi']
 
     task_name = "physics_part"
-    version   = "rec_patch"
+    version   = "rec_fixed_final"
     layout_model = None
     mfd_model    = None
     client = None
@@ -127,7 +127,7 @@ if __name__ == '__main__':
                           pdf_batch_size=32, image_batch_size=256,
                           num_workers = args.num_workers,
                           partion_num = partion_num,
-                          partion_idx = partion_idx)
+                          partion_idx = partion_idx,update_origin=args.update_origin)
                 print(f"""
 =========================================
 finish dealing with {result_path}
