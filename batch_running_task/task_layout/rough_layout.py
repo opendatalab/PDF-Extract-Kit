@@ -408,6 +408,8 @@ def fast_dealwith_one_dataset(dataset,layout_model, mfd_model, ocrmodel,
                 with timer('text_detection/det_postprocess'):
                     dt_boxes_list = det_postprocess(dt_boxaes_batch,ocrmodel)
                 
+                ############### we better split the line box via mfd box ####################
+                
                 
                 if do_text_rec:
                     with timer('text_detection/collect_for_text_images'):
@@ -469,7 +471,7 @@ def save_result(data_to_save,dataset,result_path,add_on_mode=False):
  
     new_data_to_save = []
     for pdf_path, layout_dets_per_page in data_to_save.items():
-        
+        pdf_path = clean_pdf_path(pdf_path)
         new_pdf_dict = copy.deepcopy(pdf_to_metadata[pdf_path])
         new_pdf_dict['height'] = layout_dets_per_page.pop('height')
         new_pdf_dict['width'] = layout_dets_per_page.pop('width')

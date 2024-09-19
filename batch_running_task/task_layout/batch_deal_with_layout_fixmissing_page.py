@@ -25,8 +25,8 @@ if __name__ == '__main__':
     device    = model_configs['model_args']['device']
     dpi       = model_configs['model_args']['pdf_dpi']
 
-    task_name = "layoutV6"
-    version = "fix_missing_page_version1"
+
+    version = "fix_missing_page_version2"
     layout_model = None
     mfd_model    = None
     client = None
@@ -42,9 +42,9 @@ if __name__ == '__main__':
         if os.path.exists(CURRENT_END_SIGN):
             break
         filename    = os.path.basename(inputs_path)
-        assert "layoutV" in inputs_path
+        #assert "layoutV" in inputs_path
         result_save_root = os.path.join(os.path.dirname(os.path.dirname(inputs_path)),version)
-        inputs_path = os.path.join(INPUT_LOAD_PATH,filename)
+        #inputs_path = os.path.join(INPUT_LOAD_PATH,filename)
 
         if inputs_path.startswith('s3'):
             inputs_path = "opendata:"+inputs_path
@@ -52,6 +52,7 @@ if __name__ == '__main__':
         # assert result_path.startswith('opendata:s3')
         if client is None:
             client = build_client()
+        
         if not check_path_exists(inputs_path,client):
             tqdm.write(f"[Skip]: no {inputs_path} ")
             continue
@@ -90,23 +91,23 @@ if __name__ == '__main__':
 
             
             result_path = os.path.join(result_save_root, filename_with_partion)
-
-            lock_path = os.path.join(LOCKSERVER, "checklocktime", filename_with_partion)
-            last_start_time = check_lock_and_last_start_time(lock_path,client)
-            if last_start_time and not args.redo:
-                date_string = last_start_time
-                date_format = "%Y-%m-%d %H:%M:%S"
-                date = datetime.strptime(date_string, date_format)
-                deltatime = datetime.now() - date
-                if deltatime < timedelta(hours=1):
-                    tqdm.write(f"[Skip]: {filename_with_partion} is locked by {date_string} created at {last_start_time} [now is {deltatime}]")
-                    continue
-            
-            create_last_start_time_lock(os.path.join(LOCKSERVER,"createlocktime", filename_with_partion),client)
+            if args.use_lock:
+                lock_path = os.path.join(LOCKSERVER, "checklocktime", filename_with_partion)
+                last_start_time = check_lock_and_last_start_time(lock_path,client)
+                if last_start_time and not args.redo:
+                    date_string = last_start_time
+                    date_format = "%Y-%m-%d %H:%M:%S"
+                    date = datetime.strptime(date_string, date_format)
+                    deltatime = datetime.now() - date
+                    if deltatime < timedelta(hours=0.1):
+                        tqdm.write(f"[Skip]: {filename_with_partion} is locked by {date_string} created at {last_start_time} [now is {deltatime}]")
+                        continue
+                
+                create_last_start_time_lock(os.path.join(LOCKSERVER,"createlocktime", filename_with_partion),client)
 
             print(f"now we deal with {inputs_path} to {result_path}")
             os.makedirs(os.path.dirname(result_path), exist_ok=True)
-        
+            if args.debug:raise
             if layout_model is None:layout_model = get_layout_model(model_configs,args.accelerated_layout)
             if mfd_model    is None:mfd_model    = get_batch_YOLO_model(model_configs,batch_size=args.inner_batch_size,use_tensorRT=args.accelerated_mfd)
             if ocrmodel is None:ocrmodel = ModifiedPaddleOCR(show_log=True)

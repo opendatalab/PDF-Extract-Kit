@@ -120,7 +120,7 @@ def calculate_dimensions(bbox):
         return width, height
 
 
-def build_bbox_group(metadatas):
+def build_bbox_group(metadatas, dataset):
     width_range = 100
     height_range= 100
     grouped_bboxes = {}
@@ -128,15 +128,11 @@ def build_bbox_group(metadatas):
     location2boxes = {}
     for pdf_index, pdf_metadata in enumerate(tqdm(metadatas,desc="building group")):
         pdf_path = clean_pdf_path(pdf_metadata['path'])
-        for pdf_page_metadata in pdf_metadata['doc_layout_result']:
-            page_id = pdf_page_metadata['page_id']
-            bbox_id = 0
-            
-            for bbox_metadata in pdf_page_metadata['layout_dets']:
-                if bbox_metadata['category_id']!=15:continue
-                location= (pdf_path,page_id,bbox_id)
-                bbox_id+=1
-                bbox = bbox_metadata['poly']
+        for pdf_page_metadata in tqdm(pdf_metadata['doc_layout_result'],desc="iter along page", leave=False, position=1):
+            location_keys = dataset.collect_location_and_dt_box_from_page_metadata(pdf_path, pdf_page_metadata)
+            for location in location_keys:
+                pdf_path,page_id,bbox_id,sub_box_id = location
+                bbox = sub_box_id
                 width, height = calculate_dimensions(bbox)
                 width_group   = int(width  / (width_range + eps))
                 height_group  = int(height / (height_range+ eps))
@@ -160,11 +156,14 @@ def deal_with_one_dataset(pdf_path, result_path, tex_recognizer,
                           image_batch_size=256,
                           num_workers=8,
                           partion_num = 1,
-                          partion_idx = 0):
+                          partion_idx = 0,update_origin=False):
     images_dataset = RecImageDataset(pdf_path,partion_num = partion_num, partion_idx = partion_idx)
     data_to_save =  fast_deal_with_one_dataset2(images_dataset,tex_recognizer,
                                                pdf_batch_size  =pdf_batch_size,
-                          image_batch_size=image_batch_size,num_workers=num_workers)
+                          image_batch_size=image_batch_size,num_workers=num_workers,
+                                                          update_origin=update_origin)
+    if update_origin:
+        assert result_path == pdf_path
     write_jsonl_to_path(data_to_save,result_path,images_dataset.client)
 
 
@@ -172,9 +171,9 @@ def deal_with_one_dataset(pdf_path, result_path, tex_recognizer,
 def fast_deal_with_one_dataset(images_dataset:RecImageDataset,tex_recognizer:TextRecognizer,
                           pdf_batch_size  =32,
                           image_batch_size=256,
-                          num_workers=8):
+                          num_workers=8, update_origin=False):
 
-    _,location2group,location2boxes = build_bbox_group(images_dataset.metadata)
+    _,location2group,location2boxes = build_bbox_group(images_dataset.metadata,images_dataset)
     image_collecter   = DataLoader(images_dataset, batch_size=pdf_batch_size,collate_fn=none_collate_fn, 
                             num_workers=num_workers,pin_memory=False,
                             prefetch_factor=2)  
@@ -233,6 +232,14 @@ def fast_deal_with_one_dataset(images_dataset:RecImageDataset,tex_recognizer:Tex
 
             pbar_whole_images.update(len(img_list_group))
 
+    location_and_sub_location_map = {}
+    for abs_location in location_to_rec.keys():
+        pdf_path,page_id,bbox_id,sub_box_id = abs_location
+        location = (pdf_path,page_id,bbox_id)
+        if location not in location_and_sub_location_map:location_and_sub_location_map[location] = []
+        location_and_sub_location_map[location].append(sub_box_id)
+
+    
     patch_metadata_list = []
     for pdf_index, pdf_metadata in enumerate(tqdm(images_dataset.metadata)):
         pdf_path = clean_pdf_path(pdf_metadata['path'])
@@ -240,17 +247,30 @@ def fast_deal_with_one_dataset(images_dataset:RecImageDataset,tex_recognizer:Tex
         patch_metadata = {'path':pdf_path,'doc_layout_result':[]}
         for pdf_page_metadata in pdf_metadata['doc_layout_result']:
             page_id = pdf_page_metadata['page_id']
-            bbox_id = 0
+            
             this_line_pool = {'page_id':page_id, 'layout_dets':[]}
             for bbox_metadata in pdf_page_metadata['layout_dets']:
                 if bbox_metadata['category_id']!=15:continue
-                location= (pdf_path,page_id,bbox_id)
-                bbox_id+=1
-                text, score = location_to_rec[location]
-                this_line_pool['layout_dets'].append({'category_id':15, 'text':text, 'score':float(score)})
+                bbox_id     = tuple(bbox_metadata['poly'])
+                location    = (pdf_path,page_id,bbox_id)
+                current_line_box_rec_result = []
+                rel_location_list = location_and_sub_location_map[location]
+                for sub_box_id in rel_location_list:
+                    abs_location = (pdf_path,page_id,bbox_id,sub_box_id)
+                    text, score  = location_to_rec[abs_location]
+                    current_line_box_rec_result.append({'poly':sub_box_id, 'text':text, 'score':float(score)})
+                if len(current_line_box_rec_result)==0:
+                    continue
+                if update_origin:
+                    bbox_metadata.update({'sub_boxes':current_line_box_rec_result})
+                else:
+                    this_line_pool['layout_dets'].append({'category_id':15, 'sub_boxes':current_line_box_rec_result})
             patch_metadata['doc_layout_result'].append(this_line_pool)
         patch_metadata_list.append(patch_metadata)
-    return patch_metadata_list
+    if update_origin:
+        return images_dataset.metadata
+    else:
+        return patch_metadata_list
 
 
 from torch.utils.data import Sampler
@@ -274,9 +294,9 @@ class GroupBatchSampler(Sampler):
 def fast_deal_with_one_dataset2(images_dataset:RecImageDataset,tex_recognizer:TextRecognizer,
                           pdf_batch_size  =32,
                           image_batch_size=256,
-                          num_workers=8):
-
-    _,location2group,location2boxes = build_bbox_group(images_dataset.metadata)
+                          num_workers=8,update_origin=False):
+    
+    _,location2group,location2boxes = build_bbox_group(images_dataset.metadata,images_dataset)
     image_collecter   = DataLoader(images_dataset, batch_size=pdf_batch_size,collate_fn=none_collate_fn, 
                             num_workers=num_workers,pin_memory=False,
                             prefetch_factor=2)  
@@ -346,6 +366,14 @@ def fast_deal_with_one_dataset2(images_dataset:RecImageDataset,tex_recognizer:Te
             location_to_rec[location] = rec_res
 
 
+    location_and_sub_location_map = {}
+    for abs_location in location_to_rec.keys():
+        pdf_path,page_id,bbox_id,sub_box_id = abs_location
+        location = (pdf_path,page_id,bbox_id)
+        if location not in location_and_sub_location_map:location_and_sub_location_map[location] = []
+        location_and_sub_location_map[location].append(sub_box_id)
+
+    
     patch_metadata_list = []
     for pdf_index, pdf_metadata in enumerate(tqdm(images_dataset.metadata)):
         pdf_path = clean_pdf_path(pdf_metadata['path'])
@@ -353,17 +381,37 @@ def fast_deal_with_one_dataset2(images_dataset:RecImageDataset,tex_recognizer:Te
         patch_metadata = {'path':pdf_path,'doc_layout_result':[]}
         for pdf_page_metadata in pdf_metadata['doc_layout_result']:
             page_id = pdf_page_metadata['page_id']
-            bbox_id = 0
+            
             this_line_pool = {'page_id':page_id, 'layout_dets':[]}
             for bbox_metadata in pdf_page_metadata['layout_dets']:
                 if bbox_metadata['category_id']!=15:continue
-                location= (pdf_path,page_id,bbox_id)
-                bbox_id+=1
-                text, score = location_to_rec[location]
-                this_line_pool['layout_dets'].append({'category_id':15, 'text':text, 'score':float(score)})
+                
+                bbox_id     = tuple(bbox_metadata['poly'])
+                location    = (pdf_path,page_id,bbox_id)
+                if location not in location_and_sub_location_map:
+                    assert update_origin, "you must update the origin metadata if you choose skip some bbox"
+                    continue
+                current_line_box_rec_result = []
+                rel_location_list = location_and_sub_location_map[location]
+                for sub_box_id in rel_location_list:
+                    abs_location = (pdf_path,page_id,bbox_id,sub_box_id)
+                    text, score  = location_to_rec[abs_location]
+
+                    sub_box_id = tuple([int(t) for t in sub_box_id])
+
+                    current_line_box_rec_result.append({'poly':sub_box_id, 'text':text, 'score':float(score)})
+                if len(current_line_box_rec_result)==0:
+                    continue
+                if update_origin:
+                    bbox_metadata.update({'sub_boxes':current_line_box_rec_result})
+                else:
+                    this_line_pool['layout_dets'].append({'category_id':15, 'sub_boxes':current_line_box_rec_result})
             patch_metadata['doc_layout_result'].append(this_line_pool)
         patch_metadata_list.append(patch_metadata)
-    return patch_metadata_list
+    if update_origin:
+        return images_dataset.metadata
+    else:
+        return patch_metadata_list
 
 
 if __name__ == "__main__":
@@ -371,14 +419,40 @@ if __name__ == "__main__":
     ocr_mode = 'batch'
     batch_size = 128
     num_workers= 8
-    metadata_filepath = "part-66210c190659-012745.jsonl"
+    metadata_filepath = "0000000-0000209.01000_00001.jsonl"
     images_dataset    = RecImageDataset(metadata_filepath)
-    
+    # _,location2group,location2boxes = build_bbox_group(images_dataset.metadata,images_dataset)
+    # image_collecter   = DataLoader(images_dataset, batch_size=2,collate_fn=none_collate_fn, 
+    #                         num_workers=num_workers,pin_memory=False,
+    #                         prefetch_factor=2)  
+  
+    # for image_pool_list in tqdm(image_collecter,position=1,leave=True,desc="Images batch"):
+    #     no_image_pdf_list = []
+    #     image_pool = {}
+    #     current_group_bboxes = {}
+    #     for idx,(pdf_path, image_dict) in enumerate(tqdm(image_pool_list,position=2,leave=False, desc="Partiton current image pool")):
+    #         if len(image_dict)==0:
+    #             no_image_pdf_list.append(pdf_path)
+    #             #print(f"pdf {pdf_path} has no text image")
+    #             continue
+    #         for key,val in image_dict.items():
+    #             image_pool[key]=val
+    #             group = location2group[key]
+    #             if group not in current_group_bboxes:
+    #                 current_group_bboxes[group] = []
+    #             current_group_bboxes[group].append((key,location2boxes[key]))
+    #     if len(image_pool) == 0:continue
+    #     print(len(image_pool))
+    # raise
     if ocr_mode == 'batch':
         tex_recognizer = TextRecognizer(rec_args)
         #tex_recognizer.net.backbone = torch.compile(tex_recognizer.net.backbone)
-        patch_metadata_list = fast_deal_with_one_dataset2(images_dataset,tex_recognizer,pdf_batch_size=32, image_batch_size=128 ,num_workers=num_workers)
-        write_jsonj_to_path(patch_metadata_list, "test_result/result.test3.jsonl", None)
+        patch_metadata_list = fast_deal_with_one_dataset2(images_dataset,tex_recognizer,pdf_batch_size=32, 
+                                                          image_batch_size=128 ,
+                                                          num_workers=num_workers,
+                                                          update_origin=True)
+        #print(patch_metadata_list)
+        write_jsonl_to_path(patch_metadata_list, "test_result/result.test3.jsonl", None)
         # patch_metadata_list = fast_deal_with_one_dataset(images_dataset,tex_recognizer,pdf_batch_size=32, image_batch_size=128 ,num_workers=num_workers)
         # write_jsonj_to_path(patch_metadata_list, "test_result/result.test1.jsonl", None)
     else:

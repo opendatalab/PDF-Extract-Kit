@@ -1,12 +1,16 @@
-from get_data_utils import *
+import sys,os
+
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
+from batch_running_task.get_data_utils import *
+from batch_running_task.batch_run_utils import obtain_processed_filelist, process_files,save_analysis, BatchModeConfig,dataclass
+
 import json
 from tqdm.auto import tqdm
-client = build_client()
+
 from simple_parsing import ArgumentParser
-from batch_run_utils import obtain_processed_filelist, process_files,save_analysis, BatchModeConfig,dataclass
 import time
 import subprocess
-
+client = build_client()
 OriginDATAROOT="opendata:s3://llm-process-pperf/ebook_index_v4/scihub/v001/scihub"
 
 @dataclass
@@ -25,6 +29,7 @@ def process_file(metadata_file, args:PageNumConfig):
         tqdm.write(f"already processed {metadata_file}, we pass")
         return
     metadatalist = read_json_from_path(metadata_file, client)
+    tqdm.write(f"save to {target_file_path}")
     iterater  = tqdm(metadatalist,position=1,leave=False) if args.batch_num==0 else metadatalist
     for metadata in iterater:
         pdfpath  = metadata['path']
@@ -53,7 +58,7 @@ def process_one_file_wrapper(args):
  
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_arguments(BatchModeConfig, dest="config")
+    parser.add_arguments(PageNumConfig, dest="config")
     args = parser.parse_args()
     args = args.config   
     args.task_name = "scan"

@@ -1,12 +1,12 @@
 
 #!/bin/bash
-TASKLIMIT=100
+TASKLIMIT=70
 PENDINGLIMIT=2
 # Function to get the count of pending tasks
 user=`whoami`
 partition='AI4Chem'
 jobscript="batch_running_task/task_layout/run_layout_for_missing_page.sh"
-filelist='scihub_collection/analysis/not_complete_pdf_page_id.pairlist.filelist'
+filelist='physics_collection/analysis/not_complete_pdf_page_id.pairlist.filelist'
 jobname='ParseSciHUB'
 get_pending_count() {
     squeue -u $user -p $partition -n $jobname | grep PD | wc -l
@@ -24,6 +24,13 @@ get_running_count() {
 
 # Function to submit a task
 submit_task() {
+    current_time=$(date +"%Y.%m.%d %H:%M")
+
+    if [[ "$current_time" > "2024.09.18 00:00" ]]; then
+        filelist='scihub_collection/analysis/not_complete_pdf_page_id.pairlist.filelist'
+    else
+        filelist='physics_collection/analysis/not_complete_pdf_page_id.pairlist.filelist'
+    fi
     sbatch --quotatype=spot -p $partition -N1 -c8 --gres=gpu:1 $jobscript $filelist 0 1
 }
 
