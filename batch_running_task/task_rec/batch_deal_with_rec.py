@@ -25,6 +25,8 @@ class BatchRECConfig(BatchModeConfig):
     result_save_path: str=RESULT_SAVE_PATH
     check_lock: bool = True
     update_origin: bool = False
+    compile: bool = False
+    replace:bool=False
 if __name__ == '__main__':
     task_name = "physics_part"
     version   = "mfr_patch_bf16"
@@ -56,8 +58,15 @@ if __name__ == '__main__':
     page_num_map_whole = None #get_page_num_map_whole()
     for inputs_path in tqdm(all_file_list, leave=False, position=1):
         filename    = os.path.basename(inputs_path)
+        
+        if args.replace:
+            origin_root = os.path.dirname(inputs_path).split('/')
+            task_name = origin_root[-2]
+            version   = origin_root[-1]
+            args.result_save_path = os.path.dirname(os.path.dirname(os.path.dirname(inputs_path)))
+            args.redo = True
+            args.update_origin = True
         result_save_root = os.path.join(args.result_save_path, task_name, version)
-            
         if inputs_path.startswith('s3'):
             inputs_path = "opendata:"+inputs_path
         # assert inputs_path.startswith('opendata:s3')
@@ -86,6 +95,7 @@ if __name__ == '__main__':
         
         partion_num = 1
         for partion_idx in range(partion_num):
+            
             if partion_num > 1:
                 filename_with_partion = f"{filename.replace('.jsonl','')}.{partion_idx:02d}_{partion_num:02d}.jsonl"
             else:
@@ -119,7 +129,11 @@ if __name__ == '__main__':
             print(f"now we deal with {inputs_path} to {result_path}")
             os.makedirs(os.path.dirname(result_path), exist_ok=True)
             
-            if ocrmodel is None:ocrmodel = TextRecognizer(rec_args)
+            if ocrmodel is None:
+                ocrmodel = TextRecognizer(rec_args)
+                if args.compile:
+                    ocrmodel.net.backbone = torch.compile(ocrmodel.net.backbone)
+
             
             try:
                 deal_with_one_dataset(inputs_path, result_path, ocrmodel,

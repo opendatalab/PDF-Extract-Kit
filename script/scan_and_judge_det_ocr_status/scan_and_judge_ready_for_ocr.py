@@ -88,7 +88,7 @@ def get_box_status(box:Dict[str,Any]):
         else:
             return boxstatus.has_category_rec_without_rec
     elif category_id in {0,1,2,4,6,7}:
-        return boxstatus.has_category_layout_only
+        return boxstatus.has_category_layout
     elif category_id in {13, 14}:
         if box.get('latex',"") != "":
             return boxstatus.has_category_mfd_and_get_mfr
@@ -97,7 +97,9 @@ def get_box_status(box:Dict[str,Any]):
 
 def judge_one_page_status_via_box_status(box_status_list):
     box_status_list = set(box_status_list)
-    assert boxstatus.has_category_layout in box_status_list
+    #assert boxstatus.has_category_layout in box_status_list, f"box_status_list={box_status_list}"
+    if boxstatus.has_category_layout not in box_status_list:
+        return page_status.none
     ## not mfd and rec 
     if (boxstatus.has_category_mfd_and_get_mfr not in box_status_list and boxstatus.has_category_rec_and_get_rec not in box_status_list 
     and boxstatus.has_category_mfd_without_mfr not in box_status_list and boxstatus.has_category_rec_without_rec not in box_status_list):
@@ -206,12 +208,15 @@ def process_file(metadata_file, args:StatusCheckConfig):
         assert origin_path_path in page_information_map, f"pdf_id={pdf_id} origin_path_path {origin_path_path} not in page_information_map"
         pdf_page_num = page_information_map[origin_path_path]
         track_id = metadata['track_id']
-        status_for_this_pdf= {t:page_status["none"] for t in range(pdf_page_num)}
+        status_for_this_pdf= {t:page_status.none for t in range(pdf_page_num)}
         for page_meta in doc_layout_result:
             page_id = page_meta['page_id']
             ### now do parser check 
             page_id     =  page_meta["page_id"]
             layout_dets =  page_meta["layout_dets"]
+            if len(layout_dets)==0:
+                continue
+                #raise ValueError(f"pdf_id={pdf_id} page_id={page_id} page_meta={page_meta} is empty")
             box_status_list = [get_box_status(box) for box in layout_dets]
             status_for_this_pdf[page_id] = judge_one_page_status_via_box_status(box_status_list)
 
@@ -220,6 +225,7 @@ def process_file(metadata_file, args:StatusCheckConfig):
         status_all_pdf.append([track_id, pdf_status_for_this_pdf, status_for_this_pdf_list_format])
     
     exit_reason = judge_package_status_via_pdf_status([pdf_status for track_id, pdf_status, status_for_this_pdf_list_format in status_all_pdf])
+    
     return exit_reason, metadata_file,status_all_pdf
 
 def process_one_file_wrapper(args):
@@ -239,12 +245,15 @@ if __name__ == '__main__':
     analysis = {}
     for exit_reason, metadata_file, status_all_pdf in results:
         if exit_reason not in analysis: analysis[exit_reason] = []
-        if exit_reason == "all_complete":
-            analysis[exit_reason].append(metadata_file)
-        elif exit_reason == "not_complete":
-            analysis[exit_reason].append({'file':metadata_file, "status":status_all_pdf})
-        else:
-            analysis[exit_reason].append(status_all_pdf)
+        analysis[exit_reason].append([metadata_file, status_all_pdf])
+
+        # if exit_reason not in analysis: analysis[exit_reason] = []
+        # if exit_reason == "all_complete":
+        #     analysis[exit_reason].append(metadata_file)
+        # elif exit_reason == "not_complete":
+        #     analysis[exit_reason].append({'file':metadata_file, "status":status_all_pdf})
+        # else:
+        #     analysis[exit_reason].append(status_all_pdf)
 
     for key, val in analysis.items():
         print(f"{key}=>{len(val)}")
@@ -261,8 +270,8 @@ if __name__ == '__main__':
                     f.write(json.dumps(line)+'\n')
         else:
             with open(logpath, 'w') as f:
-                for metadata_file, astring in val:
-                    f.write(f"{metadata_file} {astring}"+'\n')
+                for metadata_file, status_all_pdf in val:
+                    f.write(f"{metadata_file} "+ json.dumps(status_all_pdf) +'\n')
                 
 
     

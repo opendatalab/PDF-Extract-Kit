@@ -20,4 +20,4 @@ fi
 export OPENMPIPATH=/mnt/petrelfs/share/openmpi-3.1.2-cuda9.0
 export PATH=$OPENMPIPATH/bin:$PATH
 export LD_LIBRARY_PATH=$OPENMPIPATH/lib:$LD_LIBRARY_PATH
-python batch_deal_with_mfr.py --root_path $1 --index_part $2 --num_parts $3 --shuffle --num_workers 8 # --accelerated_layout --accelerated_mfd 
+python batch_running_task/task_mfr/batch_deal_with_mfr.py --root_path $1 --index_part $2 --num_parts $3 --shuffle --num_workers 8 --update_origin 

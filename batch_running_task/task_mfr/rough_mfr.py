@@ -117,11 +117,11 @@ def deal_with_one_dataset(pdf_path, result_path,  mfr_model, mfr_transform,
                           image_batch_size=256,
                           num_workers=8,
                           partion_num = 1,
-                          partion_idx = 0):
+                          partion_idx = 0, update_origin=False):
     images_dataset = MFRImageDataset(pdf_path,mfr_transform,partion_num = partion_num, partion_idx = partion_idx)
     data_to_save =  fast_deal_with_one_dataset(images_dataset,mfr_model,
                                                pdf_batch_size  =pdf_batch_size,
-                          image_batch_size=image_batch_size,num_workers=num_workers)
+                          image_batch_size=image_batch_size,num_workers=num_workers,update_origin=update_origin)
     write_jsonl_to_path(data_to_save,result_path,images_dataset.client)
 
 
@@ -129,7 +129,7 @@ def fast_deal_with_one_dataset(images_dataset:MFRImageDataset,
                                mfr_model,
                           pdf_batch_size  =32,
                           image_batch_size=256,
-                          num_workers=8):
+                          num_workers=8,update_origin=False):
 
     image_collecter   = DataLoader(images_dataset,batch_size=pdf_batch_size,collate_fn=none_collate_fn, 
                             num_workers=num_workers,pin_memory=False,
@@ -194,13 +194,19 @@ def fast_deal_with_one_dataset(images_dataset:MFRImageDataset,
                 bbox_id = tuple(bbox_metadata['poly'])
                 location= (pdf_path,page_id,bbox_id)
                 if location not in location_to_mfr:
-                    print(f"WARNING: one page {location} is not regitered, usually it is because page load fail")
+                    if not update_origin:print(f"WARNING: one page {location} is not regitered, usually it is because page load fail")
                     continue
                 latex = location_to_mfr[location]
-                this_line_pool['layout_dets'].append({'category_id':category_id, 'latex':latex})
+                if update_origin:
+                    bbox_metadata.update({'latex':latex})
+                else:
+                    this_line_pool['layout_dets'].append({'category_id':category_id, 'latex':latex})
             patch_metadata['doc_layout_result'].append(this_line_pool)
         patch_metadata_list.append(patch_metadata)
-    return patch_metadata_list
+    if update_origin:
+        return images_dataset.metadata
+    else:
+        return patch_metadata_list
 
 if __name__ == "__main__":
     
@@ -209,7 +215,7 @@ if __name__ == "__main__":
     device = model_configs['model_args']['device']
     image_batch_size=128
     mfr_model, mfr_transform = mfr_model_init(model_configs['model_args']['mfr_weight'], device=device, batch_size= image_batch_size)
-    images_dataset = MFRImageDataset("part-66210c190659-012745.jsonl",mfr_transform)
+    images_dataset = MFRImageDataset("0000000-0000209.01000_00001.jsonl",mfr_transform)
     images_dataset[0]
     patch_metadata_list =  fast_deal_with_one_dataset(images_dataset,mfr_model,
                                                pdf_batch_size  =2,

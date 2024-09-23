@@ -195,9 +195,14 @@ class RecImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):
     def collect_location_and_dt_box_from_page_metadata(pdf_path, pdf_page_metadata):
         location_keys = []
         page_id = pdf_page_metadata['page_id']
-        mfd_res_list = collect_mfdetrec_res_per_page(pdf_page_metadata['layout_dets']) # List[Dict]  [{'bbox':[a,b,c,d]}, {'bbox':[a,b,c,d]}] 
+        mfd_res_list = None
         for bbox_metadata in pdf_page_metadata['layout_dets']:
             if bbox_metadata['category_id']!=15:continue
+            if "sub_boxes" in bbox_metadata:# and any([b['text']!="" for b in bbox_metadata['sub_boxes']]):
+                ## this mean we have 
+                continue
+            if mfd_res_list is None:
+                mfd_res_list = collect_mfdetrec_res_per_page(pdf_page_metadata['layout_dets']) # List[Dict]  [{'bbox':[a,b,c,d]}, {'bbox':[a,b,c,d]}] 
             bbox_id  = tuple(bbox_metadata['poly'])
             tmp_box  = np.array(bbox_metadata['poly']).reshape(-1, 2)
             tmp_box  = sorted_boxes(tmp_box[None])[0].astype('float32')
@@ -209,7 +214,6 @@ class RecImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):
                 #print("we can skip this one because it has no formula, and origin ocr is corr")
                 continue
                 ## this mean we do not need modify it, lets skip
-            
             for dt_box in dt_boxes:
                 #print(dt_box)
                 ### from dt_box to get bbox
@@ -615,6 +619,10 @@ class MFRImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):
                 ori_im  = process_pdf_page_to_image(page, 200, output_width=width,output_height=height)     
                 for bbox_metadata in pdf_page_metadata['layout_dets']:
                     if bbox_metadata['category_id'] not in [13, 14]:continue
+                    if bbox_metadata.get('latex',"")!="":
+                        #print("we can skip this one because it has latex")
+                        continue # skip the part that has latex parsed
+                    
                     [xmin, ymin, xmax, ymin, xmax, ymax, xmin, ymax] = bbox_metadata['poly']
                     bbox_id = tuple(bbox_metadata['poly'])
                     location= (clean_pdf_path(pdf_path),page_id,bbox_id)
