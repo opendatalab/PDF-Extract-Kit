@@ -126,6 +126,8 @@ def build_bbox_group(metadatas, dataset):
     grouped_bboxes = {}
     location2group = {}
     location2boxes = {}
+    count_how_many_pdf_is_recalculated  = {}
+    count_how_many_page_is_recalculated = {}
     for pdf_index, pdf_metadata in enumerate(tqdm(metadatas,desc="building group")):
         pdf_path = clean_pdf_path(pdf_metadata['path'])
         for pdf_page_metadata in tqdm(pdf_metadata['doc_layout_result'],desc="iter along page", leave=False, position=1):
@@ -142,6 +144,12 @@ def build_bbox_group(metadatas, dataset):
                 grouped_bboxes[group_key].append(location)
                 location2group[location] = group_key
                 location2boxes[location] = bbox
+                count_how_many_pdf_is_recalculated[pdf_path] = 1
+                count_how_many_page_is_recalculated[(pdf_path,page_id)] = 1
+    count_how_many_pdf_is_recalculated = len(count_how_many_pdf_is_recalculated)
+    count_how_many_page_is_recalculated = len(count_how_many_page_is_recalculated)
+    count_how_many_box_is_recalculated = len(location2group)
+    print(f"Processing: pdfs:{count_how_many_pdf_is_recalculated}, pages:{count_how_many_page_is_recalculated}, boxes:{count_how_many_box_is_recalculated}")
     return grouped_bboxes, location2group, location2boxes
 
 from typing import List, Dict
@@ -162,9 +170,8 @@ def deal_with_one_dataset(pdf_path, result_path, tex_recognizer,
                                                pdf_batch_size  =pdf_batch_size,
                           image_batch_size=image_batch_size,num_workers=num_workers,
                                                           update_origin=update_origin)
-    if update_origin:
-        assert result_path == pdf_path
-    write_jsonl_to_path(data_to_save,result_path,images_dataset.client)
+    if data_to_save is not None:
+        write_jsonl_to_path(data_to_save,result_path,images_dataset.client)
 
 
 
@@ -297,6 +304,7 @@ def fast_deal_with_one_dataset2(images_dataset:RecImageDataset,tex_recognizer:Te
                           num_workers=8,update_origin=False):
     
     _,location2group,location2boxes = build_bbox_group(images_dataset.metadata,images_dataset)
+    if len(location2group) == 0:return None
     image_collecter   = DataLoader(images_dataset, batch_size=pdf_batch_size,collate_fn=none_collate_fn, 
                             num_workers=num_workers,pin_memory=False,
                             prefetch_factor=2)  

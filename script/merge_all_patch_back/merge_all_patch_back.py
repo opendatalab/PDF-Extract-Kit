@@ -20,12 +20,12 @@ def process_file(result_path, args):
     if result_path.startswith("s3:"):
         result_path = "opendata:"+result_path
     filename = os.path.basename(result_path)
-    new_path = result_path.replace('result/','final_layout/')
-    if check_path_exists(new_path,client):
-        result_path = new_path
-    
-    target_file_path = os.path.join(os.path.dirname(os.path.dirname(result_path)),"final_layout",filename)
-    result = read_data_with_patch(result_path,client)
+    target_file_path = os.path.join(os.path.dirname(os.path.dirname(result_path)),"final_20240923",filename)
+    if not args.redo and check_path_exists(target_file_path,client):
+        tqdm.write(f"skip {target_file_path}")
+        return 
+    #target_file_path = "test.jsonl"
+    result = read_data_with_version(result_path,client)
     tqdm.write(f"read {result_path} to {target_file_path}")
     
     write_jsonl_to_path(result,target_file_path ,client)

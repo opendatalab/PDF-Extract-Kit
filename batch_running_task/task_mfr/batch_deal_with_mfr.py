@@ -24,10 +24,10 @@ class BatchMFRConfig(BatchModeConfig):
     num_workers: int = 4
     result_save_path: str=RESULT_SAVE_PATH
     check_lock: bool = True
-
+    update_origin: bool = False
 if __name__ == '__main__':
     task_name = "physics_part"
-    version   = "mfr_patch_bf16"
+    version   = "final2"
     
     parser = ArgumentParser()
     parser.add_arguments(BatchMFRConfig, dest="config")
@@ -68,7 +68,7 @@ if __name__ == '__main__':
             continue
 
         POSSIABLE_RESULT_SAVE_DIR_LIST=[
-            os.path.join(args.result_save_path, task_name, "mfr_patch"),
+            #os.path.join(args.result_save_path, task_name, "mfr_patch"),
             os.path.join(args.result_save_path, task_name, version),
             os.path.join("opendata:s3://llm-pdf-text/pdf_gpu_output/ebook_index_v4/scihub/v001/scihub/"),
         ]
@@ -127,7 +127,7 @@ if __name__ == '__main__':
                           pdf_batch_size=16, image_batch_size=128,
                           num_workers = args.num_workers,
                           partion_num = partion_num,
-                          partion_idx = partion_idx)
+                          partion_idx = partion_idx,update_origin=args.update_origin)
                 print(f"""
 =========================================
 finish dealing with {result_path}

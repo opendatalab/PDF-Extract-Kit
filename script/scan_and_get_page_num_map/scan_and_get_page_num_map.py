@@ -16,9 +16,10 @@ OriginDATAROOT="opendata:s3://llm-process-pperf/ebook_index_v4/scihub/v001/scihu
 @dataclass
 class PageNumConfig(BatchModeConfig):
     savepath: str = "opendata:s3://llm-pdf-text/pdf_gpu_output/scihub_shared"
-
+    fullpage_check: bool = False
 client = build_client()
 def process_file(metadata_file, args:PageNumConfig):
+    if metadata_file.startswith("s3:"): metadata_file = "opendata:"+ metadata_file
     pdf_path_map_to_page_num = []
     if "layoutV" in metadata_file:
         filename = os.path.basename(metadata_file)
@@ -39,9 +40,14 @@ def process_file(metadata_file, args:PageNumConfig):
             continue
         try:
             pdf_buffer = read_pdf_from_path(pdfpath, client)
-            page = pdf_buffer.load_page(0)
-            dpi = 200
-            pix = page.get_pixmap(matrix=fitz.Matrix(dpi/72, dpi/72))
+            if args.fullpage_check:
+                page_id_list = range(len(pdf_buffer))
+            else:
+                page_id_list = [0]
+            for page_id in page_id_list:
+                page = pdf_buffer.load_page(page_id)
+                dpi = 20
+                pix = page.get_pixmap(matrix=fitz.Matrix(dpi/72, dpi/72))
         except Exception as e:
             tqdm.write(f"""error in loading pdf {pdfpath}, we pass""")
             pdf_path_map_to_page_num.append([pdfpath, -1])

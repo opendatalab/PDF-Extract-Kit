@@ -21,6 +21,7 @@ def process_file(result_path, args):
         result_path = "opendata:"+result_path
     filename = os.path.basename(result_path)
     target_file_path = os.path.join(os.path.dirname(os.path.dirname(result_path)),"add_mfr",filename)
+    #result = read_data_with_mfr(result_path,client)
     result = read_data_with_mfr(result_path,client)
     #tqdm.write(f"read {result_path} to {target_file_path}")
     
