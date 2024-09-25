@@ -2,7 +2,7 @@
 export LD_LIBRARY_PATH=/mnt/cache/share/gcc/gcc-7.5.0/lib64:${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 export PATH=/mnt/cache/share/gcc/gcc-7.5.0/bin:$PATH
 
-TOTALNUM=30
+TOTALNUM=10
 CPU_NUM=$1 # Automatically get the number of CPUs
 if [ -z "$CPU_NUM" ]; then
     CPU_NUM=$TOTALNUM

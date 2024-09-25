@@ -18,4 +18,4 @@ else
   echo "[`hostname`] GCC version is $REQUIRED_VERSION."
 fi
 
-python batch_running_task/task_rec/batch_deal_with_rec.py --root_path $1 --index_part $2 --num_parts $3 --num_workers 8 --update_origin --replace --shuffle #--compile 
+python batch_running_task/task_rec/batch_deal_with_rec.py --root_path $1 --index_part $2 --num_parts $3 --num_workers 8 --update_origin --replace --shuffle --compile 

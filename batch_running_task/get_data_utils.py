@@ -574,3 +574,41 @@ def read_data_with_version(result_path, client):
     # rec_patch_dict     = build_dict(read_json_from_path(rec_patchpath,client)) if check_path_exists(rec_patchpath,client) else {}
        
     return result
+
+class PackStatus:
+    whole_layout_complete            = 'whole_layout_complete'
+    whole_ocr_complete               = 'whole_ocr_complete'
+    layout_not_complete              = 'layout_not_complete'
+    better_redo                      = 'better_redo'
+    better_addon                     = 'better_addon'
+    check_the_page_information       = 'check_the_page_information'
+
+packstatus= PackStatus()
+
+class PDFSTATUS:
+    layout_not_complete              = 'cN'
+    layout_has_complete              = 'cA'
+    layout_complete_and_ocr_finished = 'cF'
+    layout_complete_without_ocr      = 'cT'
+
+
+pdf_status = PDFSTATUS()
+
+class PAGESTATUS:
+    layout_complete_and_ocr_finished     = 'bF'
+    layout_complete_and_ocr_only_for_mfd = 'bM'
+    layout_complete_and_ocr_only_for_rec = 'bR'
+    layout_complete                      = 'bP'
+    only_have_15                         = 'bI'
+    only_have_layout                     = 'bK'
+    no012467                             = 'bA'
+    none                                 = 'bN'
+
+page_status = PAGESTATUS()
+class BOXSTATUS:
+    has_category_layout          = 'a1'
+    has_category_mfd_and_get_mfr = 'b1'
+    has_category_mfd_without_mfr = 'c1'
+    has_category_rec_without_rec = 'd1'
+    has_category_rec_and_get_rec = 'e1'
+boxstatus =  BOXSTATUS()

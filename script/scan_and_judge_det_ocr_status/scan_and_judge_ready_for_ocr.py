@@ -9,43 +9,7 @@ import time
 import subprocess
 from typing import Dict, Any
 
-class PackStatus:
-    whole_layout_complete            = 'whole_layout_complete'
-    whole_ocr_complete               = 'whole_ocr_complete'
-    layout_not_complete              = 'layout_not_complete'
-    better_redo                      = 'better_redo'
-    better_addon                     = 'better_addon'
-    check_the_page_information       = 'check_the_page_information'
 
-packstatus= PackStatus()
-
-class PDFSTATUS:
-    layout_not_complete              = 'cN'
-    layout_has_complete              = 'cA'
-    layout_complete_and_ocr_finished = 'cF'
-    layout_complete_without_ocr      = 'cT'
-
-
-pdf_status = PDFSTATUS()
-
-class PAGESTATUS:
-    layout_complete_and_ocr_finished     = 'bF'
-    layout_complete_and_ocr_only_for_mfd = 'bM'
-    layout_complete_and_ocr_only_for_rec = 'bR'
-    layout_complete                      = 'bP'
-    only_have_15                         = 'bI'
-    only_have_layout                     = 'bK'
-    no012467                             = 'bA'
-    none                                 = 'bN'
-
-page_status = PAGESTATUS()
-class BOXSTATUS:
-    has_category_layout          = 'a1'
-    has_category_mfd_and_get_mfr = 'b1'
-    has_category_mfd_without_mfr = 'c1'
-    has_category_rec_without_rec = 'd1'
-    has_category_rec_and_get_rec = 'e1'
-boxstatus =  BOXSTATUS()
 
 @dataclass
 class StatusCheckConfig(BatchModeConfig):
@@ -83,7 +47,7 @@ def get_origin_path(metadata_file,args):
 def get_box_status(box:Dict[str,Any]):
     category_id = box['category_id']
     if category_id == 15:
-        if box.get('text',"") != "":
+        if box.get('text',"") != "" or 'sub_boxes' in box:
             return boxstatus.has_category_rec_and_get_rec
         else:
             return boxstatus.has_category_rec_without_rec
