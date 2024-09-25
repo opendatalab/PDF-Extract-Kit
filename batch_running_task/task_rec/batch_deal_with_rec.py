@@ -8,7 +8,9 @@ from get_data_utils import *
 RESULT_SAVE_PATH="opendata:s3://llm-pdf-text/pdf_gpu_output/scihub_shared"
 #RESULT_SAVE_PATH="tianning:s3://temp/debug"
 INPUT_LOAD_PATH="opendata:s3://llm-process-pperf/ebook_index_v4/scihub/v001/scihub"
-LOCKSERVER="http://10.140.52.123:8000"
+import socket   
+hostname= socket.gethostname()
+LOCKSERVER="http://10.140.52.123:8000" if hostname.startswith('SH') else "http://paraai-n32-h-01-ccs-master-2:32453"
 from datetime import datetime,timedelta
 import socket   
 hostname= socket.gethostname()
@@ -19,8 +21,8 @@ import traceback
 
 @dataclass
 class BatchRECConfig(BatchModeConfig):
-    inner_batch_size: int = 16
-    batch_size: int = 16
+    image_batch_size: int = 256
+    pdf_batch_size: int = 32
     num_workers: int = 4
     result_save_path: str=RESULT_SAVE_PATH
     check_lock: bool = True
@@ -138,7 +140,7 @@ if __name__ == '__main__':
             try:
                 deal_with_one_dataset(inputs_path, result_path, ocrmodel,
                           #batch_size  = args.batch_size,
-                          pdf_batch_size=32, image_batch_size=256,
+                          pdf_batch_size=args.pdf_batch_size, image_batch_size=args.image_batch_size,
                           num_workers = args.num_workers,
                           partion_num = partion_num,
                           partion_idx = partion_idx,update_origin=args.update_origin)
