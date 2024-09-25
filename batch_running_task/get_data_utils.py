@@ -167,7 +167,7 @@ def build_client():
     return client
 
 def check_path_exists(path,client):
-    print(path)
+    #print(path)
     if "s3:" in path:
         return client.contains(path)
     elif path.startswith('http'):

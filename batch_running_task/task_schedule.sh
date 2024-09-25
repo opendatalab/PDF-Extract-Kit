@@ -1,12 +1,16 @@
 
 #!/bin/bash
-TASKLIMIT=70
+TASKLIMIT=30
 PENDINGLIMIT=2
 # Function to get the count of pending tasks
 user=`whoami`
-partition='AI4Chem'
-jobscript="batch_running_task/task_layout/run_layout_for_missing_page.sh"
-filelist='scihub_collection/analysis/not_complete_pdf_page_id.pairlist.filelist'
+if [[ $(hostname) == SH* ]]; then
+    partition='AI4Chem'
+else
+    partition='vip_gpu_ailab_low'
+fi
+# jobscript="batch_running_task/task_layout/run_layout_for_missing_page.sh"
+# filelist='scihub_collection/analysis/not_complete_pdf_page_id.pairlist.filelist'
 jobname='ParseSciHUB'
 get_pending_count() {
     squeue -u $user -p $partition -n $jobname | grep PD | wc -l
