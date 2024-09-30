@@ -295,6 +295,16 @@ python pdf_extract.py --pdf assets/examples/example.pdf
 
 如果你觉得我们模型/代码/技术报告对你有帮助，请给我们⭐和引用📝,谢谢 :)  
 ```bibtex
+@misc{wang2024mineruopensourcesolutionprecise,
+      title={MinerU: An Open-Source Solution for Precise Document Content Extraction}, 
+      author={Bin Wang and Chao Xu and Xiaomeng Zhao and Linke Ouyang and Fan Wu and Zhiyuan Zhao and Rui Xu and Kaiwen Liu and Yuan Qu and Fukai Shang and Bo Zhang and Liqun Wei and Zhihao Sui and Wei Li and Botian Shi and Yu Qiao and Dahua Lin and Conghui He},
+      year={2024},
+      eprint={2409.18839},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2409.18839}, 
+}
+
 @misc{wang2024unimernet,
       title={UniMERNet: A Universal Network for Real-World Mathematical Expression Recognition}, 
       author={Bin Wang and Zhuangcheng Gu and Chao Xu and Bo Zhang and Botian Shi and Conghui He},
