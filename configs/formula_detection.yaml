@@ -1,0 +1,12 @@
+inputs: assets/demo/formula_detection
+outputs: outputs/formula_detection
+tasks:
+  formula_detection:
+    model: formula_detection_yolo
+    model_config:
+      img_size: 1280
+      conf_thres: 0.25
+      iou_thres: 0.45
+      batch_size: 1
+      model_path: models/MFD/yolov8/weights.pt
+      visualize: True

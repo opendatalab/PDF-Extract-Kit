@@ -1,0 +1,12 @@
+inputs: assets/demo/layout_detection
+outputs: outputs/layout_detection
+tasks:
+  layout_detection:
+    model: layout_detection_yolo
+    model_config:
+      img_size: 1280
+      conf_thres: 0.25
+      iou_thres: 0.45
+      batch_size: 1
+      model_path: models/Layout/yolov8/yolov8_mixed_1600.pt
+      visualize: True

@@ -1,0 +1,9 @@
+inputs: assets/demo/formula_recognition
+outputs: outputs/formula_recognition
+tasks:
+  formula_recognition:
+    model: formula_recognition_unimernet
+    model_config:
+      cfg_path: pdf_extract_kit/configs/unimernet.yaml
+      model_path: models/MFR/unimernet_tiny
+      visualize: False

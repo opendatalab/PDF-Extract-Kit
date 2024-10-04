@@ -1,0 +1,10 @@
+inputs: assets/demo/ocr/crop_img
+outputs: outputs/ocr/crop_img
+visualize: True
+tasks:
+  ocr:
+    model: ocr_ppocr
+    model_config:
+      lang: ch
+      show_log: True
+      det_db_box_thresh: 0.3

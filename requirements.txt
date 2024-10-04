@@ -1,7 +1,8 @@
-unimernet==0.1.6
+omegaconf
 matplotlib
 PyMuPDF
 ultralytics
+unimernet==0.2.1
 paddlepaddle-gpu
 paddleocr==2.7.3
 struct-eqtable==0.1.0

@@ -2,7 +2,7 @@
 *.ipynb
 
 # local data
-output/*
+outputs/*
 data/*
 temp*
 test*
@@ -16,7 +16,6 @@ test*
 *.log
 *.out
 
-models/Layout/*
-models/MFD/*
-models/MFR/*
-models/TabRec/*
+models/*
+doc/zh_cn/_build/*
+doc/en/_build/*

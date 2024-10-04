@@ -1,7 +1,0 @@
-unimernet==0.1.6
-matplotlib<=3.9.0
-PyMuPDF
-ultralytics
-paddlepaddle==2.6.1
-paddleocr==2.7.3
-struct-eqtable==0.1.0

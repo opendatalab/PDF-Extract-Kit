@@ -1,0 +1,7 @@
+inputs: assets/demo/layout_detection
+outputs: outputs/layout_detection
+tasks:
+  layout_detection:
+    model: layout_detection_layoutlmv3
+    model_config:
+      model_path: /mnt/hwfile/opendatalab/zhaozhiyuan/PDF-Extract-Kit-v2-models/layoutlmv3_model/model_final.pth

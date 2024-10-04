@@ -1,0 +1,718 @@
+
+<!DOCTYPE html>
+
+
+<html lang="zh-CN" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>代码实现 &#8212; PDF-Extract-Kit 0.1.0 文档</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=2693749b"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=a5fa425f"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../_static/translations.js?v=beaddf03"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'task_extend/code';</script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="文档补充" href="doc.html" />
+    <link rel="prev" title="阅读顺序算法" href="../algorithm/reading_order.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="zh-CN"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt="PDF-Extract-Kit 0.1.0 文档 - Home"/>
+    <script>document.write(`<img src="../_static/logo.png" class="logo__image only-dark" alt="PDF-Extract-Kit 0.1.0 文档 - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="搜索" aria-label="搜索" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">搜索</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">快速上手</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../get_started/installation.html">安装</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/pretrained_model.html">模型权重下载</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/quickstart.html">快速开始</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">基础算法模块</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../algorithm/layout_detection.html">布局检测算法</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../algorithm/formula_detection.html">公式检测算法</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../algorithm/formula_recognition.html">公式识别算法</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../algorithm/ocr.html">光学字符识别(OCR)算法</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../algorithm/table_recognition.html">表格识别算法</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../algorithm/reading_order.html">阅读顺序算法</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">新任务拓展</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">代码实现</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doc.html">文档补充</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation.html">模型评测</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">支持的模型列表</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../models/supported.html">已支持的模型</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">模型性能评测</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/layout_detection.html">布局检测算法评测</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/formula_detection.html">公式检测算法评测</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/formula_recognition.html">公式识别算法评测</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/ocr.html">OCR算法评测</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/table_recognition.html">表格识别算法评测</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/reading_order.html">阅读顺序算法评测</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/pdf_extract.html">PDF内容提取评测【端到端】</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">PDF项目</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../project/pdf_extract.html">文档内容提取项目</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../project/doc_translate.html">文档翻译项目</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../project/speed_up.html">模型加速项目</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/opendatalab/PDF-Extract-Kit" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="源码库"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="下载此页面">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/task_extend/code.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="下载源文件"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="列印成 PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="全屏模式"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="搜索" aria-label="搜索" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>代码实现</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> 目录 </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">任务定义及注册</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">模型定义及注册</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">示例脚本</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">支持类型拓展</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">批处理拓展</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="id1">
+<h1>代码实现<a class="headerlink" href="#id1" title="Link to this heading">#</a></h1>
+<p>PDF-Extract-Kit项目的核心代码实现在pdf_extract_kit目录下，该路径下包含下述几个模块：</p>
+<ul class="simple">
+<li><p>configs: 特定模块的配置文件，如 <code class="docutils literal notranslate"><span class="pre">pdf_extract_kit/configs/unimernet.yaml</span></code> ，如果本身配置简单，建议放在 <code class="docutils literal notranslate"><span class="pre">repo_root/configs</span></code> 的 <code class="docutils literal notranslate"><span class="pre">yaml</span></code> 文件中的 <code class="docutils literal notranslate"><span class="pre">model_config</span></code> 里进行定义，方便用户修改。</p></li>
+<li><p>dataset: 自定义的 <code class="docutils literal notranslate"><span class="pre">ImageDataset</span></code> 类，用于加载和预处理图像数据。它支持多种输入类型，并且可以对图像进行统一的预处理操作（如调整大小、转换为张量等），以便于后续的模型推理加速。</p></li>
+<li><p>evaluation: 模型结果评测模块，支持多种任务类型评测，如 <code class="docutils literal notranslate"><span class="pre">布局检测</span></code> 、 <code class="docutils literal notranslate"><span class="pre">公式检测</span></code> 、 <code class="docutils literal notranslate"><span class="pre">公式识别</span></code> 等等，方便用户对不同任务、不同模型进行公平对比。</p></li>
+<li><p>registry: <code class="docutils literal notranslate"><span class="pre">Registry</span></code> 类是一个通用的注册表类，提供了注册、获取和列出注册项的功能。用户可以使用该类创建不同类型的注册表，例如任务注册表、模型注册表等。</p></li>
+<li><p>tasks: 最核心的任务模块，包含了许多不同类型的任务，如 <code class="docutils literal notranslate"><span class="pre">布局检测</span></code> 、 <code class="docutils literal notranslate"><span class="pre">公式检测</span></code> 、 <code class="docutils literal notranslate"><span class="pre">公式识别</span></code> 等等，用户添加新任务和新模型一般仅需要在这里进行代码添加。</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">备注</p>
+<p>基于上述的模块化设计，用户拓展新模块一般只需要在tasks里实现自己的新任务类及对应模型（更多情况下仅需要实现对应模型，任务已经定义好），然后在registry里注册即可。</p>
+</div>
+<p>下面我们以添加基于 <code class="docutils literal notranslate"><span class="pre">YOLO``的</span> <span class="pre">``布局检测</span></code> 模型为例，介绍如何添加新任务和新模型.</p>
+<section id="id2">
+<h2>任务定义及注册<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
+<p>首先我们在 <code class="docutils literal notranslate"><span class="pre">tasks</span></code> 下添加一个 <code class="docutils literal notranslate"><span class="pre">layout_detection</span></code> 目录，然后在该目录下添加一个 <code class="docutils literal notranslate"><span class="pre">task.py</span></code> 文件用于定义布局检测任务类，具体如下：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pdf_extract_kit.registry.registry</span> <span class="kn">import</span> <span class="n">TASK_REGISTRY</span>
+<span class="kn">from</span> <span class="nn">pdf_extract_kit.tasks.base_task</span> <span class="kn">import</span> <span class="n">BaseTask</span>
+
+
+<span class="nd">@TASK_REGISTRY</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;layout_detection&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">LayoutDetectionTask</span><span class="p">(</span><span class="n">BaseTask</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">predict_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">,</span> <span class="n">result_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict layouts in images.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            input_data (str): Path to a single image file or a directory containing image files.</span>
+<span class="sd">            result_path (str): Path to save the prediction results.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: List of prediction results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_images</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+        <span class="c1"># Perform detection</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">result_path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">predict_pdfs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">,</span> <span class="n">result_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict layouts in PDF files.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            input_data (str): Path to a single PDF file or a directory containing PDF files.</span>
+<span class="sd">            result_path (str): Path to save the prediction results.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: List of prediction results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pdf_images</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_pdf_images</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+        <span class="c1"># Perform detection</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">pdf_images</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">result_path</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">pdf_images</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+</pre></div>
+</div>
+<p>可以看到，任务定义包含下面几个要点：</p>
+<ul class="simple">
+<li><p>使用 <code class="docutils literal notranslate"><span class="pre">&#64;TASK_REGISTRY.register(&quot;layout_detection&quot;)</span></code> 语法直接将布局任务类注册到 <code class="docutils literal notranslate"><span class="pre">TASK_REGISTRY</span></code> 下 ；</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__init__</span></code> 初始化函数传入 <code class="docutils literal notranslate"><span class="pre">model</span></code> , 具体参考 <code class="docutils literal notranslate"><span class="pre">BaseTask</span></code> 类</p></li>
+<li><p>实现推理函数，这里考虑到布局检测通常会处理图像类及PDF文件，所以提供了两个函数 <code class="docutils literal notranslate"><span class="pre">predict_images</span></code> 和 <code class="docutils literal notranslate"><span class="pre">predict_pdfs</span></code> ，方便用户灵活选择。</p></li>
+</ul>
+</section>
+<section id="id3">
+<h2>模型定义及注册<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>
+<p>接下来我们实现具体模型，在task下面新建models目录，并添加yolo.py用于YOLO模型定义，具体定义如下：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">Dataset</span>
+<span class="kn">from</span> <span class="nn">ultralytics</span> <span class="kn">import</span> <span class="n">YOLO</span>
+<span class="kn">from</span> <span class="nn">pdf_extract_kit.registry</span> <span class="kn">import</span> <span class="n">MODEL_REGISTRY</span>
+<span class="kn">from</span> <span class="nn">pdf_extract_kit.utils.visualization</span> <span class="kn">import</span>  <span class="n">visualize_bbox</span>
+<span class="kn">from</span> <span class="nn">pdf_extract_kit.dataset.dataset</span> <span class="kn">import</span> <span class="n">ImageDataset</span>
+<span class="kn">import</span> <span class="nn">torchvision.transforms</span> <span class="k">as</span> <span class="nn">transforms</span>
+
+
+<span class="nd">@MODEL_REGISTRY</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;layout_detection_yolo&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">LayoutDetectionYOLO</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the LayoutDetectionYOLO class.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config (dict): Configuration dictionary containing model parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Mapping from class IDs to class names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id_to_names</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="mi">0</span><span class="p">:</span> <span class="s1">&#39;title&#39;</span><span class="p">,</span>
+            <span class="mi">1</span><span class="p">:</span> <span class="s1">&#39;plain text&#39;</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">:</span> <span class="s1">&#39;abandon&#39;</span><span class="p">,</span>
+            <span class="mi">3</span><span class="p">:</span> <span class="s1">&#39;figure&#39;</span><span class="p">,</span>
+            <span class="mi">4</span><span class="p">:</span> <span class="s1">&#39;figure_caption&#39;</span><span class="p">,</span>
+            <span class="mi">5</span><span class="p">:</span> <span class="s1">&#39;table&#39;</span><span class="p">,</span>
+            <span class="mi">6</span><span class="p">:</span> <span class="s1">&#39;table_caption&#39;</span><span class="p">,</span>
+            <span class="mi">7</span><span class="p">:</span> <span class="s1">&#39;table_footnote&#39;</span><span class="p">,</span>
+            <span class="mi">8</span><span class="p">:</span> <span class="s1">&#39;isolate_formula&#39;</span><span class="p">,</span>
+            <span class="mi">9</span><span class="p">:</span> <span class="s1">&#39;formula_caption&#39;</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Load the YOLO model from the specified path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">YOLO</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;model_path&#39;</span><span class="p">])</span>
+
+        <span class="c1"># Set model parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img_size</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;img_size&#39;</span><span class="p">,</span> <span class="mi">1280</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdf_dpi</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;pdf_dpi&#39;</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conf_thres</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;conf_thres&#39;</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iou_thres</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;iou_thres&#39;</span><span class="p">,</span> <span class="mf">0.45</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visualize</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;visualize&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;device&#39;</span><span class="p">,</span> <span class="s1">&#39;cuda&#39;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s1">&#39;cpu&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;batch_size&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">result_path</span><span class="p">,</span> <span class="n">image_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict layouts in images.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            images (list): List of images to be predicted.</span>
+<span class="sd">            result_path (str): Path to save the prediction results.</span>
+<span class="sd">            image_ids (list, optional): List of image IDs corresponding to the images.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: List of prediction results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">image</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">images</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">imgsz</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">img_size</span><span class="p">,</span> <span class="n">conf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">conf_thres</span><span class="p">,</span> <span class="n">iou</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">iou_thres</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">visualize</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">result_path</span><span class="p">):</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">result_path</span><span class="p">)</span>
+                <span class="n">boxes</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s1">&#39;boxes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">xyxy</span>
+                <span class="n">classes</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s1">&#39;boxes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cls</span>
+                <span class="n">vis_result</span> <span class="o">=</span> <span class="n">visualize_bbox</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">boxes</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_to_names</span><span class="p">)</span>
+
+                <span class="c1"># Determine the base name of the image</span>
+                <span class="k">if</span> <span class="n">image_ids</span><span class="p">:</span>
+                    <span class="n">base_name</span> <span class="o">=</span> <span class="n">image_ids</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">base_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+                <span class="n">result_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base_name</span><span class="si">}</span><span class="s2">_MFD.png&quot;</span>
+
+                <span class="c1"># Save the visualized result</span>
+                <span class="n">cv2</span><span class="o">.</span><span class="n">imwrite</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result_path</span><span class="p">,</span> <span class="n">result_name</span><span class="p">),</span> <span class="n">vis_result</span><span class="p">)</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span>
+</pre></div>
+</div>
+<p>可以看到，模型定义包含下面几个要点：</p>
+<ul class="simple">
+<li><p>使用 <code class="docutils literal notranslate"><span class="pre">&#64;MODEL_REGISTRY.register('layout_detection_yolo')</span></code> 语法直接将yolo布局模型注册到 <code class="docutils literal notranslate"><span class="pre">MODEL_REGISTRY</span></code> 下；</p></li>
+<li><dl class="simple">
+<dt>初始化函数需要实现：</dt><dd><ul>
+<li><p>id_to_names的类别映射，用于可视化展示</p></li>
+<li><p>模型参数配置</p></li>
+<li><p>模型初始化</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>模型推理函数需要实现多种类型的模型推理：这里支持图像列表和PIL.Image类，可以方便用户直接基于图像路径或者图像流进行推理。</p></li>
+</ul>
+<p>实现上述类定义后，将 <code class="docutils literal notranslate"><span class="pre">LayoutDetectionYOLO</span></code> 添加到 <code class="docutils literal notranslate"><span class="pre">layout_detection</span></code> 任务下 <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> 的 <code class="docutils literal notranslate"><span class="pre">__all__</span></code> 中即可。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pdf_extract_kit.tasks.layout_detection.models.yolo</span> <span class="kn">import</span> <span class="n">LayoutDetectionYOLO</span>
+<span class="kn">from</span> <span class="nn">pdf_extract_kit.registry.registry</span> <span class="kn">import</span> <span class="n">MODEL_REGISTRY</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;LayoutDetectionYOLO&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">备注</p>
+<p>对于同一个任务，我们支持多种模型，用户具体选择哪个可以根据评测结果进行选择，结合模型 <code class="docutils literal notranslate"><span class="pre">精度</span></code> 、 <code class="docutils literal notranslate"><span class="pre">速度</span></code> 和 <code class="docutils literal notranslate"><span class="pre">场景适配程度</span></code> 进行选择。</p>
+</div>
+<p>实现了任务和模型后，可以在 repo_root/scripts下添加脚本程序 <code class="docutils literal notranslate"><span class="pre">layout_detection.py</span></code></p>
+</section>
+<section id="id4">
+<h2>示例脚本<a class="headerlink" href="#id4" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os.path</span> <span class="k">as</span> <span class="nn">osp</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">osp</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span> <span class="s1">&#39;..&#39;</span><span class="p">))</span>
+<span class="kn">from</span> <span class="nn">pdf_extract_kit.utils.config_loader</span> <span class="kn">import</span> <span class="n">load_config</span><span class="p">,</span> <span class="n">initialize_tasks_and_models</span>
+<span class="kn">import</span> <span class="nn">pdf_extract_kit.tasks</span>  <span class="c1"># 确保所有任务模块被导入</span>
+
+<span class="n">TASK_NAME</span> <span class="o">=</span> <span class="s1">&#39;layout_detection&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">parse_args</span><span class="p">():</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Run a task with a given configuration file.&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--config&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to the configuration file.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">config_path</span><span class="p">):</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span>
+    <span class="n">task_instances</span> <span class="o">=</span> <span class="n">initialize_tasks_and_models</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="c1"># get input and output path from config</span>
+    <span class="n">input_data</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;inputs&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">result_path</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;outputs&#39;</span><span class="p">,</span> <span class="s1">&#39;outputs&#39;</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">TASK_NAME</span><span class="p">)</span>
+
+    <span class="c1"># layout_detection_task</span>
+    <span class="n">model_layout_detection</span> <span class="o">=</span> <span class="n">task_instances</span><span class="p">[</span><span class="n">TASK_NAME</span><span class="p">]</span>
+
+    <span class="c1"># for image detection</span>
+    <span class="n">detection_results</span> <span class="o">=</span> <span class="n">model_layout_detection</span><span class="o">.</span><span class="n">predict_images</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">result_path</span><span class="p">)</span>
+
+    <span class="c1"># for pdf detection</span>
+    <span class="c1"># detection_results = model_layout_detection.predict_pdfs(input_data, result_path)</span>
+
+    <span class="c1"># print(detection_results)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The predicted results can be found at </span><span class="si">{</span><span class="n">result_path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parse_args</span><span class="p">()</span>
+    <span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h2>支持类型拓展<a class="headerlink" href="#id5" title="Link to this heading">#</a></h2>
+</section>
+<section id="id6">
+<h2>批处理拓展<a class="headerlink" href="#id6" title="Link to this heading">#</a></h2>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../algorithm/reading_order.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">上一页</p>
+        <p class="prev-next-title">阅读顺序算法</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="doc.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">下一页</p>
+        <p class="prev-next-title">文档补充</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> 目录
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">任务定义及注册</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">模型定义及注册</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">示例脚本</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">支持类型拓展</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">批处理拓展</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+作者： PDF-Extract-Kit Contributors
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, OpenDataLab.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

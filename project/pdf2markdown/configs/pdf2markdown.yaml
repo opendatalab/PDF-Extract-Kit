@@ -1,0 +1,35 @@
+inputs: assets/demo/formula_detection
+outputs: outputs/pdf2markdown
+visualize: True
+merge2markdown: True
+tasks:
+  layout_detection:
+    model: layout_detection_yolo
+    model_config:
+      img_size: 1280
+      conf_thres: 0.25
+      iou_thres: 0.45
+      batch_size: 1
+      model_path: models/Layout/yolov8/yolov8_mixed_1600.pt
+  formula_detection:
+    model: formula_detection_yolo
+    model_config:
+      img_size: 1280
+      conf_thres: 0.25
+      iou_thres: 0.45
+      batch_size: 1
+      model_path: models/MFD/yolov8/weights.pt
+  formula_recognition:
+    model: formula_recognition_unimernet
+    model_config:
+      batch_size: 128
+      cfg_path: pdf_extract_kit/configs/unimernet.yaml
+      model_path: models/MFR/unimernet_tiny
+  ocr:
+    model: ocr_ppocr
+    model_config:
+      lang: ch
+      show_log: True
+      det_db_box_thresh: 0.3
+
+  
