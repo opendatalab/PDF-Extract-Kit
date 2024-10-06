@@ -5,7 +5,7 @@ import argparse
 
 sys.path.append(osp.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 from pdf_extract_kit.utils.config_loader import load_config, initialize_tasks_and_models
-import pdf_extract_kit.tasks  # 确保所有任务模块被导入
+import pdf_extract_kit.tasks
 
 TASK_NAME = 'layout_detection'
 

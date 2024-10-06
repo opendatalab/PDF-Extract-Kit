@@ -56,7 +56,6 @@ def visualize_bbox(image_path, bboxes, classes, scores, id_to_names, alpha=0.3):
     Returns:
         np.ndarray: Image with visualized layout detection results.
     """
-    # image = cv2.imread(image_path)
     # Check if image_path is a PIL.Image.Image object
     if isinstance(image_path, Image.Image):
         image = np.array(image_path)

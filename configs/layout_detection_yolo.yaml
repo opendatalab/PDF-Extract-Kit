@@ -8,7 +8,7 @@ tasks:
       conf_thres: 0.25
       iou_thres: 0.45
       batch_size: 2
-      model_path: /mnt/hwfile/opendatalab/zhaozhiyuan/PDF-Extract-Kit-v2-models/yolov10m_0830_mixed_epoch500_imgsz1280_bs64_pretrain_None/weights/best.pt
+      model_path: models/Layout/YOLO/yolov10l_ft.pt
       visualize: True
       rect: True
       device: "0"

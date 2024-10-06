@@ -1,5 +1,5 @@
-inputs: assets/demo/ocr/crop_img
-outputs: outputs/ocr/crop_img
+inputs: assets/demo/ocr
+outputs: outputs/ocr
 visualize: True
 tasks:
   ocr:

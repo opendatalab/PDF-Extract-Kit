@@ -8,5 +8,5 @@ tasks:
       conf_thres: 0.25
       iou_thres: 0.45
       batch_size: 1
-      model_path: models/MFD/yolov8/weights.pt
+      model_path: models/MFD/YOLO/yolo_v8_ft.pt
       visualize: True

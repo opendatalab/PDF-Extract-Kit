@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from ultralytics import YOLO
 from pdf_extract_kit.registry import MODEL_REGISTRY
-from pdf_extract_kit.utils.visualization import  visualize_bbox
+from pdf_extract_kit.utils.visualization import visualize_bbox
 from pdf_extract_kit.dataset.dataset import ImageDataset
 import torchvision.transforms as transforms
 

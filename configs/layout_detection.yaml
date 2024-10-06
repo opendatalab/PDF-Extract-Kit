@@ -8,5 +8,6 @@ tasks:
       conf_thres: 0.25
       iou_thres: 0.45
       batch_size: 1
-      model_path: models/Layout/yolov8/yolov8_mixed_1600.pt
+      model_path: models/Layout/YOLO/yolov10l_ft.pt
       visualize: True
+      rect: True

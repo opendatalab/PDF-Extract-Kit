@@ -33,6 +33,20 @@
             }
         },
         {
+            "name": "run_ocr",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/ocr.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--config",
+                "configs/ocr.yaml"
+            ],
+            "env": {
+                "PYTHONPATH": "/Users/bin/anaconda3/envs/mfd_test"
+            }
+        },
+        {
             "name": "run_formula_detection",
             "type": "debugpy",
             "request": "launch",
@@ -55,6 +69,20 @@
             "args": [
                 "--config",
                 "configs/layout_detection.yaml"
+            ],
+            "env": {
+                "PYTHONPATH": "/Users/bin/anaconda3/envs/mfd_test"
+            }
+        },
+        {
+            "name": "run_layout_detection_layoutlmv3",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/layout_detection.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--config",
+                "configs/layout_detection_layoutlmv3.yaml"
             ],
             "env": {
                 "PYTHONPATH": "/Users/bin/anaconda3/envs/mfd_test"
