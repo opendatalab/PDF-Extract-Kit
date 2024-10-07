@@ -16,6 +16,6 @@ test*
 *.log
 *.out
 
-models/*
+models*
 doc/zh_cn/_build/*
 doc/en/_build/*
