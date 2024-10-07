@@ -1,0 +1,8 @@
+omegaconf
+matplotlib
+PyMuPDF
+ultralytics
+unimernet==0.2.1
+paddlepaddle
+paddleocr==2.7.3
+struct-eqtable==0.1.0
