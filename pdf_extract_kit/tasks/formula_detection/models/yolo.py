@@ -64,7 +64,9 @@ class FormulaDetectionYOLO:
                 if image_ids:
                     base_name = image_ids[idx]
                 else:
-                    base_name = os.path.basename(image)
+                    # base_name = os.path.basename(image)                    
+                    base_name = os.path.splitext(os.path.basename(image))[0]  # Remove file extension
+
                 
                 result_name = f"{base_name}_MFD.png"
                 

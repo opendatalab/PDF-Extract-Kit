@@ -5,5 +5,5 @@ from pdf_extract_kit.registry.registry import MODEL_REGISTRY
 
 __all__ = [
     "LayoutDetectionYOLO",
-#     "LayoutDetectionLayoutlmv3",
+    # "LayoutDetectionLayoutlmv3",
 ]
