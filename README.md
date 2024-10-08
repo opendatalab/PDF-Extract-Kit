@@ -1,13 +1,13 @@
 
 <p align="center">
-  <img src="assets/images/pdf-extract-kit_logo.png" width="220px" style="vertical-align:middle;">
+  <img src="assets/readme/pdf-extract-kit_logo.png" width="220px" style="vertical-align:middle;">
 </p>
 
 <div align="center">
 
-English | [简体中文](./README-zh_CN.md)
+English | [简体中文](./README_zh-CN.md)
 
-[[Models (🤗Hugging Face)]](https://huggingface.co/opendatalab/PDF-Extract-Kit) | [[Models(<img src="./assets/images/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/OpenDataLab/PDF-Extract-Kit) 
+[[Models (🤗Hugging Face)]](https://huggingface.co/opendatalab/PDF-Extract-Kit) | [[Models(<img src="./assets/readme/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/OpenDataLab/PDF-Extract-Kit) 
  
 🔥🔥🔥 [MinerU: Efficient Document Content Extraction Tool Based on PDF-Extract-Kit](https://github.com/opendatalab/MinerU)
 
@@ -37,14 +37,14 @@ English | [简体中文](./README-zh_CN.md)
 
 ## Model Overview
 
-| **Task Type**     | **Description**                                                                 | **Models**                    |   |   |
-|-------------------|---------------------------------------------------------------------------------|-------------------------------|---|---|
-| **Layout Detection** | Locate different elements in a document: including images, tables, text, titles, formulas | `YOLOv10_ft`, `LayoutLMv3_ft` |   |   |
-| **Formula Detection** | Locate formulas in documents: including inline and block formulas            | `YOLOv8_ft`                   |   |   |
-| **Formula Recognition** | Recognize formula images into LaTeX source code                             | `UniMERNet`                   |   |   |
-| **OCR**           | Extract text content from images (including location and recognition)            | `PaddleOCR`                   |   |   |
-| **Table Recognition** | Recognize table images into corresponding source code (LaTeX/HTML/Markdown)   | `PaddleOCR+TableMaster`, `StructEqTable` |   |   |
-| **Reading Order** | Sort and concatenate discrete text paragraphs                                    | Coming Soon!                  |   |   |
+| **Task Type**     | **Description**                                                                 | **Models**                    |
+|-------------------|---------------------------------------------------------------------------------|-------------------------------|
+| **Layout Detection** | Locate different elements in a document: including images, tables, text, titles, formulas | `YOLOv10_ft`, `LayoutLMv3_ft` | 
+| **Formula Detection** | Locate formulas in documents: including inline and block formulas            | `YOLOv8_ft`                   |  
+| **Formula Recognition** | Recognize formula images into LaTeX source code                             | `UniMERNet`                   |  
+| **OCR**           | Extract text content from images (including location and recognition)            | `PaddleOCR`                   | 
+| **Table Recognition** | Recognize table images into corresponding source code (LaTeX/HTML/Markdown)   | `PaddleOCR+TableMaster`, `StructEqTable` |  
+| **Reading Order** | Sort and concatenate discrete text paragraphs                                    | Coming Soon!                  | 
 
 ## News and Updates
 - `2024.10.08` 🎉🎉🎉 The official release of `PDF-Extract-Kit 1.0`, rebuilt with modularity for more convenient and flexible model usage! Please switch to the `release/0.1.0` branch for the old version.
