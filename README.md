@@ -1,308 +1,160 @@
 
 <p align="center">
-  <img src="assets/readme/pdf-extract-kit_logo.png" width="220px" style="vertical-align:middle;">
+  <img src="assets/images/pdf-extract-kit_logo.png" width="220px" style="vertical-align:middle;">
 </p>
-
-
 
 <div align="center">
 
-[English](./README.md) | 简体中文
+English | [简体中文](./README-zh_CN.md)
 
-[[Models (🤗Hugging Face)]](https://huggingface.co/opendatalab/PDF-Extract-Kit) | [[Models(<img src="./assets/readme/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/OpenDataLab/PDF-Extract-Kit) 
+[[Models (🤗Hugging Face)]](https://huggingface.co/opendatalab/PDF-Extract-Kit) | [[Models(<img src="./assets/images/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/OpenDataLab/PDF-Extract-Kit) 
  
-
-🔥🔥🔥 [MinerU：基于PDF-Extract-Kit的高效文档内容提取工具](https://github.com/opendatalab/MinerU)
+🔥🔥🔥 [MinerU: Efficient Document Content Extraction Tool Based on PDF-Extract-Kit](https://github.com/opendatalab/MinerU)
 
 </div>
 
 <p align="center">
-    👋 join us on <a href="https://discord.gg/JYsXDXXN" target="_blank">Discord</a> and <a href="https://r.vansin.top/?r=MinerU" target="_blank">WeChat</a>
+    👋 join us on <a href="https://discord.gg/Tdedn9GTXq" target="_blank">Discord</a> and <a href="https://r.vansin.top/?r=MinerU" target="_blank">WeChat</a>
 </p>
 
 
-## 整体介绍
+## Overview
 
-PDF文档中包含大量知识信息，然而提取高质量的PDF内容并非易事。为此，我们将PDF内容提取工作进行拆解：
-- 布局检测：使用[LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3)模型进行区域检测，如`图像`，`表格`,`标题`,`文本`等；
-- 公式检测：使用[YOLOv8](https://github.com/ultralytics/ultralytics)进行公式检测，包含`行内公式`和`行间公式`；
-- 公式识别：使用[UniMERNet](https://github.com/opendatalab/UniMERNet)进行公式识别；
-- 表格识别：使用[StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy)进行表格识别；
-- 光学字符识别：使用[PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)进行文本识别；
+`PDF-Extract-Kit` is a powerful open-source toolkit designed to efficiently extract high-quality content from complex and diverse PDF documents. Here are its main features and advantages:
 
-> **注意：** *由于文档类型的多样性，现有开源的布局检测和公式检测很难处理多样性的PDF文档，为此我们内容采集多样性数据进行标注和训练，使得在各类文档上取得精准的检测效果，细节参考[布局检测](#layout-anchor)和[公式检测](#mfd-anchor)部分。对于公式识别，UniMERNet方法可以媲美商业软件，在各种类型公式识别上均匀很高的质量。对于OCR，我们采用PaddleOCR，对中英文OCR效果不错。*
+- **Integration of Leading Document Parsing Models**: Incorporates state-of-the-art models for layout detection, formula detection, formula recognition, OCR, and other core document parsing tasks.
+- **High-Quality Parsing Across Diverse Documents**: Fine-tuned with diverse document annotation data to deliver high-quality results across various complex document types.
+- **Modular Design**: The flexible modular design allows users to easily combine and construct various applications by modifying configuration files and minimal code, making application building as straightforward as stacking blocks.
+- **Comprehensive Evaluation Benchmarks**: Provides diverse and comprehensive PDF evaluation benchmarks, enabling users to choose the most suitable model based on evaluation results.
 
-PDF内容提取框架如下图所示
+**Experience PDF-Extract-Kit now and unlock the limitless potential of PDF documents!**
 
-![](assets/readme/pipeline.png)
+> **Note:** PDF-Extract-Kit is designed for high-quality document processing and functions as a model toolbox.    
+> If you are interested in extracting high-quality document content (e.g., converting PDFs to Markdown), please use [MinerU](https://github.com/opendatalab/MinerU), which combines the high-quality predictions from PDF-Extract-Kit with specialized engineering optimizations for more convenient and efficient content extraction.    
+> If you are interested in developing innovative applications (such as document translation, document Q&A, or document assistants), feel free to build your projects using PDF-Extract-Kit. We will regularly update the `PDF-Extract-Kit/project` directory with interesting applications, so stay tuned!
 
+**We welcome researchers and engineers from the community to contribute outstanding models and innovative applications by submitting PRs to become contributors to the PDF-Extract-Kit project.**
 
-## 新闻和更新
-- `2024.08.01` 🎉🎉🎉 新增了[StructEqTable](demo/TabRec/StructEqTable/README_TABLE.md)表格识别模块用于表格内容提取，欢迎使用！
-- `2024.07.01` 🎉🎉🎉 我们发布了`PDF-Extract-Kit`，一个用于高质量PDF内容提取的综合工具包，包括`布局检测`、`公式检测`、`公式识别`和`OCR`。
-```
+## Model Overview
 
+| **Task Type**     | **Description**                                                                 | **Models**                    |   |   |
+|-------------------|---------------------------------------------------------------------------------|-------------------------------|---|---|
+| **Layout Detection** | Locate different elements in a document: including images, tables, text, titles, formulas | `YOLOv10_ft`, `LayoutLMv3_ft` |   |   |
+| **Formula Detection** | Locate formulas in documents: including inline and block formulas            | `YOLOv8_ft`                   |   |   |
+| **Formula Recognition** | Recognize formula images into LaTeX source code                             | `UniMERNet`                   |   |   |
+| **OCR**           | Extract text content from images (including location and recognition)            | `PaddleOCR`                   |   |   |
+| **Table Recognition** | Recognize table images into corresponding source code (LaTeX/HTML/Markdown)   | `PaddleOCR+TableMaster`, `StructEqTable` |   |   |
+| **Reading Order** | Sort and concatenate discrete text paragraphs                                    | Coming Soon!                  |   |   |
 
+## News and Updates
+- `2024.10.08` 🎉🎉🎉 The official release of `PDF-Extract-Kit 1.0`, rebuilt with modularity for more convenient and flexible model usage! Please switch to the `release/0.1.0` branch for the old version.
+- `2024.08.01` 🎉🎉🎉 Added the [StructEqTable](demo/TabRec/StructEqTable/README_TABLE.md) module for table content extraction. Welcome to use it!
+- `2024.07.01` 🎉🎉🎉 We released `PDF-Extract-Kit`, a comprehensive toolkit for high-quality PDF content extraction, including `Layout Detection`, `Formula Detection`, `Formula Recognition`, and `OCR`.
 
-<details>
-  <summary>PDF-Extract-Kit输出格式</summary>
+## Performance Demonstration
 
-```Bash
-{
-    "layout_dets": [    # 页中的元素
-        {
-            "category_id": 0, # 类别编号， 0~9，13~15
-            "poly": [
-                136.0, # 坐标为图片坐标，需要转换回pdf坐标, 顺序是 左上-右上-右下-左下的x,y坐标
-                781.0,
-                340.0,
-                781.0,
-                340.0,
-                806.0,
-                136.0,
-                806.0
-            ],
-            "score": 0.69,   # 置信度
-            "latex": ''      # 公式识别的结果，只有13,14有内容，其他为空，另外15是ocr的结果，这个key会换成text
-        },
-        ...
-    ],
-    "page_info": {         # 页信息：提取bbox时的分辨率大小，如果有缩放可以基于该信息进行对齐
-        "page_no": 0,      # 页数
-        "height": 1684,    # 页高
-        "width": 1200      # 页宽
-    }
-}
-```
+Many current open-source SOTA models are trained and evaluated on academic datasets, achieving high-quality results only on single document types. To enable models to achieve stable and robust high-quality results on diverse documents, we constructed diverse fine-tuning datasets and fine-tuned some SOTA models to obtain practical parsing models. Below are some visual results of the models.
 
-其中category_id包含的类型如下：
+### Layout Detection
 
-```
-{0: 'title',              # 标题
- 1: 'plain text',         # 文本
- 2: 'abandon',            # 包括页眉页脚页码和页面注释
- 3: 'figure',             # 图片
- 4: 'figure_caption',     # 图片描述
- 5: 'table',              # 表格
- 6: 'table_caption',      # 表格描述
- 7: 'table_footnote',     # 表格注释
- 8: 'isolate_formula',    # 行间公式（这个是layout的行间公式，优先级低于14）
- 9: 'formula_caption',    # 行间公式的标号
+We trained robust `Layout Detection` models using diverse PDF document annotations. Our fine-tuned models achieve accurate extraction results on diverse PDF documents such as papers, textbooks, research reports, and financial reports, and demonstrate high robustness to challenges like blurring and watermarks. The visualization example below shows the inference results of the fine-tuned LayoutLMv3 model.
 
- 13: 'inline_formula',    # 行内公式
- 14: 'isolated_formula',  # 行间公式
- 15: 'ocr_text'}              # ocr识别结果
-```
-</details>
+![](assets/readme/layout_example.png)
 
+### Formula Detection
 
-## 效果展示
+Similarly, we collected and annotated documents containing formulas in both English and Chinese, and fine-tuned advanced formula detection models. The visualization result below shows the inference results of the fine-tuned YOLO formula detection model:
 
-结合多样性PDF文档标注，我们训练了鲁棒的`布局检测`和`公式检测`模型。在论文、教材、研报、财报等多样性的PDF文档上，我们的pipeline都能得到准确的提取结果，对于扫描模糊、水印等情况也有较高鲁棒性。
+![](assets/readme/mfd_example.png)
 
+### Formula Recognition
 
-![](assets/readme/example.png)
+[UniMERNet](https://github.com/opendatalab/UniMERNet) is an algorithm designed for diverse formula recognition in real-world scenarios. By constructing large-scale training data and carefully designed results, it achieves excellent recognition performance for complex long formulas, handwritten formulas, and noisy screenshot formulas.
 
-## 评测指标
+#### For more visual and inference results of the models, please refer to the [PDF-Extract-Kit tutorial documentation](xxx).
 
-现有开源模型多基于Arxiv论文类型数据进行训练，面对多样性的PDF文档，提取质量远不能达到实用需求。相比之下，我们的模型经过多样化数据训练，可以适应各种类型文档提取。
+## Evaluation Metrics
 
-[TODO]
-评测代码及详细信息请看[这里](xxx)。
+Coming Soon!
 
-<span id="layout-anchor"></span>
-### 布局检测
+## Usage Guide
 
-我们与现有的开源Layout检测模型做了对比，包括[DocXchain](https://github.com/AlibabaResearch/AdvancedLiterateMachinery/tree/main/Applications/DocXChain)、[Surya](https://github.com/VikParuchuri/surya)、[360LayoutAnalysis](https://github.com/360AILAB-NLP/360LayoutAnalysis)的两个模型。而LayoutLMv3-SFT指的是我们在[LayoutLMv3-base-chinese预训练权重](https://huggingface.co/microsoft/layoutlmv3-base-chinese)的基础上进一步做了SFT训练后的模型。论文验证集由402张论文页面构成，教材验证集由587张不同来源的教材页面构成。
-
-<table>
-    <tr>
-        <th align="center" rowspan="2">模型</th> 
-        <th colspan="3" align="center">论文验证集</th> 
-        <th colspan="3" align="center">教材验证集</th> 
-   </tr>
-    <tr>
-      	 <th>mAP</th>
-         <th>AP50</th>
-         <th>AR50</th>
-         <th>mAP</th>
-         <th>AP50</th>
-         <th>AR50</th>    
-    </tr>
-    <tr>
-        <td>DocXchain</td>
-        <td>52.8</td>
-        <td>69.5</td>
-        <td>77.3</td> 
-        <td>34.9</td>
-        <td>50.1</td>
-        <td>63.5</td>   
-    </tr>
-    <tr>
-        <td>Surya</td>
-        <td>24.2</td>
-        <td>39.4</td>
-        <td>66.1</td> 
-        <td>13.9</td>
-        <td>23.3</td>
-        <td>49.9</td>   
-    </tr>
-    <tr>
-        <td>360LayoutAnalysis-Paper</td>
-        <td>37.7</td>
-        <td>53.6</td>
-        <td>59.8</td> 
-        <td>20.7</td>
-        <td>31.3</td>
-        <td>43.6</td>   
-    </tr>
-    <tr>
-        <td>360LayoutAnalysis-Report</td>
-        <td>35.1</td>
-        <td>46.9</td>
-        <td>55.9</td> 
-        <td>25.4</td>
-        <td>33.7</td>
-        <td>45.1</td>   
-    </tr>
-    <tr>
-        <td bgcolor="#f0f0f0">LayoutLMv3-SFT</td>
-        <th bgcolor="#f0f0f0">77.6</th>
-        <th bgcolor="#f0f0f0">93.3</th>
-        <th bgcolor="#f0f0f0">95.5</th> 
-        <th bgcolor="#f0f0f0">67.9</th>
-        <th bgcolor="#f0f0f0">82.7</th>
-        <th bgcolor="#f0f0f0">87.9</th>   
-    </tr>
-</table>
-
-
-<span id="mfd-anchor"></span>
-### 公式检测
-
-我们与开源的模型[Pix2Text-MFD](https://github.com/breezedeus/pix2text)做了对比。另外，YOLOv8-Trained是我们在[YOLOv8l](https://github.com/ultralytics/)模型的基础上训练后的权重。论文验证集由255张论文页面构成，多源验证集由789张不同来源的页面构成，包括教材、书籍等。
-
-<table>
-    <tr>
-        <th align="center" rowspan="2">模型</th> 
-        <th colspan="2" align="center">论文验证集</th> 
-        <th colspan="2" align="center">多源验证集</th> 
-   </tr>
-    <tr>
-         <th>AP50</th>
-         <th>AR50</th>
-         <th>AP50</th>
-         <th>AR50</th>    
-    </tr>
-    <tr>
-        <td>Pix2Text-MFD</td>
-        <td>60.1</td> 
-        <td>64.6</td>
-        <td>58.9</td>
-        <td>62.8</td>   
-    </tr>
-    <tr>
-        <td bgcolor="#f0f0f0">YOLOv8-Trained</td>
-        <th bgcolor="#f0f0f0">87.7</th> 
-        <th bgcolor="#f0f0f0">89.9</th>
-        <th bgcolor="#f0f0f0">82.4</th>
-        <th bgcolor="#f0f0f0">87.3</th>   
-    </tr>
-</table>
-
-### 公式识别
-
-![BLEU](./assets/readme/unimernet_result.jpg)
-
-公式识别我们使用的是[UniMERNet](https://github.com/opendatalab/UniMERNet)的权重，没有进一步的SFT训练，其精度验证结果可以在其GitHub页面获取。
-
-### 表格识别
-![StructEqTable](assets/readme/table_expamle.png)
-
-表格识别我们使用的是[StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy)的权重，用于将表格转换为LaTeX。相比于PP-StructureV2的表格识别，StructEqTable的识别能力更强，针对复杂表格也能够有不错的效果，但目前可能主要适用于学术论文中的数据，速度也有较大的提升空间，我们仍在不断迭代优化中。在一周内我们会将表格识别的功能同步更新到[MinerU](https://github.com/opendatalab/MinerU)中。
-
-## 使用教程
-
-### 环境安装 (Linux)
+### Environment Setup
 
 ```bash
-conda create -n pipeline python=3.10
-
+conda create -n pdf-extract-kit-v1.0 python=3.10
+conda activate pdf-extract-kit-v1.0
 pip install -r requirements.txt
-
-pip install --extra-index-url https://miropsota.github.io/torch_packages_builder detectron2==0.6+pt2.3.1cu121
 ```
+> **Note:** If your device does not support GPU, please install the CPU version dependencies using `requirements-cpu.txt` instead of `requirements.txt`.
 
-安装完环境后，可能会遇到一些版本冲突导致版本变更，如果遇到了版本相关的报错，可以尝试下面的命令重新安装指定版本的库。
+### Refer to [Model Download](models/README.md) to download the required model weights.
 
-```bash
-pip install pillow==8.4.0
-```
+### Running Demos
 
-除了版本冲突外，可能还会遇到torch无法调用的错误，可以先把下面的库卸载，然后重新安装cuda12和cudnn。
-
-```bash
-pip uninstall nvidia-cusparse-cu12
-```
-
-### 参考[模型下载](models/README.md)下载所需模型权重
-
-
-## 在Windows上运行
-
-如需要在Windows上运行本项目，请参考[在Windows环境下使用PDF-Extract-Kit](docs/Install_in_Windows_zh_cn.md)。
-
-
-## 在macOS上运行
-
-如需要在macOS上运行本项目，请参考[在macOS系统使用PDF-Extract-Kit](docs/Install_in_macOS_zh_cn.md)。
-
-
-## 运行提取脚本
+#### Layout Detection Model
 
 ```bash 
-python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
+python scripts/layout_detection.py --config=configs/layout_detection.yaml
 ```
+You can view the layout detection results in the `outputs/layout_detection` folder.
 
-相关参数解释：
-- `--pdf` 待处理的pdf文件，如果传入一个文件夹，则会处理文件夹下的所有pdf文件。
-- `--output` 处理结果保存的路径，默认是"output"
-- `--vis` 是否对结果可视化，是则会把检测的结果可视化出来，主要是检测框和类别
-- `--render` 是否把识别得的结果渲染出来，包括公式的latex代码，以及普通文本，都会渲染出来放在检测框中。注意：此过程非常耗时，另外也需要提前安装`xelatex`和`imagemagic`。
+#### Formula Detection Model
 
-> 本项目专注使用模型对`多样性`文档进行`高质量`内容提取，不涉及提取后内容拼接成新文档，如PDF转Markdown。如果有此类需求，请参考我们另一个Github项目: [MinerU](https://github.com/opendatalab/MinerU)
+```bash 
+python scripts/formula_detection.py --config=configs/formula_detection.yaml
+```
+You can view the formula detection results in the `outputs/formula_detection` folder.
 
+#### OCR Model
 
-## 待办事项
+```bash 
+python scripts/ocr.py --config=configs/ocr.yaml
+```
+You can view the OCR results in the `outputs/ocr` folder.
 
-- [x] **表格解析**：开发能够将表格图像转换成对应的LaTeX/Markdown格式源码的功能。  
-- [ ] **化学方程式检测**：实现对化学方程式的自动检测。  
-- [ ] **化学方程式/图解识别**：开发识别并解析化学方程式的模型。  
-- [ ] **阅读顺序排序模型**：构建模型以确定文档中文本的正确阅读顺序。  
+#### Formula Recognition Model
 
-**PDF-Extract-Kit** 旨在提供高质量PDF文件的提取能力。我们鼓励社区提出具体且有价值的需求，并欢迎大家共同参与，以不断改进PDF-Extract-Kit工具，推动科研及产业发展。
+```bash 
+python scripts/formula_recognition.py --config=configs/formula_recognition.yaml
+```
+You can view the formula recognition results in the `outputs/layout_detection` folder.
 
+> This project focuses on using models for `high-quality` content extraction from `diverse` documents and does not involve reconstructing extracted content into new documents, such as PDF to Markdown. For such needs, please refer to our other GitHub project: [MinerU](https://github.com/opendatalab/MinerU).
 
-## 协议
+## To-Do List
 
-本仓库的代码依照 [Apache-2.0](LICENSE) 协议开源。
+- [x] **Table Parsing**: Develop functionality to convert table images into corresponding LaTeX/Markdown format source code.
+- [ ] **Chemical Equation Detection**: Implement automatic detection of chemical equations.
+- [ ] **Chemical Equation/Diagram Recognition**: Develop models to recognize and parse chemical equations and diagrams.
+- [ ] **Reading Order Sorting Model**: Build a model to determine the correct reading order of text in documents.
 
-使用模型权重时，请遵循对应的模型协议：[LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3) / [UniMERNet](https://github.com/opendatalab/UniMERNet) / [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy) / [YOLOv8](https://github.com/ultralytics/ultralytics) / [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR).
+**PDF-Extract-Kit** aims to provide high-quality PDF content extraction capabilities. We encourage the community to propose specific and valuable needs and welcome everyone to participate in continuously improving the PDF-Extract-Kit tool to advance research and industry development.
 
+## License
 
-## 致谢
+This project is open-sourced under the [AGPL-3.0](LICENSE) license.
 
-   - [LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3): 布局检测模型
-   - [UniMERNet](https://github.com/opendatalab/UniMERNet): 公式识别模型
-   - [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy): 表格识别模型
-   - [YOLOv8](https://github.com/ultralytics/ultralytics): 公式检测模型
-   - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR模型
+Since this project uses YOLO code and PyMuPDF for file processing, these components require compliance with the AGPL-3.0 license. Therefore, to ensure adherence to the licensing requirements of these dependencies, this repository as a whole adopts the AGPL-3.0 license.
 
+## Acknowledgement
+
+   - [LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3): Layout detection model
+   - [UniMERNet](https://github.com/opendatalab/UniMERNet): Formula recognition model
+   - [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy): Table recognition model
+   - [YOLOv8](https://github.com/ultralytics/ultralytics): Formula detection model
+   - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR model
 
 ## Citation
-
-如果你觉得我们模型/代码/技术报告对你有帮助，请给我们⭐和引用📝,谢谢 :)  
+If you find our models / code / papers useful in your research, please consider giving ⭐ and citations 📝, thx :)  
 ```bibtex
+@article{wang2024mineru,
+  title={MinerU: An Open-Source Solution for Precise Document Content Extraction},
+  author={Wang, Bin and Xu, Chao and Zhao, Xiaomeng and Ouyang, Linke and Wu, Fan and Zhao, Zhiyuan and Xu, Rui and Liu, Kaiwen and Qu, Yuan and Shang, Fukai and others},
+  journal={arXiv preprint arXiv:2409.18839},
+  year={2024}
+}
+
 @misc{wang2024unimernet,
       title={UniMERNet: A Universal Network for Real-World Mathematical Expression Recognition}, 
       author={Bin Wang and Zhuangcheng Gu and Chao Xu and Bo Zhang and Botian Shi and Conghui He},
@@ -311,7 +163,6 @@ python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
       archivePrefix={arXiv},
       primaryClass={cs.CV}
 }
-
 @article{he2024opendatalab,
   title={Opendatalab: Empowering general artificial intelligence with open datasets},
   author={He, Conghui and Li, Wei and Jin, Zhenjiang and Xu, Chao and Wang, Bin and Lin, Dahua},
@@ -320,8 +171,7 @@ python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
 }
 ```
 
-
-## Star历史
+## Star History
 
 <a>
  <picture>
@@ -331,7 +181,8 @@ python pdf_extract.py --pdf data/pdfs/ocr_1.pdf
  </picture>
 </a>
 
-## 友情链接
-- [LabelU(轻量级多模态标注工具）](https://github.com/opendatalab/labelU)
-- [LabelLLM（开源LLM对话标注平台）](https://github.com/opendatalab/LabelLLM)
-- [Miner U（一站式高质量数据提取工具）](https://github.com/opendatalab/MinerU)
+## Related Links
+- [UniMERNet (Real-World Formula Recognition Algorithm)](https://github.com/opendatalab/UniMERNet)
+- [LabelU (Lightweight Multimodal Annotation Tool)](https://github.com/opendatalab/labelU)
+- [LabelLLM (Open Source LLM Dialogue Annotation Platform)](https://github.com/opendatalab/LabelLLM)
+- [MinerU (One-Stop High-Quality Data Extraction Tool)](https://github.com/opendatalab/MinerU)
