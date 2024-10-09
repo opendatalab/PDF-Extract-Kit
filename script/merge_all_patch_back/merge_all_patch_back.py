@@ -25,7 +25,7 @@ def process_file(result_path, args):
         tqdm.write(f"skip {target_file_path}")
         return 
     #target_file_path = "test.jsonl"
-    result = read_data_with_version(result_path,client)
+    result = read_data_with_missing(result_path,client)
     tqdm.write(f"read {result_path} to {target_file_path}")
     
     write_jsonl_to_path(result,target_file_path ,client)

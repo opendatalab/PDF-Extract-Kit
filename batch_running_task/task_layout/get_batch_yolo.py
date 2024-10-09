@@ -83,6 +83,7 @@ def get_batch_YOLO_model(model_configs, batch_size,use_tensorRT=True)->YOLO:
     conf_thres= model_configs['model_args']['conf_thres']
     iou_thres = model_configs['model_args']['iou_thres']
     build_mfd_predictor(mfd_model ,  imgsz=img_size, conf=conf_thres, iou=iou_thres, verbose=False)
+    mfd_model.is_tensorRT=use_tensorRT
     return mfd_model
 
   

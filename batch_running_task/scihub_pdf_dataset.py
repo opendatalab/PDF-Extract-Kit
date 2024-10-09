@@ -251,7 +251,7 @@ class RecImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):
             raise
         except:
             traceback.print_exc()
-            raise
+
             tqdm.write(f"[Error]: {pdf_path}")
             return (pdf_path,{})
 

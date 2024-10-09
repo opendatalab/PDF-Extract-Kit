@@ -1,13 +1,16 @@
 
 #!/bin/bash
-TASKLIMIT=30
-PENDINGLIMIT=2
+
 # Function to get the count of pending tasks
 user=`whoami`
 if [[ $(hostname) == SH* ]]; then
     partition='AI4Chem'
+    TASKLIMIT=80
+    PENDINGLIMIT=2
 else
     partition='vip_gpu_ailab_low'
+    TASKLIMIT=30
+    PENDINGLIMIT=2
 fi
 # jobscript="batch_running_task/task_layout/run_layout_for_missing_page.sh"
 # filelist='scihub_collection/analysis/not_complete_pdf_page_id.pairlist.filelist'

@@ -49,7 +49,7 @@ def inference_layout(layout_pair,layout_model,inner_batch_size):
 def inference_mfd(mfd_images,mfd_model,inner_batch_size):
     origin_length = len(mfd_images)
     
-    if len(mfd_images)<inner_batch_size:
+    if len(mfd_images)<inner_batch_size and mfd_model.is_tensorRT:
         mfd_images = torch.nn.functional.pad(mfd_images, (0,0,0,0,0,0,0, inner_batch_size-len(mfd_images)))
     mfd_res    = mfd_model.predict(mfd_images, imgsz=(1888,1472), conf=0.3, iou=0.5, verbose=False)
     mfd_res = mfd_res[:origin_length]
@@ -376,6 +376,8 @@ def fast_dealwith_one_dataset(dataset,layout_model, mfd_model, ocrmodel,
             pdf_paths  = [dataset.metadata[pdf_index]['path'] for pdf_index in pdf_index]
             with timer('get_layout'):
                 layout_res = inference_layout((layout_images,heights, widths),layout_model,inner_batch_size)
+            print(layout_res)
+            raise
             with timer('get_mfd'):
                 mfd_res    = inference_mfd(mfd_images,mfd_model,inner_batch_size)
             with timer('combine_layout_mfd_result'):

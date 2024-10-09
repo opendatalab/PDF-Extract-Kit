@@ -97,9 +97,9 @@ def judge_one_pdf_status_via_page_status(page_status_list):
 
 def judge_package_status_via_pdf_status(pdf_status_list):
     pdf_status_list = set(pdf_status_list)
-    if pdf_status.layout_not_complete in pdf_status_list:
-        return packstatus.layout_not_complete
-    elif pdf_status.layout_has_complete in pdf_status_list:
+    # if pdf_status.layout_not_complete in pdf_status_list:
+    #     return packstatus.layout_not_complete
+    if pdf_status.layout_has_complete in pdf_status_list:
         return packstatus.whole_layout_complete
     elif pdf_status.layout_complete_and_ocr_finished in pdf_status_list:
         return packstatus.whole_ocr_complete

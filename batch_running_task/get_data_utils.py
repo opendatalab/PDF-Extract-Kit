@@ -526,6 +526,9 @@ def read_data_with_version(result_path, client):
     #tqdm.write("reading result")
     result  = read_json_from_path(result_path,client)
     result_dict      = build_dict(result)
+    patch_version1_dict = {}
+    patch_version2_dict = {}
+    patch_version3_dict = {}
     patch_version1_dict   = build_dict(read_json_from_path(version1,client)) if check_path_exists(version1,client) else {}
     patch_version2_dict   = build_dict(read_json_from_path(version2,client)) if check_path_exists(version2,client) else {}
     patch_version3_dict   = build_dict(read_json_from_path(version3,client)) if check_path_exists(version3,client) else {}
@@ -575,6 +578,69 @@ def read_data_with_version(result_path, client):
     # rec_patch_dict     = build_dict(read_json_from_path(rec_patchpath,client)) if check_path_exists(rec_patchpath,client) else {}
        
     return result
+
+def read_data_with_missing(result_path, client):
+    if result_path.startswith("s3:"):
+        result_path = "opendata:"+result_path
+    #assert "layoutV" in result_path
+    filename = os.path.basename(result_path)
+    rootpath = os.path.dirname(os.path.dirname(result_path))
+    version1 = os.path.join(rootpath,"fix_missing_page_version3",filename)
+
+    assert check_path_exists(result_path,client)
+    #tqdm.write("reading result")
+    result  = read_json_from_path(result_path,client)
+    result_dict      = build_dict(result)
+    patch_version1_dict = {}
+    patch_version2_dict = {}
+    patch_version3_dict = {}
+    patch_version1_dict   = build_dict(read_json_from_path(version1,client)) if check_path_exists(version1,client) else {}
+
+    #tqdm.write("reading done")
+    for track_id, pdf_metadata in result_dict.items():
+        for patch_dict in [patch_version1_dict, patch_version2_dict, patch_version3_dict]:
+            if track_id in patch_dict:
+                patch_pdf_metadata = patch_dict[track_id]
+                for page_id, pdf_page_metadata in patch_pdf_metadata.items():
+                    if page_id in pdf_metadata:
+                        assert len(pdf_page_metadata["layout_dets"]) == len(pdf_metadata[page_id]["layout_dets"]), f"pdf={track_id} page={page_id} => bbox count {len(pdf_metadata[page_id]['layout_dets'])} not equal to patch count {len(pdf_page_metadata['layout_dets'])}"
+                        for box1_dict, box2_dict in zip(pdf_metadata[page_id]["layout_dets"], pdf_page_metadata["layout_dets"]):
+                            assert box1_dict['category_id'] == box2_dict['category_id'], f"pdf={track_id} page={page_id} => category_id {box1_dict['category_id']} not equal to patch category_id {box2_dict['category_id']}"
+                            assert box1_dict['poly'] == box2_dict['poly'], f"pdf={track_id} page={page_id} => poly {box1_dict['poly']} not equal to patch poly {box2_dict['poly']}"
+                            if box1_dict['category_id'] == 15:
+                                if box2_dict.get('text',"") == "":continue
+                                if box1_dict.get('text',"") == "":
+                                    box1_dict['text'] = box2_dict.get('text',"")
+                                
+                                else:
+                                    assert box1_dict['text'] == box2_dict['text'], f"pdf={track_id} page={page_id} => text {box1_dict['text']} not equal to patch text {box2_dict['text']}"
+                            
+                            if box1_dict['category_id'] in {13, 14}:
+                                if box2_dict.get('latex',"") == "":continue
+                                if box1_dict.get('latex',"") == "":
+                                    box1_dict['latex'] = box2_dict['latex']
+                                else:
+                                    assert box1_dict['latex'] == box2_dict['latex'], f"pdf={track_id} page={page_id} => latex {box1_dict['latex']} not equal to patch latex {box2_dict['latex']}" 
+                            box1_dict.update(box2_dict)
+                    else:
+                        pdf_metadata[page_id] = pdf_page_metadata  
+    
+    for pdf_metadata in result:
+        track_id = pdf_metadata['track_id']
+        pdf_metadata['height'] = output_height
+        pdf_metadata['width'] = output_width
+        doc_layout_result = []
+        for page_id, pdf_page_metadata in result_dict[track_id].items():
+            doc_layout_result.append(pdf_page_metadata)
+        pdf_metadata['doc_layout_result'] = doc_layout_result    
+
+    #print(len(result))
+    # mfr_patch_dict     = build_dict(read_json_from_path(mfr_patchpath,client)) if check_path_exists(mfr_patchpath,client) else {}
+    # mfr_patch_bf16_dict     = build_dict(read_json_from_path(mfr_patch_bf16path,client)) if check_path_exists(mfr_patch_bf16path,client) else {}
+    # rec_patch_dict     = build_dict(read_json_from_path(rec_patchpath,client)) if check_path_exists(rec_patchpath,client) else {}
+       
+    return result
+
 
 class PackStatus:
     whole_layout_complete            = 'whole_layout_complete'

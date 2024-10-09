@@ -122,7 +122,7 @@ if __name__ == '__main__':
                     date_format = "%Y-%m-%d %H:%M:%S"
                     date = datetime.strptime(date_string, date_format)
                     deltatime = datetime.now() - date
-                    if deltatime < timedelta(hours=20):
+                    if deltatime < timedelta(hours=0.5):
                         tqdm.write(f"[Skip]: {filename_with_partion} is locked by {date_string} created at {last_start_time} [now is {deltatime}]")
                         continue
                 

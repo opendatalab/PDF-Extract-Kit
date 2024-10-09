@@ -26,7 +26,7 @@ if __name__ == '__main__':
     dpi       = model_configs['model_args']['pdf_dpi']
 
 
-    version = "fix_missing_page_version2"
+    version = "fix_missing_page_version3"
     layout_model = None
     mfd_model    = None
     client = None
@@ -34,9 +34,10 @@ if __name__ == '__main__':
     page_num_map_whole = None #get_page_num_map_whole()
     for inputs_line in tqdm(all_file_list, leave=False, position=1):
 
-        splited_line = inputs_line.split()
+        splited_line = inputs_line.strip().split()
         inputs_path = splited_line[0]
         json_str = " ".join(splited_line[1:])
+   
         page_num_for_name = json.loads(json_str)
 
         if os.path.exists(CURRENT_END_SIGN):

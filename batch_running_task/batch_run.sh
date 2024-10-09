@@ -1,5 +1,5 @@
 
-TOTALNUM=30
+TOTALNUM=10
 CPU_NUM=$1 # Automatically get the number of CPUs
 if [ -z "$CPU_NUM" ]; then
     CPU_NUM=$TOTALNUM
@@ -17,7 +17,10 @@ else
     PARA="-p vip_gpu_ailab_low -N1 -c8 --gres=gpu:1"
 fi
 SCRIPT="batch_running_task/task_rec/run_rec.sh"
+#SCRIPT="batch_running_task/task_layout/run_layout_for_missing_page.sh"
+
 FILELIST="physics_collection/wait_for_ocr.filelist"
+#FILELIST="physics_collection/analysis/not_complete_pdf_page_id.pairlist.filelist"
 
 
 START=0
@@ -26,8 +29,8 @@ do
     
     #sbatch --quotatype=spot -p AI4Chem -N1 -c8 --gres=gpu:1  run.sh sci_index_files.addon.filelist $(($CPU+$START)) $TOTALNUM
     #sbatch --quotatype=spot -p AI4Chem -N1 -c8 --gres=gpu:1  run_mfr.sh physics_collection/sci_index_files.remain.filelist 0 1
-    sbatch $PARA $SCRIPT $FILELIST $(($CPU+$START)) $TOTALNUM
-    #sbatch --quotatype=spot -p AI4Chem -N1 -c8 --gres=gpu:1   physics_collection/sci_index_files.finished.filelist $(($CPU+$START)) $TOTALNUM
+    sbatch -x SH-IDC1-10-140-24-139 $PARA $SCRIPT $FILELIST $(($CPU+$START)) $TOTALNUM
+    #sbatch --quotatype=spot -p AI4Chem -N1 -c8 --gres=gpu:1  physics_collection/sci_index_files.finished.filelist $(($CPU+$START)) $TOTALNUM
     #sbatch --quotatype=spot -p AI4Chem -N1 -c8 --gres=gpu:1  batch_running_task/task_layout/run_layout_for_missing_page.sh physics_collection/analysis/not_complete_pdf_page_id.pairlist.remain.filelist $(($CPU+$START)) $TOTALNUM
     ## lets sleep 20s every 10 job start
     if [ $(($CPU % 10)) -eq 9 ]; then
