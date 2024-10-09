@@ -89,3 +89,39 @@ Check the unit case:1000pdf takes around 20-30min
     python batch_running_task/task_layout/batch_deal_with_rec.py --root test.filelist
     python batch_running_task/task_layout/batch_deal_with_mfr.py --root test.filelist
     ```
+## 
+
+## Batch Postprocess (Pure CPU task)
+    We provide series of postprocess module to deal with the missing page and merge the layout, rec, mfr result into a single json file, and so on.
+    Below is a list of postprocess module:
+    - check the pdf status for each page: `script\scan_and_get_page_num_map\scan_and_get_page_num_map.py`
+    - get the page ocr status: `script\scan_and_judge_det_ocr_status\scan_and_judge_ready_for_ocr.py`
+    - merge layout, rec, mfr result: `script\merge_layout_rec_mfr_result\script\merge_all_patch_back\merge_all_patch_back.py`
+    - format the final result: `script\format_into_markdown\format_into_markdown.py`
+    - .....
+
+    You may find a script named `batch_job_dispatch.sh` at each fold. It looks like: (We default use Slurm cluster)
+    ```
+    PARTION_TOTAL=320 #32 #
+    PARTION_INTERVAL=16 # 32
+    PARTION_NUM=$(($PARTION_TOTAL / $PARTION_INTERVAL))
+    #echo $PARTION_NUM
+    for ((i=0; i<PARTION_NUM; i++));
+    do  
+        START=$((($i)*$PARTION_INTERVAL))
+        sbatch  -p ai4earth -N1 -c20 --gres=gpu:0 script/scan_and_get_page_num_map/job_dispatch.sh $FILEPATH $START $PARTION_INTERVAL $PARTION_TOTAL $JOBSCRIPT
+        sleep 1
+    done
+    ```
+    It will automative partition the `$FILEPATH` into `$PARTION_TOTAL` part and do multi-thread processing at each compute node.
+
+    The `$FILEPATH` is the filepath list file. It should ends with `.filelist`. Each line is the path to the information bulk file endswith `.jsonl`.(Same as above)
+
+    A quick example to use the code is directly run the script in `batch_job_dispatch.sh` with correctly assigning `$JOBSCRIPT` and `$FILEPATH` (Example can see `script\scan_and_get_page_num_map\batch_job_dispatch.sh`)
+
+## Deal with missing page
+    After running `script\scan_and_judge_det_ocr_status\scan_and_judge_ready_for_ocr.py`, it will create the status list for each page of each pdf in each jsonl file.
+    
+    In `batch_running_task.task_layout.rough_layout.deal_with_page_info_dataset_for_missing_page`, it accept an extra keyword name `page_num_for_name` which means the process-waiting page for each pdf for current bulk jsonl. It can help you fast to add patch for the missing page and missing pdf.
+
+
