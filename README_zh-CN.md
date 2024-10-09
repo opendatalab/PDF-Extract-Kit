@@ -30,7 +30,7 @@
 
 > **注意：** PDF-Extract-Kit 专注于高质量文档处理，适合作为模型工具箱使用。
 > 如果你想提取高质量文档内容(PDF转Markdown)，请直接使用[MinerU](https://github.com/opendatalab/MinerU)，MinerU结合PDF-Extract-Kit的高质量预测结果，进行了专门的工程优化，使得PDF文档内容提取更加便捷高效；  
-> 如果你是一位开发者，希望搭建更多有意思的应用（如文档翻译，文档问答，文档助手等），请基于PDF-Extract-Kit自行DIY。特别地，我们会在`PDF-Extract-Kit/project`下面不定期更新一些有趣的应用，敬请期待！  
+> 如果你是一位开发者，希望搭建更多有意思的应用（如文档翻译，文档问答，文档助手等），基于PDF-Extract-Kit自行进行DIY将会十分便捷。特别地，我们会在`PDF-Extract-Kit/project`下面不定期更新一些有趣的应用，敬请期待！  
 
 **我们欢迎社区研究员和工程师贡献优秀模型和创新应用，通过提交 PR 成为 PDF-Extract-Kit 的贡献者。**
 
@@ -49,7 +49,7 @@
 
 
 ## 新闻和更新
-- `2024.10.08` 🎉🎉🎉 基于模块化重构的`PDF-Extract-Kit 1.0`正式版本正式发布，模型使用更加便捷灵活！老版本请切换至`release/0.1.0`分支进行使用。
+- `2024.10.08` 🎉🎉🎉 基于模块化重构的`PDF-Extract-Kit 1.0`正式版本正式发布，模型使用更加便捷灵活！老版本请切换至[release/0.1.0](https://github.com/opendatalab/PDF-Extract-Kit/tree/release/0.1.1)分支进行使用。
 - `2024.08.01` 🎉🎉🎉 新增了[StructEqTable](demo/TabRec/StructEqTable/README_TABLE.md)表格识别模块用于表格内容提取，欢迎使用！
 - `2024.07.01` 🎉🎉🎉 我们发布了`PDF-Extract-Kit`，一个用于高质量PDF内容提取的综合工具包，包括`布局检测`、`公式检测`、`公式识别`和`OCR`。
 
@@ -89,8 +89,8 @@ Coming Soon!
 ### 环境安装
 
 ```bash
-conda create -n pdf-extract-kit-v1.0 python=3.10
-conda activate pdf-extract-kit-v1.0
+conda create -n pdf-extract-kit-1.0 python=3.10
+conda activate pdf-extract-kit-1.0
 pip install -r requirements.txt
 ```
 > **注意：** 如果你的设备不支持 GPU，请使用 `requirements-cpu.txt` 安装 CPU 版本的依赖。

@@ -31,7 +31,7 @@ English | [简体中文](./README_zh-CN.md)
 
 > **Note:** PDF-Extract-Kit is designed for high-quality document processing and functions as a model toolbox.    
 > If you are interested in extracting high-quality document content (e.g., converting PDFs to Markdown), please use [MinerU](https://github.com/opendatalab/MinerU), which combines the high-quality predictions from PDF-Extract-Kit with specialized engineering optimizations for more convenient and efficient content extraction.    
-> If you are interested in developing innovative applications (such as document translation, document Q&A, or document assistants), feel free to build your projects using PDF-Extract-Kit. We will regularly update the `PDF-Extract-Kit/project` directory with interesting applications, so stay tuned!
+> If you're a developer looking to create engaging applications such as document translation, document Q&A, or document assistants, you'll find it very convenient to build your own projects using PDF-Extract-Kit. In particular, we will periodically update the PDF-Extract-Kit/project directory with interesting applications, so stay tuned!
 
 **We welcome researchers and engineers from the community to contribute outstanding models and innovative applications by submitting PRs to become contributors to the PDF-Extract-Kit project.**
 
@@ -82,8 +82,8 @@ Coming Soon!
 ### Environment Setup
 
 ```bash
-conda create -n pdf-extract-kit-v1.0 python=3.10
-conda activate pdf-extract-kit-v1.0
+conda create -n pdf-extract-kit-1.0 python=3.10
+conda activate pdf-extract-kit-1.0
 pip install -r requirements.txt
 ```
 > **Note:** If your device does not support GPU, please install the CPU version dependencies using `requirements-cpu.txt` instead of `requirements.txt`.
