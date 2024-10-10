@@ -49,7 +49,7 @@
 
 
 ## 新闻和更新
-- `2024.10.08` 🎉🎉🎉 基于模块化重构的`PDF-Extract-Kit 1.0`正式版本正式发布，模型使用更加便捷灵活！老版本请切换至[release/0.1.1](https://github.com/opendatalab/PDF-Extract-Kit/tree/release/0.1.1)分支进行使用。
+- `2024.10.10` 🎉🎉🎉 基于模块化重构的`PDF-Extract-Kit 1.0`正式版本正式发布，模型使用更加便捷灵活！老版本请切换至[release/0.1.1](https://github.com/opendatalab/PDF-Extract-Kit/tree/release/0.1.1)分支进行使用。
 - `2024.08.01` 🎉🎉🎉 新增了[StructEqTable](demo/TabRec/StructEqTable/README_TABLE.md)表格识别模块用于表格内容提取，欢迎使用！
 - `2024.07.01` 🎉🎉🎉 我们发布了`PDF-Extract-Kit`，一个用于高质量PDF内容提取的综合工具包，包括`布局检测`、`公式检测`、`公式识别`和`OCR`。
 
