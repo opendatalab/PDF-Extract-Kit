@@ -16,6 +16,7 @@ test*
 *.log
 *.out
 
-models*
-doc/zh_cn/_build/*
-doc/en/_build/*
+models/*
+
+# Sphinx documentation
+docs/*/_build/
