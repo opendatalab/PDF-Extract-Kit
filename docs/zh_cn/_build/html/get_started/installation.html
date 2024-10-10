@@ -401,6 +401,14 @@ document.write(`
 <p class="admonition-title">备注</p>
 <p>“-e” 表示在可编辑模式下安装项目，因此对代码所做的任何本地修改都会生效，仅推荐有源码修改需求的用户使用。</p>
 </div>
+<p><strong>步骤 2.</strong> 若需要使用yolov10进行布局检测，需要安装yolov10</p>
+<p>目前仅支持从源码安装</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:THU-MIG/yolov10.git（克隆至任意路径即可）
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>yolov10
+<span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+<span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</pre></div>
+</div>
 </section>
 <section id="id3">
 <h2>验证<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>

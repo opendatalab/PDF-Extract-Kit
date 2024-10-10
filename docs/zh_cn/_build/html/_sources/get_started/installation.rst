@@ -37,6 +37,17 @@
 
    "-e" 表示在可编辑模式下安装项目，因此对代码所做的任何本地修改都会生效，仅推荐有源码修改需求的用户使用。
 
+**步骤 2.** 若需要使用yolov10进行布局检测，需要安装yolov10
+
+目前仅支持从源码安装
+
+.. code-block:: console
+
+    $ git clone git@github.com:THU-MIG/yolov10.git（克隆至任意路径即可）
+    $ cd yolov10
+    $ pip install -r requirements.txt
+    $ pip install -e .
+
 验证
 ========
 

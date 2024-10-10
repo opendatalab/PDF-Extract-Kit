@@ -12,40 +12,74 @@
 模型使用
 =================
 
-在配置好环境的情况下，直接执行``scripts/layout_detection.py``即可运行布局检测算法脚本。
+布局检测模型支持layoutlmv3以及yolov10，在配置好环境的情况下，直接执行```scripts/layout_detection.py```即可运行布局检测算法脚本。
+
+**1. layoutlmv3**
 
 .. code:: shell
 
-   $ python scripts/layout_detection.py --config configs/layout_detection.yaml
+   $ python scripts/layout_detection.py --config configs/layout_detection_layoutlmv3.yaml
+   
+**2. yolov10**
+
+.. code:: shell
+
+   $ python scripts/layout_detection.py --config configs/layout_detection_yolo.yaml
 
 模型配置
 -----------------
+
+**1. layoutlmv3**
 
 .. code:: yaml
 
     inputs: assets/demo/layout_detection
     outputs: outputs/layout_detection
     tasks:
-        layout_detection:
-            model: layout_detection_yolo
-            model_config:
-               img_size: 1280
-               conf_thres: 0.25
-               iou_thres: 0.45
-               batch_size: 1
-               model_path: models/Layout/yolov8/yolov8_mixed_1600.pt
-               visualize: True
+      layout_detection:
+        model: layout_detection_layoutlmv3
+        model_config:
+          model_path: path/to/layoutlmv3_model
 
 - inputs/outputs: 分别定义输入文件路径和可视化输出目录
 - tasks: 定义任务类型，当前只包含一个布局检测任务
-- model: 定义具体模型类型: 如layout_detection_yolo 或者 layout_detection_layoutlmv3
+- model: 定义具体模型类型，例如layout_detection_layoutlmv3
 - model_config: 定义模型配置
-- img_size: 定义图像长边大小，短边会根据长边等比例缩放
+- model_path: 模型权重路径
+
+**2. yolov10**
+
+和layoutlmv3相比，yolov10推理速度更快，支持batch模式推理
+
+.. code:: yaml
+
+    inputs: assets/demo/layout_detection
+    outputs: outputs/layout_detection
+    tasks:
+      layout_detection:
+        model: layout_detection_yolo
+        model_config:
+          img_size: 1280
+          conf_thres: 0.25
+          iou_thres: 0.45
+          batch_size: 2
+          model_path: path/to/yolov10_model
+          visualize: True
+          rect: True
+          device: "0"
+
+- inputs/outputs: 分别定义输入文件路径和可视化输出目录
+- tasks: 定义任务类型，当前只包含一个布局检测任务
+- model: 定义具体模型类型，例如layout_detection_yolo
+- model_config: 定义模型配置
+- img_size: 定义图像长边大小，短边会根据长边等比例缩放，默认长边保持1280
 - conf_thres: 定义置信度阈值，仅检测大于该阈值的目标
 - iou_thres: 定义IoU阈值，去除重叠度大于该阈值的目标
 - batch_size: 定义批量大小，推理时每次同时推理的图像数，一般情况下越大推理速度越快，显卡越好该数值可以设置的越大
 - model_path: 模型权重路径
-- visualize: 是否对模型结果进行可视化，可视化结果会保存在outputs目录下。
+- visualize: 是否对模型结果进行可视化，可视化结果会保存在outputs目录下
+- rect: 是否开启rectangular推理，默认为True。若设为True，同一batch中的图像会保持长宽比进行缩放并且padding到同一尺寸；若为False，同一batch中所有图像都resize到(img_size, img_size)尺寸进行推理
+- visualize: 是否对模型结果进行可视化，可视化结果会保存在outputs目录下
 
 多样化输入支持
 -----------------
