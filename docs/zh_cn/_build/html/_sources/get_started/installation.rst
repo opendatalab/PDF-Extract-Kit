@@ -10,51 +10,19 @@
 我们推荐用户参照我们的最佳实践安装 PDF-Extract-Kit。
 推荐使用 Python-3.10 的 conda 虚拟环境安装 PDF-Extract-Kit。
 
-**步骤 0.** 使用 conda 先构建一个 Python-3.10 的虚拟环境
+**步骤 1.** 使用 conda 先构建一个 Python-3.10 的虚拟环境
 
 .. code-block:: console
 
-    $ conda create --name pdf-extract python=3.10 -y
-    $ conda activate pdf-extract
+    $ conda create -n pdf-extract-kit-1.0 python=3.10 -y
+    $ conda activate pdf-extract-kit-1.0
 
-**步骤 1.** 安装 PDF-Extract-Kit
-
-方案a: 通过 pip 直接安装
+**步骤 2.** 安装 PDF-Extract-Kit 的依赖项
 
 .. code-block:: console
 
-    $ pip install -U 'pdf-extract-kit'
-
-方案b: 从源码安装
-
-.. code-block:: console
-
-   $ git clone https://github.com/opendatalab/PDF-Extract-Kit.git
-   $ cd PDF-Extract-Kit
-   $ pip install -e '.'
+    $ pip install -r requirements.txt
 
 .. note::
 
-   "-e" 表示在可编辑模式下安装项目，因此对代码所做的任何本地修改都会生效，仅推荐有源码修改需求的用户使用。
-
-**步骤 2.** 若需要使用yolov10进行布局检测，需要安装yolov10
-
-目前仅支持从源码安装
-
-.. code-block:: console
-
-    $ git clone git@github.com:THU-MIG/yolov10.git（克隆至任意路径即可）
-    $ cd yolov10
-    $ pip install -r requirements.txt
-    $ pip install -e .
-
-验证
-========
-
-为了验证 PDF-Extract-Kit 是否安装正确，我们将使用命令打印配置文件。
-
-**打印支持任务类型及模型信息：** 在命令行中使用 ``pdf-extract-kit list`` 验证是否能打印支持模型列表。
-
-.. code-block:: console
-
-   $ pdf-extract-kit list
+    如果你的设备不支持 GPU，请使用 ``requirements-cpu.txt`` 安装 CPU 版本的依赖。

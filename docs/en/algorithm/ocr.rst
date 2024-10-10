@@ -1,5 +1,5 @@
 ..  _algorithm_ocr:
 ==========================
-光学字符识别(OCR)算法
+OCR (Optical Character Recognition) Algorithm
 ==========================
 Comming soon.

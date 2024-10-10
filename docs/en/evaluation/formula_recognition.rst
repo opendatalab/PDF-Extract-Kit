@@ -1,5 +1,5 @@
 =====================
-公式识别算法评测
+Formula Recognition Evaluation
 =====================
 
 XXX

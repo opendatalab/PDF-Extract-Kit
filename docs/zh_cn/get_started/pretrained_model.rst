@@ -17,15 +17,15 @@ HuggingFace
 
    from huggingface_hub import snapshot_download
 
-   snapshot_download(repo_id='opendatalab/pdf-extract-kit', local_dir='./', max_workers=20)
+   snapshot_download(repo_id='opendatalab/pdf-extract-kit-1.0', local_dir='./', max_workers=20)
 
-如果想仅下载单个算法模型（如公式检测MFD），可以使用如下代码：
+如果想仅下载单个算法模型（如公式检测任务的YOLO模型），可以使用如下代码：
 
 .. code:: python
 
    from huggingface_hub import snapshot_download
 
-   snapshot_download(repo_id='opendatalab/pdf-extract-kit', local_dir='./', allow_patterns='models/MFD/*') 
+   snapshot_download(repo_id='opendatalab/pdf-extract-kit-1.0', local_dir='./', allow_patterns='models/MFD/YOLO/*') 
 
 .. note::
 
@@ -54,15 +54,15 @@ ModelScope
 
    from modelscope import snapshot_download
 
-   snapshot_download(model_id='opendatalab/pdf-extract-kit', cache_dir='./')
+   snapshot_download(model_id='opendatalab/pdf-extract-kit-1.0', cache_dir='./')
 
-如果想仅下载单个算法模型（如公式检测MFD），可以使用如下代码：
+如果想仅下载单个算法模型（如公式检测任务的YOLO模型），可以使用如下代码：
 
 .. code:: python
 
    from modelscope import snapshot_download
 
-   snapshot_download(repo_id='opendatalab/pdf-extract-kit', local_dir='./', allow_patterns='models/MFD/*') 
+   snapshot_download(repo_id='opendatalab/pdf-extract-kit-1.0', local_dir='./', allow_patterns='models/MFD/YOLO/*') 
 
 
 .. note::
@@ -81,7 +81,7 @@ ModelScope
    .. code:: console
 
       $ # 默认为 ~/.cache/modelscope/hub/
-      $ export MODELSCOPE_CACHE=Comming soon!
+      $ export MODELSCOPE_CACHE=XXXX
 
 
 
@@ -95,6 +95,6 @@ HuggingFace 和 ModelScope 的远程模型仓库就是一个由 Git LFS 管理�
 
    $ git lfs install
    $ # From HuggingFace
-   $ git lfs clone https://huggingface.co/opendatalab/PDF-Extract-Kit
+   $ git lfs clone https://huggingface.co/opendatalab/pdf-extract-kit-1.0
    $ # From ModelScope
-   $ git clone https://www.modelscope.cn/opendatalab/PDF-Extract-Kit.git
+   $ git clone https://www.modelscope.cn/opendatalab/pdf-extract-kit-1.0.git

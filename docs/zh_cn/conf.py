@@ -26,7 +26,6 @@ if os.path.exists(requirements_path):
         install(package.strip())
 
 from sphinx.ext import autodoc
-
 sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Project information -----------------------------------------------------

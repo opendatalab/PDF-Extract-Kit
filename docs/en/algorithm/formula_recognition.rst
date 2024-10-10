@@ -1,24 +1,24 @@
 ..  _algorithm_formula_recognition:
 
 ============
-公式识别算法
+Formula Recognition Algorithm
 ============
 
-简介
+Introduction
 =================
 
-公式检测是指给定输入公式图像，识别公式图像内容并转为 ``LaTeX`` 格式。
+Formula detection involves recognizing the content of a given input formula image and converting it to ``LaTeX`` format.
 
-模型使用
+Model Usage
 =================
 
-在配置好环境的情况下，直接执行 ``scripts/formula_recognition.py`` 即可运行布局检测算法脚本。
+With the environment properly configured, you can run the layout detection algorithm script by executing ``scripts/formula_recognition.py``.
 
 .. code:: shell
 
    $ python scripts/formula_recognition.py --config configs/formula_recognition.yaml
 
-模型配置
+Model Configuration
 -----------------
 
 .. code:: yaml
@@ -33,20 +33,20 @@
             model_path: models/MFR/unimernet_tiny
             visualize: False
 
-- inputs/outputs: 分别定义输入文件路径和LaTeX预测结果目录
-- tasks: 定义任务类型，当前只包含一个公式识别任务
-- model: 定义具体模型类型: 当前仅提供 `UniMERNet <https://github.com/opendatalab/UniMERNet>`_ 公式识别模型
-- model_config: 定义模型配置
-- cfg_path: UniMERNet配置文件路径
-- model_path: 模型权重路径
-- visualize: 是否对模型结果进行可视化，可视化结果会保存在outputs目录下。
+- inputs/outputs: Define the input file path and the directory for LaTeX prediction results, respectively.
+- tasks: Define the task type, currently only containing a formula recognition task.
+- model: Define the specific model type: Currently, only the `UniMERNet <https://github.com/opendatalab/UniMERNet>`_ formula recognition model is provided.
+- model_config: Define the model configuration.
+- cfg_path: Path to the UniMERNet configuration file.
+- model_path: Path to the model weights.
+- visualize: Whether to visualize the model results. Visualized results will be saved in the outputs directory.
 
-多样化输入支持
+Support for Diverse Inputs
 -----------------
 
-PDF-Extract-Kit中的公式检测脚本支持 ``单个公式图像``、 ``文档图像及对应公式区域``
+The formula detection script in PDF-Extract-Kit supports ``single formula images`` and ``document images with corresponding formula regions``.
 
-可视化结果查看
+Viewing Visualization Results
 -----------------
 
-当config文件中visualize设置为True时， ``LaTeX`` 预测结果会保存在outputs目录下。
+When the visualize setting in the config file is set to True, ``LaTeX`` prediction results will be saved in the outputs directory.

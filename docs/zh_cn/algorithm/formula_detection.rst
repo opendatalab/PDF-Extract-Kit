@@ -59,7 +59,7 @@ PDF-Extract-Kit中的公式检测脚本支持 ``单个图像`` 、 ``只包含�
 
 .. note:: 
 
-   根据自己实际数据形式，修改configs/formula_detection.yaml中inputs的路径即可
+   根据自己实际数据形式，修改 ``configs/formula_detection.yaml`` 中 ``inputs`` 的路径即可
    - 单个图像: path/to/image  
    - 图像文件夹: path/to/images  
    - 单个PDF文件: path/to/pdf  
@@ -67,14 +67,14 @@ PDF-Extract-Kit中的公式检测脚本支持 ``单个图像`` 、 ``只包含�
 
 .. note::
 
-   当使用PDF作为输入时，需要将 ``formula_detection.py ``
+   当使用PDF作为输入时，需要将 ``formula_detection.py `` 中的 ``predict_images`` 修改为 ``predict_pdfs``。
+
 
    .. code:: python
 
       # for image detection
       detection_results = model_formula_detection.predict_images(input_data, result_path)
    
-   中的 ``predict_images`` 修改为 ``predict_pdfs``。
 
    .. code:: python
 

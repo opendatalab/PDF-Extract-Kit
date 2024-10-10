@@ -365,7 +365,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">模型使用</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">模型配置</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">多样化输入支持</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">可视化结果查看</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">可视化结果查看</a></li>
 </ul>
 </li>
 </ul>
@@ -430,7 +430,7 @@ document.write(`
 <p>PDF-Extract-Kit中的公式检测脚本支持 <code class="docutils literal notranslate"><span class="pre">单个图像</span></code> 、 <code class="docutils literal notranslate"><span class="pre">只包含图像文件的目录</span></code> 、 <code class="docutils literal notranslate"><span class="pre">单个PDF文件</span></code> 、 <code class="docutils literal notranslate"><span class="pre">只包含PDF文件的目录</span></code> 等输入形式。</p>
 <div class="admonition note">
 <p class="admonition-title">备注</p>
-<p>根据自己实际数据形式，修改configs/formula_detection.yaml中inputs的路径即可
+<p>根据自己实际数据形式，修改 <code class="docutils literal notranslate"><span class="pre">configs/formula_detection.yaml</span></code> 中 <code class="docutils literal notranslate"><span class="pre">inputs</span></code> 的路径即可
 - 单个图像: path/to/image
 - 图像文件夹: path/to/images
 - 单个PDF文件: path/to/pdf
@@ -438,20 +438,19 @@ document.write(`
 </div>
 <div class="admonition note">
 <p class="admonition-title">备注</p>
-<p>当使用PDF作为输入时，需要将 <a href="#id6"><span class="problematic" id="id7">``</span></a>formula_detection.py ``</p>
+<p>当使用PDF作为输入时，需要将 <code class="docutils literal notranslate"><span class="pre">formula_detection.py</span> <span class="pre">``</span> <span class="pre">中的</span> <span class="pre">``predict_images</span></code> 修改为 <code class="docutils literal notranslate"><span class="pre">predict_pdfs</span></code>。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># for image detection</span>
 <span class="n">detection_results</span> <span class="o">=</span> <span class="n">model_formula_detection</span><span class="o">.</span><span class="n">predict_images</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">result_path</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>中的 <code class="docutils literal notranslate"><span class="pre">predict_images</span></code> 修改为 <code class="docutils literal notranslate"><span class="pre">predict_pdfs</span></code>。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># for pdf detection</span>
 <span class="n">detection_results</span> <span class="o">=</span> <span class="n">model_formula_detection</span><span class="o">.</span><span class="n">predict_pdfs</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">result_path</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </section>
-<section id="id8">
-<h3>可视化结果查看<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
+<section id="id6">
+<h3>可视化结果查看<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
 <p>当config文件中 <code class="docutils literal notranslate"><span class="pre">visualize</span></code> 设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时，可视化结果会保存在 <code class="docutils literal notranslate"><span class="pre">outputs/formula_detection</span></code> 目录下。</p>
 <div class="admonition note">
 <p class="admonition-title">备注</p>
@@ -510,7 +509,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">模型使用</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">模型配置</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">多样化输入支持</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">可视化结果查看</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">可视化结果查看</a></li>
 </ul>
 </li>
 </ul>

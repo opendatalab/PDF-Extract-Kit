@@ -362,7 +362,6 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">最佳实践</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">验证</a></li>
 </ul>
             </nav>
         </div>
@@ -381,41 +380,18 @@ document.write(`
 <h2>最佳实践<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
 <p>我们推荐用户参照我们的最佳实践安装 PDF-Extract-Kit。
 推荐使用 Python-3.10 的 conda 虚拟环境安装 PDF-Extract-Kit。</p>
-<p><strong>步骤 0.</strong> 使用 conda 先构建一个 Python-3.10 的虚拟环境</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>pdf-extract<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.10<span class="w"> </span>-y
-<span class="gp">$ </span>conda<span class="w"> </span>activate<span class="w"> </span>pdf-extract
+<p><strong>步骤 1.</strong> 使用 conda 先构建一个 Python-3.10 的虚拟环境</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>pdf-extract-kit-1.0<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.10<span class="w"> </span>-y
+<span class="gp">$ </span>conda<span class="w"> </span>activate<span class="w"> </span>pdf-extract-kit-1.0
 </pre></div>
 </div>
-<p><strong>步骤 1.</strong> 安装 PDF-Extract-Kit</p>
-<p>方案a: 通过 pip 直接安装</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span><span class="s1">&#39;pdf-extract-kit&#39;</span>
-</pre></div>
-</div>
-<p>方案b: 从源码安装</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/opendatalab/PDF-Extract-Kit.git
-<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>PDF-Extract-Kit
-<span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;.&#39;</span>
+<p><strong>步骤 2.</strong> 安装 PDF-Extract-Kit 的依赖项</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">备注</p>
-<p>“-e” 表示在可编辑模式下安装项目，因此对代码所做的任何本地修改都会生效，仅推荐有源码修改需求的用户使用。</p>
-</div>
-<p><strong>步骤 2.</strong> 若需要使用yolov10进行布局检测，需要安装yolov10</p>
-<p>目前仅支持从源码安装</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:THU-MIG/yolov10.git（克隆至任意路径即可）
-<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>yolov10
-<span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-<span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
-</pre></div>
-</div>
-</section>
-<section id="id3">
-<h2>验证<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>
-<p>为了验证 PDF-Extract-Kit 是否安装正确，我们将使用命令打印配置文件。</p>
-<p><strong>打印支持任务类型及模型信息：</strong> 在命令行中使用 <code class="docutils literal notranslate"><span class="pre">pdf-extract-kit</span> <span class="pre">list</span></code> 验证是否能打印支持模型列表。</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pdf-extract-kit<span class="w"> </span>list
-</pre></div>
+<p>如果你的设备不支持 GPU，请使用 <code class="docutils literal notranslate"><span class="pre">requirements-cpu.txt</span></code> 安装 CPU 版本的依赖。</p>
 </div>
 </section>
 </section>
@@ -466,7 +442,6 @@ document.write(`
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">最佳实践</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">验证</a></li>
 </ul>
   </nav></div>
 

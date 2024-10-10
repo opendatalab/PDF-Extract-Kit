@@ -379,19 +379,15 @@ document.write(`
 <p>配置好PDF-Extract-Kit环境，并下载好模型后，我们可以开始使用PDF-Extract-Kit了。</p>
 <section id="id2">
 <h2>布局检测示例<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
-<p>布局检测提供两种模型，layoutlmv3以及yolov10，yolov10支持批量处理且速度更快</p>
-<p><strong>1. 使用layoutlmv3进行布局检测</strong></p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python<span class="w"> </span>scripts/layout_detection.py<span class="w"> </span>--config<span class="w"> </span>configs/layout_detection_layoutlmv3.yaml
+<p>布局检测提供了多种模型: <code class="docutils literal notranslate"><span class="pre">LayoutLMv3</span></code>, <code class="docutils literal notranslate"><span class="pre">YOLOv10</span></code>,  <code class="docutils literal notranslate"><span class="pre">DocLayout-YOLO</span></code>， 相比与 <code class="docutils literal notranslate"><span class="pre">LayoutLMv3</span></code>, <code class="docutils literal notranslate"><span class="pre">YOLOv10``速度更快，</span> <span class="pre">``DocLayout-YOLO``则是基于</span> <span class="pre">``YOLOv10</span></code> 的基础上进行多样性文档预训练及模型优化，速度快，精度高。</p>
+<p><a href="#id3"><span class="problematic" id="id4">**</span></a>1. 使用布局检测模型</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python<span class="w"> </span>scripts/layout_detection.py<span class="w"> </span>--config<span class="w"> </span>configs/layout_detection.yaml
 </pre></div>
 </div>
-<p><strong>2. 使用yolov10进行布局检测</strong></p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python<span class="w"> </span>scripts/layout_detection.py<span class="w"> </span>--config<span class="w"> </span>configs/layout_detection_yolo.yaml
-</pre></div>
-</div>
-<p>执行完之后，我们可以在`outpus/layout_detection`目录下查看检测结果。</p>
+<p>执行完之后，我们可以在 <code class="docutils literal notranslate"><span class="pre">outpus/layout_detection</span></code> 目录下查看检测结果。</p>
 <div class="admonition note">
 <p class="admonition-title">备注</p>
-<p><a href="#id3"><span class="problematic" id="id4">``</span></a><cite>layout_detection_yolo.yaml```以及```layout_detection_layoutlmv3```设置输入、输出及模型配置，布局检测更详细教程见:ref:`布局检测算法 &lt;algorithm_layout_detection&gt;</cite> 。</p>
+<p><code class="docutils literal notranslate"><span class="pre">layout_detection.yaml</span></code> 设置输入、输出及模型配置，布局检测更详细教程见<a class="reference internal" href="../algorithm/layout_detection.html#algorithm-layout-detection"><span class="std std-ref">布局检测算法</span></a> 。</p>
 </div>
 </section>
 <section id="id5">
@@ -399,10 +395,10 @@ document.write(`
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python<span class="w"> </span>scripts/formula_detection.py<span class="w"> </span>--config<span class="w"> </span>configs/formula_detection.yaml
 </pre></div>
 </div>
-<p>执行完之后，我们可以在`outpus/formula_detection`目录下查看检测结果。</p>
+<p>执行完之后，我们可以在 <code class="docutils literal notranslate"><span class="pre">outpus/formula_detection</span></code> 目录下查看检测结果。</p>
 <div class="admonition note">
 <p class="admonition-title">备注</p>
-<p><a href="#id6"><span class="problematic" id="id7">``</span></a>formula_detection.yaml``设置输入、输出及模型配置，公式检测更详细教程见 <a class="reference internal" href="../algorithm/formula_detection.html#algorithm-formula-detection"><span class="std std-ref">公式检测算法</span></a> 。</p>
+<p><code class="docutils literal notranslate"><span class="pre">formula_detection.yaml</span></code> 设置输入、输出及模型配置，公式检测更详细教程见 <a class="reference internal" href="../algorithm/formula_detection.html#algorithm-formula-detection"><span class="std std-ref">公式检测算法</span></a> 。</p>
 </div>
 </section>
 </section>

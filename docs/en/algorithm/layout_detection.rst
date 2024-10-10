@@ -1,85 +1,118 @@
 .. _algorithm_layout_detection:
 
 =================
-布局检测算法
+Layout Detection Algorithm
 =================
 
-简介
+Introduction
 =================
 
-布局检测是文档内容提取的基础任务，目标对页面中不同类型的区域进行定位：如图像、表格、文本、标题等，方便后续高质量内容提取。对于文本、标题等区域，可以基于OCR模型进行文字识别，对于表格区域可以基于表格识别模型进行转换。
+Layout detection is a fundamental task in document content extraction, aiming to locate different types of regions on a page, such as images, tables, text, and headings, to facilitate high-quality content extraction. For text and heading regions, OCR models can be used for text recognition, while table regions can be converted using table recognition models.
 
-模型使用
+Model Usage
 =================
 
-在配置好环境的情况下，直接执行``scripts/layout_detection.py``即可运行布局检测算法脚本。
+The layout detection model supports layoutlmv3 and yolov10. Once the environment is set up, you can run the layout detection algorithm script by executing ```scripts/layout_detection.py```.
+
+**1. layoutlmv3**
 
 .. code:: shell
 
-   $ python scripts/layout_detection.py --config configs/layout_detection.yaml
+   $ python scripts/layout_detection.py --config configs/layout_detection_layoutlmv3.yaml
+   
+**2. yolov10**
 
-模型配置
+.. code:: shell
+
+   $ python scripts/layout_detection.py --config configs/layout_detection_yolo.yaml
+
+Model Configuration
 -----------------
+
+**1. layoutlmv3**
 
 .. code:: yaml
 
     inputs: assets/demo/layout_detection
     outputs: outputs/layout_detection
     tasks:
-        layout_detection:
-            model: layout_detection_yolo
-            model_config:
-               img_size: 1280
-               conf_thres: 0.25
-               iou_thres: 0.45
-               batch_size: 1
-               model_path: models/Layout/yolov8/yolov8_mixed_1600.pt
-               visualize: True
+      layout_detection:
+        model: layout_detection_layoutlmv3
+        model_config:
+          model_path: path/to/layoutlmv3_model
 
-- inputs/outputs: 分别定义输入文件路径和可视化输出目录
-- tasks: 定义任务类型，当前只包含一个布局检测任务
-- model: 定义具体模型类型: 如layout_detection_yolo 或者 layout_detection_layoutlmv3
-- model_config: 定义模型配置
-- img_size: 定义图像长边大小，短边会根据长边等比例缩放
-- conf_thres: 定义置信度阈值，仅检测大于该阈值的目标
-- iou_thres: 定义IoU阈值，去除重叠度大于该阈值的目标
-- batch_size: 定义批量大小，推理时每次同时推理的图像数，一般情况下越大推理速度越快，显卡越好该数值可以设置的越大
-- model_path: 模型权重路径
-- visualize: 是否对模型结果进行可视化，可视化结果会保存在outputs目录下。
+- inputs/outputs: Define the input file path and the directory for visualization output.
+- tasks: Define the task type, currently only a layout detection task is included.
+- model: Specify the specific model type, e.g., layout_detection_layoutlmv3.
+- model_config: Define the model configuration.
+- model_path: Path to the model weights.
 
-多样化输入支持
+**2. yolov10**
+
+Compared to layoutlmv3, yolov10 has faster inference speed and supports batch mode inference.
+
+.. code:: yaml
+
+    inputs: assets/demo/layout_detection
+    outputs: outputs/layout_detection
+    tasks:
+      layout_detection:
+        model: layout_detection_yolo
+        model_config:
+          img_size: 1280
+          conf_thres: 0.25
+          iou_thres: 0.45
+          batch_size: 2
+          model_path: path/to/yolov10_model
+          visualize: True
+          rect: True
+          device: "0"
+
+- inputs/outputs: Define the input file path and the directory for visualization output.
+- tasks: Define the task type, currently only a layout detection task is included.
+- model: Specify the specific model type, e.g., layout_detection_yolo.
+- model_config: Define the model configuration.
+- img_size: Define the image long edge size; the short edge will be scaled proportionally based on the long edge, with the default long edge being 1280.
+- conf_thres: Define the confidence threshold, detecting only targets above this threshold.
+- iou_thres: Define the IoU threshold, removing targets with an overlap greater than this threshold.
+- batch_size: Define the batch size, the number of images inferred simultaneously during inference. Generally, the larger the batch size, the faster the inference speed; a better GPU allows for a larger batch size.
+- model_path: Path to the model weights.
+- visualize: Whether to visualize the model results; visualized results will be saved in the outputs directory.
+- rect: Whether to enable rectangular inference, default is True. If set to True, images in the same batch will be scaled while maintaining aspect ratio and padded to the same size; if False, all images in the same batch will be resized to (img_size, img_size) for inference.
+
+Diverse Input Support
 -----------------
 
-PDF-Extract-Kit中的布局检测脚本支持 ``单个图像``、 ``只包含图像文件的目录``、 ``单个PDF文件``、 ``只包含PDF文件的目录``等输入形式。
+The layout detection script in PDF-Extract-Kit supports input formats such as a ``single image``, a ``directory containing only image files``, a ``single PDF file``, and a ``directory containing only PDF files``.
 
 .. note::
 
-   根据自己实际数据形式，修改configs/layout_detection.yaml中inputs的路径即可
-   - 单个图像: path/to/image  
-   - 图像文件夹: path/to/images  
-   - 单个PDF文件: path/to/pdf  
-   - PDF文件夹: path/to/pdfs  
+   Modify the path to inputs in configs/layout_detection.yaml according to your actual data format:
+   - Single image: path/to/image  
+   - Image directory: path/to/images  
+   - Single PDF file: path/to/pdf  
+   - PDF directory: path/to/pdfs  
 
 .. note::
-   当使用PDF作为输入时，需要将 ``formula_detection.py``
+   When using PDF as input, you need to change ``predict_images`` to ``predict_pdfs`` in ``formula_detection.py``.
 
    .. code:: python
 
       # for image detection
       detection_results = model_layout_detection.predict_images(input_data, result_path)
 
-   中的 ``predict_images``修改为 ``predict_pdfs``。
+   Change to:
 
    .. code:: python
 
       # for pdf detection
       detection_results = model_layout_detection.predict_pdfs(input_data, result_path)
 
-可视化结果查看
+Viewing Visualization Results
 -----------------
 
-当config文件中 ``visualize`` 设置为 ``True`` 时，可视化结果会保存在 ``outputs`` 目录下。
+When ``visualize`` is set to ``True`` in the config file, the visualization results will be saved in the ``outputs`` directory.
 
 .. note::
 
-   可视化可以方便对模型结果进行分析，但当进行大批量任务时，建议关掉可视化(设置 ``visualize``为 ``False``)，减少内存和磁盘占用。
+   Visualization is helpful for analyzing model results, but for large-scale tasks, it is recommended to turn off visualization (set ``visualize`` to ``False``) to reduce memory and disk usage.

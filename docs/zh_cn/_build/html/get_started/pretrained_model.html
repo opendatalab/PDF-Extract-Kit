@@ -389,13 +389,13 @@ document.write(`
 模型权重，并且允许多线程。您可以利用下列代码并行下载模型权重：</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">huggingface_hub</span> <span class="kn">import</span> <span class="n">snapshot_download</span>
 
-<span class="n">snapshot_download</span><span class="p">(</span><span class="n">repo_id</span><span class="o">=</span><span class="s1">&#39;opendatalab/pdf-extract-kit&#39;</span><span class="p">,</span> <span class="n">local_dir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">snapshot_download</span><span class="p">(</span><span class="n">repo_id</span><span class="o">=</span><span class="s1">&#39;opendatalab/pdf-extract-kit-1.0&#39;</span><span class="p">,</span> <span class="n">local_dir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>如果想仅下载单个算法模型（如公式检测MFD），可以使用如下代码：</p>
+<p>如果想仅下载单个算法模型（如公式检测任务的YOLO模型），可以使用如下代码：</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">huggingface_hub</span> <span class="kn">import</span> <span class="n">snapshot_download</span>
 
-<span class="n">snapshot_download</span><span class="p">(</span><span class="n">repo_id</span><span class="o">=</span><span class="s1">&#39;opendatalab/pdf-extract-kit&#39;</span><span class="p">,</span> <span class="n">local_dir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">allow_patterns</span><span class="o">=</span><span class="s1">&#39;models/MFD/*&#39;</span><span class="p">)</span>
+<span class="n">snapshot_download</span><span class="p">(</span><span class="n">repo_id</span><span class="o">=</span><span class="s1">&#39;opendatalab/pdf-extract-kit-1.0&#39;</span><span class="p">,</span> <span class="n">local_dir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">allow_patterns</span><span class="o">=</span><span class="s1">&#39;models/MFD/YOLO/*&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -421,13 +421,13 @@ document.write(`
 支持下载指定的模型权重，您可以利用下列命令下载模型：</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">modelscope</span> <span class="kn">import</span> <span class="n">snapshot_download</span>
 
-<span class="n">snapshot_download</span><span class="p">(</span><span class="n">model_id</span><span class="o">=</span><span class="s1">&#39;opendatalab/pdf-extract-kit&#39;</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">)</span>
+<span class="n">snapshot_download</span><span class="p">(</span><span class="n">model_id</span><span class="o">=</span><span class="s1">&#39;opendatalab/pdf-extract-kit-1.0&#39;</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>如果想仅下载单个算法模型（如公式检测MFD），可以使用如下代码：</p>
+<p>如果想仅下载单个算法模型（如公式检测任务的YOLO模型），可以使用如下代码：</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">modelscope</span> <span class="kn">import</span> <span class="n">snapshot_download</span>
 
-<span class="n">snapshot_download</span><span class="p">(</span><span class="n">repo_id</span><span class="o">=</span><span class="s1">&#39;opendatalab/pdf-extract-kit&#39;</span><span class="p">,</span> <span class="n">local_dir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">allow_patterns</span><span class="o">=</span><span class="s1">&#39;models/MFD/*&#39;</span><span class="p">)</span>
+<span class="n">snapshot_download</span><span class="p">(</span><span class="n">repo_id</span><span class="o">=</span><span class="s1">&#39;opendatalab/pdf-extract-kit-1.0&#39;</span><span class="p">,</span> <span class="n">local_dir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">allow_patterns</span><span class="o">=</span><span class="s1">&#39;models/MFD/YOLO/*&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -443,7 +443,7 @@ document.write(`
 <p>如果未指定 <code class="docutils literal notranslate"><span class="pre">cache_dir</span></code>，则将下载至 ModelScope 的默认 cache 路径中（<code class="docutils literal notranslate"><span class="pre">~/.cache/huggingface/hub</span></code>）。</p>
 <p>若要修改默认 cache 路径，需要修改相关环境变量：</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="c1"># 默认为 ~/.cache/modelscope/hub/</span>
-<span class="gp">$ </span><span class="nb">export</span><span class="w"> </span><span class="nv">MODELSCOPE_CACHE</span><span class="o">=</span>Comming<span class="w"> </span>soon!
+<span class="gp">$ </span><span class="nb">export</span><span class="w"> </span><span class="nv">MODELSCOPE_CACHE</span><span class="o">=</span>XXXX
 </pre></div>
 </div>
 </div>
@@ -455,9 +455,9 @@ document.write(`
 仓库。因此，我们可以利用 <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> 完成权重的下载：</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>lfs<span class="w"> </span>install
 <span class="gp">$ </span><span class="c1"># From HuggingFace</span>
-<span class="gp">$ </span>git<span class="w"> </span>lfs<span class="w"> </span>clone<span class="w"> </span>https://huggingface.co/opendatalab/PDF-Extract-Kit
+<span class="gp">$ </span>git<span class="w"> </span>lfs<span class="w"> </span>clone<span class="w"> </span>https://huggingface.co/opendatalab/pdf-extract-kit-1.0
 <span class="gp">$ </span><span class="c1"># From ModelScope</span>
-<span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>https://www.modelscope.cn/opendatalab/PDF-Extract-Kit.git
+<span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>https://www.modelscope.cn/opendatalab/pdf-extract-kit-1.0.git
 </pre></div>
 </div>
 </section>

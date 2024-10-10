@@ -12,18 +12,16 @@
 
 -->
 
-# 变更日志
+# Changelog
 
+## v1.0.0 (2024-10-10)
 
-## v0.2.0 (2024.09.30)
+The PDF-Extract-Kit-1.0 has been refactored with a more streamlined and user-friendly modular design! 🔥🔥🔥
 
-PDF-Extract-Kit 代码重构，模块化设计更加简洁易用! 🔥🔥🔥
+## v0.1.0 (2024-07-01)
 
-## v0.1.0 (2024.07.01)
+Official release of PDF-Extract-Kit! 🔥🔥🔥
 
-PDF-Extract-Kit 正式发布！🔥🔥🔥
+### Highlights
 
-### 亮点
-
-- PDF-Extract-Kit提供高质量布局检测模型 DocLayout-YOLO
-- PDF-Extract-Kit提供高质量公式检测模型 YOLOv8
+- PDF-Extract-Kit-1.0 offers a high-quality layout detection model, DocLayout-YOLO.

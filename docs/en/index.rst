@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-欢迎来到 PDF-Extract-Kit 的中文文档
+Welcome to the PDF-Extract-Kit Documentation
 ==============================================
 
 .. figure:: ./_static/image/logo.png
@@ -14,7 +14,7 @@
 .. raw:: html
 
    <p style="text-align:center">
-   <strong>高质量文档内容提取工具箱
+   <strong>High-Quality Document Parsing Toolkit
    </strong>
    </p>
 
@@ -26,12 +26,11 @@
    </p>
 
 
-
-文档
+Tutorial
 -------------
 .. toctree::
    :maxdepth: 2
-   :caption: 快速上手
+   :caption: Getting Started
 
    get_started/installation.rst
    get_started/pretrained_model.rst
@@ -39,7 +38,7 @@
 
 .. toctree::
    :maxdepth: 2
-   :caption: 基础算法模块
+   :caption: Core Algorithm Modules
 
    algorithm/layout_detection.rst
    algorithm/formula_detection.rst
@@ -50,7 +49,7 @@
 
 .. toctree::
    :maxdepth: 2
-   :caption: 新任务拓展
+   :caption: Task Extensions
 
    task_extend/code.rst
    task_extend/doc.rst
@@ -58,14 +57,14 @@
 
 .. toctree::
    :maxdepth: 2
-   :caption: 支持的模型列表
+   :caption: Supported Models
 
    models/supported.md
 
 
 .. toctree::
    :maxdepth: 2
-   :caption: 模型性能评测
+   :caption: Model Performance Evaluation
 
    evaluation/layout_detection.rst
    evaluation/formula_detection.rst
@@ -77,7 +76,7 @@
 
 .. toctree::
    :maxdepth: 2
-   :caption: PDF项目
+   :caption: PDF Projects
 
    project/pdf_extract.md
    project/doc_translate.md

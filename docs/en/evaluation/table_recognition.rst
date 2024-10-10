@@ -1,5 +1,5 @@
 =====================
-表格识别算法评测
+Table Recognition Evaluation
 =====================
 
 XXX

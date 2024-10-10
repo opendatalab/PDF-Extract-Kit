@@ -1,6 +1,6 @@
 ..  _algorithm_table_recognition:
 =================
-表格识别算法
+Table Recognition Algorithm
 =================
 
 Comming soon.

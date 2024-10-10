@@ -14,7 +14,7 @@
 .. raw:: html
 
    <p style="text-align:center">
-   <strong>高质量文档内容提取工具箱
+   <strong>高质量文档解析工具箱
    </strong>
    </p>
 
@@ -24,7 +24,6 @@
    <a class="github-button" href="https://github.com/opendatalab/PDF-Extract-Kit/subscription" data-icon="octicon-eye" data-size="large" aria-label="Watch">Watch</a>
    <a class="github-button" href="https://github.com/opendatalab/PDF-Extract-Kit/fork" data-icon="octicon-repo-forked" data-size="large" aria-label="Fork">Fork</a>
    </p>
-
 
 
 文档
