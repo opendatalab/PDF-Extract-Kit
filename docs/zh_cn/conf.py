@@ -14,16 +14,16 @@ import os
 import subprocess
 import sys
 
-# def install(package):
-#     subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+def install(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
-# # 安装 requirements.txt 中的依赖项
-# requirements_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'requirements.txt'))
-# if os.path.exists(requirements_path):
-#     with open(requirements_path) as f:
-#         packages = f.readlines()
-#     for package in packages:
-#         install(package.strip())
+# 安装 requirements.txt 中的依赖项
+requirements_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'requirements.txt'))
+if os.path.exists(requirements_path):
+    with open(requirements_path) as f:
+        packages = f.readlines()
+    for package in packages:
+        install(package.strip())
 
 from sphinx.ext import autodoc
 
