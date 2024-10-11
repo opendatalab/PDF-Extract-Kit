@@ -20,9 +20,15 @@
 **步骤 2.** 安装 PDF-Extract-Kit 的依赖项
 
 .. code-block:: console
-
+    $ # 对于GPU设备
     $ pip install -r requirements.txt
+    $ # 对于无CPU设备
+    $ pip install -r requirements-cpu.txt
 
 .. note::
-
-    如果你的设备不支持 GPU，请使用 ``requirements-cpu.txt`` 安装 CPU 版本的依赖。
+    考虑到用户环境配置的便捷性，我们在requirements.txt只包含当前最好模型需要的环境，目前包含
+    - 布局检测：YOLO系列（YOLOv10, DocLayout-YOLO）
+    - 公式检测：YOLO系列 (YOLOv8)
+    - 公式识别：UniMERNet
+    - OCR： PaddleOCR
+    对于其他模型请，如LayoutLMv3需要单独安装环境，具体见\ :ref:`布局检测算法 <algorithm_layout_detection>`

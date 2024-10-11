@@ -37,7 +37,7 @@ HuggingFace
 
    .. code:: console
 
-      $ # 默认为 `~/.cache/huggingface/`
+      $ # 默认为 ~/.cache/huggingface/
       $ export HF_HOME=Comming soon!
 
 .. tip::

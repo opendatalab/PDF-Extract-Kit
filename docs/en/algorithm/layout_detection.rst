@@ -12,44 +12,20 @@ Layout detection is a fundamental task in document content extraction, aiming to
 Model Usage
 =================
 
-The layout detection model supports layoutlmv3 and yolov10. Once the environment is set up, you can run the layout detection algorithm script by executing ```scripts/layout_detection.py```.
+The layout detection model supports ``YOLOv10``, ``DocLayout-YOLO`` and ``LayoutLMv3``. Once the environment is set up, you can run the layout detection algorithm script by executing ``scripts/layout_detection.py``.
 
-**1. layoutlmv3**
-
-.. code:: shell
-
-   $ python scripts/layout_detection.py --config configs/layout_detection_layoutlmv3.yaml
-   
-**2. yolov10**
+**Run demo**
 
 .. code:: shell
 
-   $ python scripts/layout_detection.py --config configs/layout_detection_yolo.yaml
+   $ python scripts/layout_detection.py --config configs/layout_detection.yaml
 
 Model Configuration
 -----------------
 
-**1. layoutlmv3**
+**1. yolov10**
 
-.. code:: yaml
-
-    inputs: assets/demo/layout_detection
-    outputs: outputs/layout_detection
-    tasks:
-      layout_detection:
-        model: layout_detection_layoutlmv3
-        model_config:
-          model_path: path/to/layoutlmv3_model
-
-- inputs/outputs: Define the input file path and the directory for visualization output.
-- tasks: Define the task type, currently only a layout detection task is included.
-- model: Specify the specific model type, e.g., layout_detection_layoutlmv3.
-- model_config: Define the model configuration.
-- model_path: Path to the model weights.
-
-**2. yolov10**
-
-Compared to layoutlmv3, yolov10 has faster inference speed and supports batch mode inference.
+Compared to LayoutLMv3, YOLOv10 has faster inference speed and supports batch mode inference.
 
 .. code:: yaml
 
@@ -79,6 +55,27 @@ Compared to layoutlmv3, yolov10 has faster inference speed and supports batch mo
 - model_path: Path to the model weights.
 - visualize: Whether to visualize the model results; visualized results will be saved in the outputs directory.
 - rect: Whether to enable rectangular inference, default is True. If set to True, images in the same batch will be scaled while maintaining aspect ratio and padded to the same size; if False, all images in the same batch will be resized to (img_size, img_size) for inference.
+
+
+**2. layoutlmv3**
+
+.. code:: yaml
+
+    inputs: assets/demo/layout_detection
+    outputs: outputs/layout_detection
+    tasks:
+      layout_detection:
+        model: layout_detection_layoutlmv3
+        model_config:
+          model_path: path/to/layoutlmv3_model
+
+- inputs/outputs: Define the input file path and the directory for visualization output.
+- tasks: Define the task type, currently only a layout detection task is included.
+- model: Specify the specific model type, e.g., layout_detection_layoutlmv3.
+- model_config: Define the model configuration.
+- model_path: Path to the model weights.
+
+
 
 Diverse Input Support
 -----------------

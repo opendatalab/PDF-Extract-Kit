@@ -9,7 +9,7 @@ Layout Detection Example
 
 Layout detection offers several models: ``LayoutLMv3``, ``YOLOv10``, and ``DocLayout-YOLO``. Compared to ``LayoutLMv3``, ``YOLOv10`` is faster. ``DocLayout-YOLO`` is based on YOLOv10 and includes diverse document pre-training and model optimization, offering both speed and high accuracy.
 
-**1. Using Layout Detection Models
+**1. Using Layout Detection Models**
 
 .. code-block:: console
 

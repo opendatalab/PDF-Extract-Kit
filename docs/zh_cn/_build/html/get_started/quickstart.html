@@ -362,7 +362,7 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">布局检测示例</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">公式检测示例</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">公式检测示例</a></li>
 </ul>
             </nav>
         </div>
@@ -379,8 +379,8 @@ document.write(`
 <p>配置好PDF-Extract-Kit环境，并下载好模型后，我们可以开始使用PDF-Extract-Kit了。</p>
 <section id="id2">
 <h2>布局检测示例<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
-<p>布局检测提供了多种模型: <code class="docutils literal notranslate"><span class="pre">LayoutLMv3</span></code>, <code class="docutils literal notranslate"><span class="pre">YOLOv10</span></code>,  <code class="docutils literal notranslate"><span class="pre">DocLayout-YOLO</span></code>， 相比与 <code class="docutils literal notranslate"><span class="pre">LayoutLMv3</span></code>, <code class="docutils literal notranslate"><span class="pre">YOLOv10``速度更快，</span> <span class="pre">``DocLayout-YOLO``则是基于</span> <span class="pre">``YOLOv10</span></code> 的基础上进行多样性文档预训练及模型优化，速度快，精度高。</p>
-<p><a href="#id3"><span class="problematic" id="id4">**</span></a>1. 使用布局检测模型</p>
+<p>布局检测提供了多种模型: <code class="docutils literal notranslate"><span class="pre">LayoutLMv3</span></code>、 <code class="docutils literal notranslate"><span class="pre">YOLOv10</span></code>、  <code class="docutils literal notranslate"><span class="pre">DocLayout-YOLO</span></code>， 相比与 <code class="docutils literal notranslate"><span class="pre">LayoutLMv3</span></code>， <code class="docutils literal notranslate"><span class="pre">YOLOv10</span></code> 速度更快， <code class="docutils literal notranslate"><span class="pre">DocLayout-YOLO</span></code> 则是基于 <code class="docutils literal notranslate"><span class="pre">YOLOv10</span></code> 的基础上进行多样性文档预训练及模型优化，速度快，精度高。</p>
+<p><strong>1. 使用布局检测模型</strong></p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python<span class="w"> </span>scripts/layout_detection.py<span class="w"> </span>--config<span class="w"> </span>configs/layout_detection.yaml
 </pre></div>
 </div>
@@ -390,8 +390,8 @@ document.write(`
 <p><code class="docutils literal notranslate"><span class="pre">layout_detection.yaml</span></code> 设置输入、输出及模型配置，布局检测更详细教程见<a class="reference internal" href="../algorithm/layout_detection.html#algorithm-layout-detection"><span class="std std-ref">布局检测算法</span></a> 。</p>
 </div>
 </section>
-<section id="id5">
-<h2>公式检测示例<a class="headerlink" href="#id5" title="Link to this heading">#</a></h2>
+<section id="id3">
+<h2>公式检测示例<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python<span class="w"> </span>scripts/formula_detection.py<span class="w"> </span>--config<span class="w"> </span>configs/formula_detection.yaml
 </pre></div>
 </div>
@@ -449,7 +449,7 @@ document.write(`
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">布局检测示例</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">公式检测示例</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">公式检测示例</a></li>
 </ul>
   </nav></div>
 

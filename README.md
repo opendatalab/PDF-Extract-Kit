@@ -7,6 +7,8 @@
 
 English | [简体中文](./README_zh-CN.md)
 
+[PDF-Extract-Kit-1.0 Tutorial](https://pdf-extract-kit.readthedocs.io/en/latest/get_started/pretrained_model.html)
+
 [[Models (🤗Hugging Face)]](https://huggingface.co/opendatalab/PDF-Extract-Kit) | [[Models(<img src="./assets/readme/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/OpenDataLab/PDF-Extract-Kit) 
  
 🔥🔥🔥 [MinerU: Efficient Document Content Extraction Tool Based on PDF-Extract-Kit](https://github.com/opendatalab/MinerU)
@@ -88,7 +90,9 @@ pip install -r requirements.txt
 ```
 > **Note:** If your device does not support GPU, please install the CPU version dependencies using `requirements-cpu.txt` instead of `requirements.txt`.
 
-### Refer to [Model Download](models/README.md) to download the required model weights.
+### Model Download
+
+Please refer to the [Model Weights Download Tutorial](https://pdf-extract-kit.readthedocs.io/en/latest/get_started/pretrained_model.html) to download the required model weights. Note: You can choose to download all the weights or select specific ones. For detailed instructions, please refer to the tutorial.
 
 ### Running Demos
 
@@ -119,6 +123,8 @@ You can view the OCR results in the `outputs/ocr` folder.
 python scripts/formula_recognition.py --config=configs/formula_recognition.yaml
 ```
 You can view the formula recognition results in the `outputs/layout_detection` folder.
+
+> **Note:** For more details on using the model, please refer to the[PDF-Extract-Kit-1.0 Tutorial](https://pdf-extract-kit.readthedocs.io/en/latest/get_started/pretrained_model.html).
 
 > This project focuses on using models for `high-quality` content extraction from `diverse` documents and does not involve reconstructing extracted content into new documents, such as PDF to Markdown. For such needs, please refer to our other GitHub project: [MinerU](https://github.com/opendatalab/MinerU).
 

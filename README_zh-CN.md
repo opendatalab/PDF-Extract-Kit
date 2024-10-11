@@ -7,6 +7,8 @@
 
 [English](./README.md) | 简体中文
 
+[PDF-Extract-Kit-1.0中文教程](https://pdf-extract-kit.readthedocs.io/zh-cn/latest/get_started/pretrained_model.html)
+
 [[Models (🤗Hugging Face)]](https://huggingface.co/opendatalab/PDF-Extract-Kit) | [[Models(<img src="./assets/readme/modelscope_logo.png" width="20px">ModelScope)]](https://www.modelscope.cn/models/OpenDataLab/PDF-Extract-Kit) 
  
 🔥🔥🔥 [MinerU：基于PDF-Extract-Kit的高效文档内容提取工具](https://github.com/opendatalab/MinerU)
@@ -95,7 +97,9 @@ pip install -r requirements.txt
 ```
 > **注意：** 如果你的设备不支持 GPU，请使用 `requirements-cpu.txt` 安装 CPU 版本的依赖。
 
-### 参考[模型下载](models/README.md)下载所需模型权重
+### 模型下载
+
+参考[模型权重下载教程](https://pdf-extract-kit.readthedocs.io/zh-cn/latest/get_started/pretrained_model.html)下载所需模型权重。注：可以选择全部下载，也可以选择部分下载，具体操作参考教程。
 
 
 ### Demo运行
@@ -130,6 +134,7 @@ python scripts/formula_recognition.py --config=configs/formula_recognition.yaml
 ```
 你可以在 `outputs/layout_detection` 文件夹下查看公式识别结果。
 
+> **注意：** 更多模型使用细节请查看[PDF-Extract-Kit-1.0 中文教程](https://pdf-extract-kit.readthedocs.io/zh-cn/latest/get_started/pretrained_model.html).
 
 > 本项目专注使用模型对`多样性`文档进行`高质量`内容提取，不涉及提取后内容拼接成新文档，如PDF转Markdown。如果有此类需求，请参考我们另一个Github项目: [MinerU](https://github.com/opendatalab/MinerU)
 

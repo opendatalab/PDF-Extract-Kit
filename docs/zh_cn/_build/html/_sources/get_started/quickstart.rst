@@ -9,9 +9,9 @@
 布局检测示例
 ==============
 
-布局检测提供了多种模型: ``LayoutLMv3``, ``YOLOv10``,  ``DocLayout-YOLO``， 相比与 ``LayoutLMv3``, ``YOLOv10``速度更快， ``DocLayout-YOLO``则是基于 ``YOLOv10`` 的基础上进行多样性文档预训练及模型优化，速度快，精度高。
+布局检测提供了多种模型: ``LayoutLMv3``、 ``YOLOv10``、  ``DocLayout-YOLO``， 相比与 ``LayoutLMv3``， ``YOLOv10`` 速度更快， ``DocLayout-YOLO`` 则是基于 ``YOLOv10`` 的基础上进行多样性文档预训练及模型优化，速度快，精度高。
 
-**1. 使用布局检测模型
+**1. 使用布局检测模型**
 
 .. code-block:: console
 
