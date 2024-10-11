@@ -386,14 +386,22 @@ document.write(`
 </pre></div>
 </div>
 <p><strong>步骤 2.</strong> 安装 PDF-Extract-Kit 的依赖项</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="c1"># 对于GPU设备</span>
+<span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+<span class="gp">$ </span><span class="c1"># 对于无CPU设备</span>
+<span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-cpu.txt
+</pre></div>
+</div>
 <div class="admonition note">
 <p class="admonition-title">备注</p>
-<p>考虑到用户环境配置的便捷性，我们在requirements.txt只包含当前最好模型需要的环境，目前包含
-- 布局检测：YOLO系列（YOLOv10, DocLayout-YOLO）
-- 公式检测：YOLO系列 (YOLOv8)
-- 公式识别：UniMERNet
-- OCR： PaddleOCR
-对于其他模型请，如LayoutLMv3需要单独安装环境，具体见<a class="reference internal" href="../algorithm/layout_detection.html#algorithm-layout-detection"><span class="std std-ref">布局检测算法</span></a></p>
+<p>考虑到用户环境配置的便捷性，我们在requirements.txt只包含当前最好模型需要的环境，目前包含</p>
+<ul class="simple">
+<li><p>布局检测：YOLO系列（YOLOv10, DocLayout-YOLO）</p></li>
+<li><p>公式检测：YOLO系列 (YOLOv8)</p></li>
+<li><p>公式识别：UniMERNet</p></li>
+<li><p>OCR： PaddleOCR</p></li>
+</ul>
+<p>对于其他模型请，如LayoutLMv3需要单独安装环境，具体见<a class="reference internal" href="../algorithm/layout_detection.html#algorithm-layout-detection"><span class="std std-ref">布局检测算法</span></a></p>
 </div>
 </section>
 </section>
