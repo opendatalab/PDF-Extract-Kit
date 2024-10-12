@@ -30,6 +30,8 @@ tasks:
     model_config:
       lang: ch
       show_log: True
+      det_model_dir: models/OCR/PaddleOCR/det/ch_PP-OCRv4_det
+      rec_model_dir: models/OCR/PaddleOCR/rec/ch_PP-OCRv4_rec
       det_db_box_thresh: 0.3
 
   
