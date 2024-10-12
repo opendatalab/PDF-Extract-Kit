@@ -112,4 +112,4 @@ When ``visualize`` is set to ``True`` in the config file, the visualization resu
 
 .. note::
 
-   Visualization is helpful for analyzing model results, but for large-scale tasks, it is recommended to turn off visualization (set ``visualize`` to ``False``) to reduce memory and disk usage.
+   Visualization is helpful for analyzing model results, but for large-scale tasks, it is recommended to turn off visualization (set ``visualize`` to ``False`` ) to reduce memory and disk usage.
