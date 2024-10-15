@@ -61,6 +61,41 @@
 
 **2. LayoutLMv3**
 
+.. note::
+
+   LayoutLMv3 默认情况下不能直接运行。请按照以下步骤进行配置修改：
+
+   1. **Detectron2 环境配置**
+
+   .. code-block:: bash
+
+      # 对于 Linux
+      pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-linux_x86_64.whl
+
+      # 对于 macOS
+      pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-macosx_10_9_universal2.whl
+
+      # 对于 Windows
+      pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-win_amd64.whl
+
+   2. **启用 LayoutLMv3 注册代码**
+
+   请取消注释以下链接中的代码行：
+   
+   - `第2行 <https://github.com/opendatalab/PDF-Extract-Kit/blob/main/pdf_extract_kit/tasks/layout_detection/__init__.py#L2>`_
+   - `第8行 <https://github.com/opendatalab/PDF-Extract-Kit/blob/main/pdf_extract_kit/tasks/layout_detection/__init__.py#L8>`_
+
+   .. code-block:: python
+
+      from pdf_extract_kit.tasks.layout_detection.models.yolo import LayoutDetectionYOLO
+      from pdf_extract_kit.tasks.layout_detection.models.layoutlmv3 import LayoutDetectionLayoutlmv3
+      from pdf_extract_kit.registry.registry import MODEL_REGISTRY
+
+      __all__ = [
+         "LayoutDetectionYOLO",
+         "LayoutDetectionLayoutlmv3",
+      ]
+
 .. code:: yaml
 
     inputs: assets/demo/layout_detection

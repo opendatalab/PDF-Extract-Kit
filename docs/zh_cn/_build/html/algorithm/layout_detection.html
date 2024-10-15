@@ -362,10 +362,10 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">简介</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">模型使用</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">模型配置</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">多样化输入支持</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">可视化结果查看</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">模型使用</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">模型配置</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">多样化输入支持</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">可视化结果查看</a></li>
 </ul>
 </li>
 </ul>
@@ -383,17 +383,17 @@ document.write(`
 <span id="id1"></span><h1>布局检测算法<a class="headerlink" href="#algorithm-layout-detection" title="Link to this heading">#</a></h1>
 <section id="id2">
 <h2>简介<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">布局检测</span></code> 是文档内容提取的基础任务，目标对页面中不同类型的区域进行定位：如 <code class="docutils literal notranslate"><span class="pre">图像</span></code>、 <code class="docutils literal notranslate"><span class="pre">表格</span></code>、 <code class="docutils literal notranslate"><span class="pre">文本</span></code>、 <code class="docutils literal notranslate"><span class="pre">标题``等，方便后续高质量内容提取。对于</span> <span class="pre">``文本</span></code>、 <a href="#id3"><span class="problematic" id="id4">``</span></a>标题``等区域，可以基于 <a href="#id5"><span class="problematic" id="id6">``</span></a>OCR模型``进行文字识别，对于表格区域可以基于表格识别模型进行转换。</p>
+<p><code class="docutils literal notranslate"><span class="pre">布局检测</span></code> 是文档内容提取的基础任务，目标对页面中不同类型的区域进行定位：如 <code class="docutils literal notranslate"><span class="pre">图像</span></code> 、 <code class="docutils literal notranslate"><span class="pre">表格</span></code> 、 <code class="docutils literal notranslate"><span class="pre">文本</span></code> 、 <code class="docutils literal notranslate"><span class="pre">标题</span></code> 等，方便后续高质量内容提取。对于 <code class="docutils literal notranslate"><span class="pre">文本</span></code> 、 <code class="docutils literal notranslate"><span class="pre">标题</span></code> 等区域，可以基于 <code class="docutils literal notranslate"><span class="pre">OCR模型</span></code> 进行文字识别，对于表格区域可以基于表格识别模型进行转换。</p>
 </section>
-<section id="id7">
-<h2>模型使用<a class="headerlink" href="#id7" title="Link to this heading">#</a></h2>
-<p>布局检测模型支持 <code class="docutils literal notranslate"><span class="pre">YOLOv10</span></code>， <code class="docutils literal notranslate"><span class="pre">DocLayout-YOLO``和</span> <span class="pre">``LayoutLMv3</span></code>，在配置好环境的情况下，直接执行 <code class="docutils literal notranslate"><span class="pre">scripts/layout_detection.py</span></code> 即可运行布局检测算法脚本。</p>
+<section id="id3">
+<h2>模型使用<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>
+<p>布局检测模型支持 <code class="docutils literal notranslate"><span class="pre">YOLOv10</span></code> ， <code class="docutils literal notranslate"><span class="pre">DocLayout-YOLO</span></code> 和 <code class="docutils literal notranslate"><span class="pre">LayoutLMv3</span></code> ，在配置好环境的情况下，直接执行 <code class="docutils literal notranslate"><span class="pre">scripts/layout_detection.py</span></code> 即可运行布局检测算法脚本。</p>
 <p><strong>执行布局检测程序</strong></p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>scripts/layout_detection.py<span class="w"> </span>--config<span class="w"> </span>configs/layout_detection.yaml
 </pre></div>
 </div>
-<section id="id8">
-<h3>模型配置<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
+<section id="id4">
+<h3>模型配置<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
 <p><strong>1. YOLOv10</strong></p>
 <p>和LayoutLMv3相比，YOLOv10推理速度更快，支持batch模式推理</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">assets/demo/layout_detection</span>
@@ -427,6 +427,41 @@ document.write(`
 <li><p>visualize: 是否对模型结果进行可视化，可视化结果会保存在outputs目录下</p></li>
 </ul>
 <p><strong>2. LayoutLMv3</strong></p>
+<div class="admonition note">
+<p class="admonition-title">备注</p>
+<p>LayoutLMv3 默认情况下不能直接运行。请按照以下步骤进行配置修改：</p>
+<ol class="arabic simple">
+<li><p><strong>Detectron2 环境配置</strong></p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># 对于 Linux</span>
+pip<span class="w"> </span>install<span class="w"> </span>https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-linux_x86_64.whl
+
+<span class="c1"># 对于 macOS</span>
+pip<span class="w"> </span>install<span class="w"> </span>https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-macosx_10_9_universal2.whl
+
+<span class="c1"># 对于 Windows</span>
+pip<span class="w"> </span>install<span class="w"> </span>https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-win_amd64.whl
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p><strong>启用 LayoutLMv3 注册代码</strong></p></li>
+</ol>
+<p>请取消注释以下链接中的代码行：</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/opendatalab/PDF-Extract-Kit/blob/main/pdf_extract_kit/tasks/layout_detection/__init__.py#L2">第2行</a></p></li>
+<li><p><a class="reference external" href="https://github.com/opendatalab/PDF-Extract-Kit/blob/main/pdf_extract_kit/tasks/layout_detection/__init__.py#L8">第8行</a></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pdf_extract_kit.tasks.layout_detection.models.yolo</span> <span class="kn">import</span> <span class="n">LayoutDetectionYOLO</span>
+<span class="kn">from</span> <span class="nn">pdf_extract_kit.tasks.layout_detection.models.layoutlmv3</span> <span class="kn">import</span> <span class="n">LayoutDetectionLayoutlmv3</span>
+<span class="kn">from</span> <span class="nn">pdf_extract_kit.registry.registry</span> <span class="kn">import</span> <span class="n">MODEL_REGISTRY</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+   <span class="s2">&quot;LayoutDetectionYOLO&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;LayoutDetectionLayoutlmv3&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">assets/demo/layout_detection</span>
 <span class="nt">outputs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">outputs/layout_detection</span>
 <span class="nt">tasks</span><span class="p">:</span>
@@ -444,9 +479,9 @@ document.write(`
 <li><p>model_path: 模型权重路径</p></li>
 </ul>
 </section>
-<section id="id9">
-<h3>多样化输入支持<a class="headerlink" href="#id9" title="Link to this heading">#</a></h3>
-<p>PDF-Extract-Kit中的布局检测脚本支持 <code class="docutils literal notranslate"><span class="pre">单个图像</span></code>、 <code class="docutils literal notranslate"><span class="pre">只包含图像文件的目录</span></code>、 <code class="docutils literal notranslate"><span class="pre">单个PDF文件</span></code>、 <code class="docutils literal notranslate"><span class="pre">只包含PDF文件的目录</span></code> 等输入形式。</p>
+<section id="id7">
+<h3>多样化输入支持<a class="headerlink" href="#id7" title="Link to this heading">#</a></h3>
+<p>PDF-Extract-Kit中的布局检测脚本支持 <code class="docutils literal notranslate"><span class="pre">单个图像</span></code> 、 <code class="docutils literal notranslate"><span class="pre">只包含图像文件的目录</span></code> 、 <code class="docutils literal notranslate"><span class="pre">单个PDF文件</span></code> 、 <code class="docutils literal notranslate"><span class="pre">只包含PDF文件的目录</span></code> 等输入形式。</p>
 <div class="admonition note">
 <p class="admonition-title">备注</p>
 <p>根据自己实际数据形式，修改configs/layout_detection.yaml中inputs的路径即可
@@ -462,19 +497,19 @@ document.write(`
 <span class="n">detection_results</span> <span class="o">=</span> <span class="n">model_layout_detection</span><span class="o">.</span><span class="n">predict_images</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">result_path</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>中的 <code class="docutils literal notranslate"><span class="pre">predict_images``修改为</span> <span class="pre">``predict_pdfs</span></code>。</p>
+<p>中的 <code class="docutils literal notranslate"><span class="pre">predict_images</span></code> 修改为 <code class="docutils literal notranslate"><span class="pre">predict_pdfs</span></code> 。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># for pdf detection</span>
 <span class="n">detection_results</span> <span class="o">=</span> <span class="n">model_layout_detection</span><span class="o">.</span><span class="n">predict_pdfs</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">result_path</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </section>
-<section id="id10">
-<h3>可视化结果查看<a class="headerlink" href="#id10" title="Link to this heading">#</a></h3>
+<section id="id8">
+<h3>可视化结果查看<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
 <p>当config文件中 <code class="docutils literal notranslate"><span class="pre">visualize</span></code> 设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时，可视化结果会保存在 <code class="docutils literal notranslate"><span class="pre">outputs</span></code> 目录下。</p>
 <div class="admonition note">
 <p class="admonition-title">备注</p>
-<p>可视化可以方便对模型结果进行分析，但当进行大批量任务时，建议关掉可视化(设置 <code class="docutils literal notranslate"><span class="pre">visualize``为</span> <span class="pre">``False</span></code>)，减少内存和磁盘占用。</p>
+<p>可视化可以方便对模型结果进行分析，但当进行大批量任务时，建议关掉可视化(设置 <code class="docutils literal notranslate"><span class="pre">visualize</span></code> 为 <code class="docutils literal notranslate"><span class="pre">False</span></code> )，减少内存和磁盘占用。</p>
 </div>
 </section>
 </section>
@@ -526,10 +561,10 @@ document.write(`
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">简介</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">模型使用</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">模型配置</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">多样化输入支持</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">可视化结果查看</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">模型使用</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">模型配置</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">多样化输入支持</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">可视化结果查看</a></li>
 </ul>
 </li>
 </ul>
