@@ -67,7 +67,7 @@ PDF-Extract-Kit中的公式检测脚本支持 ``单个图像`` 、 ``只包含�
 
 .. note::
 
-   当使用PDF作为输入时，需要将 ``formula_detection.py `` 中的 ``predict_images`` 修改为 ``predict_pdfs``。
+   当使用PDF作为输入时，需要将 ``formula_detection.py`` 中的 ``predict_images`` 修改为 ``predict_pdfs`` 。
 
 
    .. code:: python
@@ -89,4 +89,4 @@ PDF-Extract-Kit中的公式检测脚本支持 ``单个图像`` 、 ``只包含�
 
 .. note::
 
-   可视化可以方便对模型结果进行分析，但当进行大批量任务时，建议关掉可视化(设置 ``visualize`` 为 ``False``)，减少内存和磁盘占用。
+   可视化可以方便对模型结果进行分析，但当进行大批量任务时，建议关掉可视化(设置 ``visualize`` 为 ``False`` )，减少内存和磁盘占用。

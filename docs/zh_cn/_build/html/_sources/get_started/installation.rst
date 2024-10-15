@@ -23,7 +23,7 @@
 
     $ # 对于GPU设备
     $ pip install -r requirements.txt
-    $ # 对于无CPU设备
+    $ # 对于CPU设备
     $ pip install -r requirements-cpu.txt
 
 .. note::
@@ -34,5 +34,5 @@
     - 公式检测：YOLO系列 (YOLOv8)  
     - 公式识别：UniMERNet  
     - OCR： PaddleOCR  
-    
+
     对于其他模型请，如LayoutLMv3需要单独安装环境，具体见\ :ref:`布局检测算法 <algorithm_layout_detection>`

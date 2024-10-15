@@ -338,7 +338,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
 </div></div>
       
     </div>
@@ -354,6 +356,20 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> 目录 </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">简介</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">项目使用</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">项目配置</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">多样化输入支持</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">输出结果</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -365,7 +381,114 @@ document.write(`
                   
   <section id="id1">
 <h1>文档内容提取项目<a class="headerlink" href="#id1" title="Link to this heading">#</a></h1>
-<p>Comming soon!</p>
+<section id="id2">
+<h2>简介<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
+<p>文档内容提取是利用布局检测，公式检测，公式识别，OCR等模型，提取文档中的信息，并转换为markdown文本。</p>
+</section>
+<section id="id3">
+<h2>项目使用<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>
+<p>在配置好环境的情况下，直接执行 <code class="docutils literal notranslate"><span class="pre">project/pdf2markdown/scripts/run_project.py</span></code> 即可运行文档内容提取项目。</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>project/pdf2markdown/scripts/run_project.py<span class="w"> </span>--config<span class="w"> </span>project/pdf2markdown/configs/pdf2markdown.yaml
+</pre></div>
+</div>
+<section id="id4">
+<h3>项目配置<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">assets/demo/formula_detection</span>
+<span class="nt">outputs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">outputs/pdf2markdown</span>
+<span class="nt">visualize</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="nt">merge2markdown</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="nt">tasks</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">layout_detection</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">layout_detection_yolo</span>
+<span class="w">        </span><span class="nt">model_config</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">img_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1280</span>
+<span class="w">            </span><span class="nt">conf_thres</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.25</span>
+<span class="w">            </span><span class="nt">iou_thres</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.45</span>
+<span class="w">            </span><span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">            </span><span class="nt">model_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">models/Layout/YOLO/yolov10l_ft.pt</span>
+<span class="w">    </span><span class="nt">formula_detection</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">formula_detection_yolo</span>
+<span class="w">        </span><span class="nt">model_config</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">img_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1280</span>
+<span class="w">            </span><span class="nt">conf_thres</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.25</span>
+<span class="w">            </span><span class="nt">iou_thres</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.45</span>
+<span class="w">            </span><span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">            </span><span class="nt">model_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">models/MFD/YOLO/yolo_v8_ft.pt</span>
+<span class="w">    </span><span class="nt">formula_recognition</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">formula_recognition_unimernet</span>
+<span class="w">        </span><span class="nt">model_config</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">128</span>
+<span class="w">            </span><span class="nt">cfg_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pdf_extract_kit/configs/unimernet.yaml</span>
+<span class="w">            </span><span class="nt">model_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">models/MFR/unimernet_tiny</span>
+<span class="w">    </span><span class="nt">ocr</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ocr_ppocr</span>
+<span class="w">        </span><span class="nt">model_config</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">lang</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ch</span>
+<span class="w">            </span><span class="nt">show_log</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">            </span><span class="nt">det_model_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">models/OCR/PaddleOCR/det/ch_PP-OCRv4_det</span>
+<span class="w">            </span><span class="nt">rec_model_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">models/OCR/PaddleOCR/rec/ch_PP-OCRv4_rec</span>
+<span class="w">            </span><span class="nt">det_db_box_thresh</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.3</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>inputs/outputs: 分别定义输入文件路径和输出路径</p></li>
+<li><p>visualize: 是否对模型结果进行可视化，可视化结果会保存在outputs目录下。</p></li>
+<li><p>merge2markdown: 是否将结果合并为markdown文档，这里只支持简单的单栏文本从上往下进行拼接，更复杂布局文档的markdown转换请参考 <a class="reference external" href="https://github.com/opendatalab/MinerU">MinerU</a></p></li>
+<li><p>tasks: 定义任务类型，PDF文档提取包含了布局检测、公式检测、公式识别、OCR等任务</p></li>
+<li><p>具体每个任务和模型的参数含义请参考各任务的教程文档</p></li>
+</ul>
+</section>
+<section id="id5">
+<h3>多样化输入支持<a class="headerlink" href="#id5" title="Link to this heading">#</a></h3>
+<p>PDF文档内容提取支持 <code class="docutils literal notranslate"><span class="pre">单个图像/PDF文件</span></code> 、 <code class="docutils literal notranslate"><span class="pre">包含图像/PDF文件的目录</span></code> 等输入形式。</p>
+</section>
+<section id="id6">
+<h3>输出结果<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
+<p>PDF文档提取的结果以json形式保存在 <code class="docutils literal notranslate"><span class="pre">outputs</span></code> 路径下，json的格式如下所示：</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;layout_dets&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;category_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;text&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;poly&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                    </span><span class="mf">380.6792698635707</span><span class="p">,</span>
+<span class="w">                    </span><span class="mf">159.85058512958923</span><span class="p">,</span>
+<span class="w">                    </span><span class="mf">765.1419999999998</span><span class="p">,</span>
+<span class="w">                    </span><span class="mf">159.85058512958923</span><span class="p">,</span>
+<span class="w">                    </span><span class="mf">765.1419999999998</span><span class="p">,</span>
+<span class="w">                    </span><span class="mf">192.51073013642917</span><span class="p">,</span>
+<span class="w">                    </span><span class="mf">380.6792698635707</span><span class="p">,</span>
+<span class="w">                    </span><span class="mf">192.51073013642917</span>
+<span class="w">                </span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;this is an example text&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.97</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="err">...</span>
+<span class="w">        </span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;page_info&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;page_no&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;height&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2339</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;width&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1654</span><span class="p">,</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="err">...</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>layout_dets: 单页PDF或图片的内容提取结果</p></li>
+<li><p>category_type: 单个内容块的所属内别，比如标题、图片、行内公式等等</p></li>
+<li><p>poly: 单个内容块的位置坐标</p></li>
+<li><p>text: 该文本块的文本内容</p></li>
+<li><p>score: 检测的置信度</p></li>
+<li><p>page_info: 页面信息，包含页码和页面尺寸</p></li>
+<li><p>page_no: 页码，从0开始计数</p></li>
+<li><p>height: 页面尺寸: 高</p></li>
+<li><p>width: 页面尺寸: 宽</p></li>
+</ul>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">merge2markdown</span></code> 参数为True的话，则会额外保存一个markdown文件。</p>
+</section>
+</section>
 </section>
 
 
@@ -403,6 +526,27 @@ document.write(`
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> 目录
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">简介</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">项目使用</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">项目配置</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">多样化输入支持</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">输出结果</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>
