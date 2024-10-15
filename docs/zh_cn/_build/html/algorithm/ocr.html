@@ -338,7 +338,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
 </div></div>
       
     </div>
@@ -354,6 +356,20 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> 目录 </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">简介</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">模型使用</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">模型配置</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">多样化输入支持</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">可视化结果查看</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -365,7 +381,58 @@ document.write(`
                   
   <section id="ocr">
 <span id="algorithm-ocr"></span><h1>光学字符识别(OCR)算法<a class="headerlink" href="#ocr" title="Link to this heading">#</a></h1>
-<p>Comming soon.</p>
+<section id="id1">
+<h2>简介<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
+<p>光学字符识别(OCR)是指对图片中的文字块进行检测和识别。</p>
+</section>
+<section id="id2">
+<h2>模型使用<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
+<p>在配置好环境的情况下，直接执行 <code class="docutils literal notranslate"><span class="pre">scripts/ocr.py</span></code> 即可运行OCR算法脚本。</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>scripts/ocr.py<span class="w"> </span>--config<span class="w"> </span>configs/ocr.yaml
+</pre></div>
+</div>
+<section id="id3">
+<h3>模型配置<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">assets/demo/ocr</span>
+<span class="nt">outputs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">outputs/ocr</span>
+<span class="nt">visualize</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="nt">tasks</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">ocr</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ocr_ppocr</span>
+<span class="w">      </span><span class="nt">model_config</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">lang</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ch</span>
+<span class="w">         </span><span class="nt">show_log</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">         </span><span class="nt">det_model_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">models/OCR/PaddleOCR/det/ch_PP-OCRv4_det</span>
+<span class="w">         </span><span class="nt">rec_model_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">models/OCR/PaddleOCR/rec/ch_PP-OCRv4_rec</span>
+<span class="w">         </span><span class="nt">det_db_box_thresh</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.3</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>inputs/outputs: 分别定义输入文件路径和输出路径</p></li>
+<li><p>visualize: 是否对模型结果进行可视化，可视化结果会保存在outputs目录下。</p></li>
+<li><p>tasks: 定义任务类型，当前只包含一个OCR任务</p></li>
+<li><p>model: 定义具体模型类型, 当前仅提供PaddleOCR模型</p></li>
+<li><p>model_config: 定义模型配置</p></li>
+<li><p>lang: 定义语种，默认语种ch支持中英文文字的检测和识别</p></li>
+<li><p>show_log: 是否打印检测识别过程的日志</p></li>
+<li><p>det_model_dir: 定义PaddleOCR检测模型的路径，指定路径不存在时，会自动下载模型权重到该路径</p></li>
+<li><p>rec_model_dir: 定义PaddleOCR识别模型的路径，指定路径不存在时，会自动下载模型权重到该路径</p></li>
+<li><p>det_db_box_thresh: 检测框筛选阈值，置信度低于该阈值的框会被舍弃</p></li>
+</ul>
+</section>
+<section id="id4">
+<h3>多样化输入支持<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
+<p>PDF-Extract-Kit中的OCR脚本支持 <code class="docutils literal notranslate"><span class="pre">单个图像/PDF文件</span></code> 、 <code class="docutils literal notranslate"><span class="pre">包含图像/PDF文件的目录</span></code> 等输入形式。</p>
+</section>
+<section id="id5">
+<h3>可视化结果查看<a class="headerlink" href="#id5" title="Link to this heading">#</a></h3>
+<p>当config文件中 <code class="docutils literal notranslate"><span class="pre">visualize</span></code> 设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时，可视化结果会保存在 <code class="docutils literal notranslate"><span class="pre">outputs</span></code> 参数指定的目录下。</p>
+<div class="admonition note">
+<p class="admonition-title">备注</p>
+<p>可视化可以方便对模型结果进行分析，但当进行大批量任务时，建议关掉可视化(设置 <code class="docutils literal notranslate"><span class="pre">visualize</span></code> 为 <code class="docutils literal notranslate"><span class="pre">False</span></code> )，减少内存和磁盘占用。</p>
+</div>
+</section>
+</section>
 </section>
 
 
@@ -403,6 +470,27 @@ document.write(`
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> 目录
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">简介</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">模型使用</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">模型配置</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">多样化输入支持</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">可视化结果查看</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>

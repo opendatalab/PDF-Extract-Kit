@@ -7,12 +7,12 @@
 简介
 =================
 
-``布局检测`` 是文档内容提取的基础任务，目标对页面中不同类型的区域进行定位：如 ``图像``、 ``表格``、 ``文本``、 ``标题``等，方便后续高质量内容提取。对于 ``文本``、 ``标题``等区域，可以基于 ``OCR模型``进行文字识别，对于表格区域可以基于表格识别模型进行转换。
+``布局检测`` 是文档内容提取的基础任务，目标对页面中不同类型的区域进行定位：如 ``图像`` 、 ``表格`` 、 ``文本`` 、 ``标题`` 等，方便后续高质量内容提取。对于 ``文本`` 、 ``标题`` 等区域，可以基于 ``OCR模型`` 进行文字识别，对于表格区域可以基于表格识别模型进行转换。
 
 模型使用
 =================
 
-布局检测模型支持 ``YOLOv10``， ``DocLayout-YOLO``和 ``LayoutLMv3``，在配置好环境的情况下，直接执行 ``scripts/layout_detection.py`` 即可运行布局检测算法脚本。
+布局检测模型支持 ``YOLOv10`` ， ``DocLayout-YOLO`` 和 ``LayoutLMv3`` ，在配置好环境的情况下，直接执行 ``scripts/layout_detection.py`` 即可运行布局检测算法脚本。
 
    
 **执行布局检测程序**
@@ -61,6 +61,41 @@
 
 **2. LayoutLMv3**
 
+.. note::
+
+   LayoutLMv3 默认情况下不能直接运行。请按照以下步骤进行配置修改：
+
+   1. **Detectron2 环境配置**
+
+   .. code-block:: bash
+
+      # 对于 Linux
+      pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-linux_x86_64.whl
+
+      # 对于 macOS
+      pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-macosx_10_9_universal2.whl
+
+      # 对于 Windows
+      pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-win_amd64.whl
+
+   2. **启用 LayoutLMv3 注册代码**
+
+   请取消注释以下链接中的代码行：
+   
+   - `第2行 <https://github.com/opendatalab/PDF-Extract-Kit/blob/main/pdf_extract_kit/tasks/layout_detection/__init__.py#L2>`_
+   - `第8行 <https://github.com/opendatalab/PDF-Extract-Kit/blob/main/pdf_extract_kit/tasks/layout_detection/__init__.py#L8>`_
+
+   .. code-block:: python
+
+      from pdf_extract_kit.tasks.layout_detection.models.yolo import LayoutDetectionYOLO
+      from pdf_extract_kit.tasks.layout_detection.models.layoutlmv3 import LayoutDetectionLayoutlmv3
+      from pdf_extract_kit.registry.registry import MODEL_REGISTRY
+
+      __all__ = [
+         "LayoutDetectionYOLO",
+         "LayoutDetectionLayoutlmv3",
+      ]
+
 .. code:: yaml
 
     inputs: assets/demo/layout_detection
@@ -81,7 +116,7 @@
 多样化输入支持
 -----------------
 
-PDF-Extract-Kit中的布局检测脚本支持 ``单个图像``、 ``只包含图像文件的目录``、 ``单个PDF文件``、 ``只包含PDF文件的目录`` 等输入形式。
+PDF-Extract-Kit中的布局检测脚本支持 ``单个图像`` 、 ``只包含图像文件的目录`` 、 ``单个PDF文件`` 、 ``只包含PDF文件的目录`` 等输入形式。
 
 .. note::
 
@@ -99,7 +134,7 @@ PDF-Extract-Kit中的布局检测脚本支持 ``单个图像``、 ``只包含图
       # for image detection
       detection_results = model_layout_detection.predict_images(input_data, result_path)
 
-   中的 ``predict_images``修改为 ``predict_pdfs``。
+   中的 ``predict_images`` 修改为 ``predict_pdfs`` 。
 
    .. code:: python
 
@@ -113,4 +148,4 @@ PDF-Extract-Kit中的布局检测脚本支持 ``单个图像``、 ``只包含图
 
 .. note::
 
-   可视化可以方便对模型结果进行分析，但当进行大批量任务时，建议关掉可视化(设置 ``visualize``为 ``False``)，减少内存和磁盘占用。
+   可视化可以方便对模型结果进行分析，但当进行大批量任务时，建议关掉可视化(设置 ``visualize`` 为 ``False`` )，减少内存和磁盘占用。

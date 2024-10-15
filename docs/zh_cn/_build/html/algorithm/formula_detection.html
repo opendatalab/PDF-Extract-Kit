@@ -438,7 +438,7 @@ document.write(`
 </div>
 <div class="admonition note">
 <p class="admonition-title">备注</p>
-<p>当使用PDF作为输入时，需要将 <code class="docutils literal notranslate"><span class="pre">formula_detection.py</span> <span class="pre">``</span> <span class="pre">中的</span> <span class="pre">``predict_images</span></code> 修改为 <code class="docutils literal notranslate"><span class="pre">predict_pdfs</span></code>。</p>
+<p>当使用PDF作为输入时，需要将 <code class="docutils literal notranslate"><span class="pre">formula_detection.py</span></code> 中的 <code class="docutils literal notranslate"><span class="pre">predict_images</span></code> 修改为 <code class="docutils literal notranslate"><span class="pre">predict_pdfs</span></code> 。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># for image detection</span>
 <span class="n">detection_results</span> <span class="o">=</span> <span class="n">model_formula_detection</span><span class="o">.</span><span class="n">predict_images</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">result_path</span><span class="p">)</span>
 </pre></div>
@@ -454,7 +454,7 @@ document.write(`
 <p>当config文件中 <code class="docutils literal notranslate"><span class="pre">visualize</span></code> 设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时，可视化结果会保存在 <code class="docutils literal notranslate"><span class="pre">outputs/formula_detection</span></code> 目录下。</p>
 <div class="admonition note">
 <p class="admonition-title">备注</p>
-<p>可视化可以方便对模型结果进行分析，但当进行大批量任务时，建议关掉可视化(设置 <code class="docutils literal notranslate"><span class="pre">visualize</span></code> 为 <code class="docutils literal notranslate"><span class="pre">False</span></code>)，减少内存和磁盘占用。</p>
+<p>可视化可以方便对模型结果进行分析，但当进行大批量任务时，建议关掉可视化(设置 <code class="docutils literal notranslate"><span class="pre">visualize</span></code> 为 <code class="docutils literal notranslate"><span class="pre">False</span></code> )，减少内存和磁盘占用。</p>
 </div>
 </section>
 </section>

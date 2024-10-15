@@ -59,6 +59,42 @@ Compared to LayoutLMv3, YOLOv10 has faster inference speed and supports batch mo
 
 **2. layoutlmv3**
 
+.. note::
+   
+   LayoutLMv3 cannot run directly by default. Please follow the steps below to modify the configuration:
+
+   1. **Detectron2 Environment Setup**
+
+   .. code-block:: bash
+
+      # For Linux
+      pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-linux_x86_64.whl
+
+      # For macOS
+      pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-macosx_10_9_universal2.whl
+
+      # For Windows
+      pip install https://github.com/opendatalab/PDF-Extract-Kit/raw/main/assets/whl/detectron2-0.6-cp310-cp310-win_amd64.whl
+
+   2. **Enable LayoutLMv3 Registration Code**
+
+   Uncomment the lines at the following links:
+   
+   - `line 2 <https://github.com/opendatalab/PDF-Extract-Kit/blob/main/pdf_extract_kit/tasks/layout_detection/__init__.py#L2>`_
+   - `line 8 <https://github.com/opendatalab/PDF-Extract-Kit/blob/main/pdf_extract_kit/tasks/layout_detection/__init__.py#L8>`_
+
+   .. code-block:: python
+
+      from pdf_extract_kit.tasks.layout_detection.models.yolo import LayoutDetectionYOLO
+      from pdf_extract_kit.tasks.layout_detection.models.layoutlmv3 import LayoutDetectionLayoutlmv3
+      from pdf_extract_kit.registry.registry import MODEL_REGISTRY
+
+      __all__ = [
+         "LayoutDetectionYOLO",
+         "LayoutDetectionLayoutlmv3",
+      ]
+
+
 .. code:: yaml
 
     inputs: assets/demo/layout_detection
