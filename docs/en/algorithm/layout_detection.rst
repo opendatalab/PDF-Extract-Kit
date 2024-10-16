@@ -12,7 +12,54 @@ Layout detection is a fundamental task in document content extraction, aiming to
 Model Usage
 =================
 
-The layout detection model supports ``YOLOv10``, ``DocLayout-YOLO`` and ``LayoutLMv3``. Once the environment is set up, you can run the layout detection algorithm script by executing ``scripts/layout_detection.py``.
+Layout detection supports following models：
+
+.. raw:: html
+
+    <style type="text/css">
+    .tg  {border-collapse:collapse;border-color:#9ABAD9;border-spacing:0;}
+    .tg td{background-color:#EBF5FF;border-color:#9ABAD9;border-style:solid;border-width:1px;color:#444;
+      font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;word-break:normal;}
+    .tg th{background-color:#409cff;border-color:#9ABAD9;border-style:solid;border-width:1px;color:#fff;
+      font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+    .tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+    .tg .tg-0lax{text-align:left;vertical-align:top}
+    </style>
+    <table class="tg"><thead>
+      <tr>
+        <th class="tg-0pky">Model</th>
+        <th class="tg-0pky">DocLayout-YOLO (Default model)</th>
+        <th class="tg-0pky">YOLO-v10</th>
+        <th class="tg-0pky">LayoutLMv3</th>
+      </tr></thead>
+    <tbody>
+      <tr>
+        <td class="tg-0pky">Description</td>
+        <td class="tg-0pky">Based on YOLO-v10, optimized from both pre-training and architecture</td>
+        <td class="tg-0pky">Base YOLO-v10 model</td>
+        <td class="tg-0pky">Base LayoutLMv3 model</td>
+      </tr>
+      <tr>
+        <td class="tg-0lax">Characteristics</td>
+        <td class="tg-0lax">More accurate compared to base YOLO-v10 model</td>
+        <td class="tg-0lax">High accuracy and fast</td>
+        <td class="tg-0lax">High accuracy but slower</td>
+      </tr>
+      <tr>
+        <td class="tg-0lax">Model weight</td>
+        <td class="tg-0lax"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/doclayout_yolo_ft.pt">doclayout_yolo_ft.pt</a></td>
+        <td class="tg-0lax"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/yolov10l_ft.pt" target="_blank" rel="noopener noreferrer">yolov10l_ft.pt</a></td>
+        <td class="tg-0lax"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/tree/main/models/Layout/LayoutLMv3" target="_blank" rel="noopener noreferrer">layoutlmv3_weight</a></td>
+      </tr>
+      <tr>
+        <td class="tg-0lax">Config file</td>
+        <td class="tg-0lax">layout_detection.yaml</td>
+        <td class="tg-0lax">layout_detection_yolo.yaml</td>
+        <td class="tg-0lax">layout_detection_layoutlmv3.yaml</td>
+      </tr>
+    </tbody></table>
+
+Once enciroment is setup, you can perform layout detection by executing ``scripts/layout_detection.py`` directly.
 
 **Run demo**
 
@@ -23,9 +70,7 @@ The layout detection model supports ``YOLOv10``, ``DocLayout-YOLO`` and ``Layout
 Model Configuration
 -----------------
 
-**1. yolov10**
-
-Compared to LayoutLMv3, YOLOv10 has faster inference speed and supports batch mode inference.
+**1. DocLayout-YOLO / YOLO-v10**
 
 .. code:: yaml
 
@@ -35,26 +80,21 @@ Compared to LayoutLMv3, YOLOv10 has faster inference speed and supports batch mo
       layout_detection:
         model: layout_detection_yolo
         model_config:
-          img_size: 1280
+          img_size: 1024
           conf_thres: 0.25
           iou_thres: 0.45
-          batch_size: 2
-          model_path: path/to/yolov10_model
+          model_path: path/to/doclayout_yolo_model
           visualize: True
-          rect: True
-          device: "0"
 
 - inputs/outputs: Define the input file path and the directory for visualization output.
 - tasks: Define the task type, currently only a layout detection task is included.
 - model: Specify the specific model type, e.g., layout_detection_yolo.
 - model_config: Define the model configuration.
-- img_size: Define the image long edge size; the short edge will be scaled proportionally based on the long edge, with the default long edge being 1280.
+- img_size: Define the image long edge size; the short edge will be scaled proportionally based on the long edge, with the default long edge being 1024.
 - conf_thres: Define the confidence threshold, detecting only targets above this threshold.
 - iou_thres: Define the IoU threshold, removing targets with an overlap greater than this threshold.
-- batch_size: Define the batch size, the number of images inferred simultaneously during inference. Generally, the larger the batch size, the faster the inference speed; a better GPU allows for a larger batch size.
-- model_path: Path to the model weights.
+- model_path: Path to the model weights. Use DocLayout-YOLO or YOLO-v10 depends on input model weight.
 - visualize: Whether to visualize the model results; visualized results will be saved in the outputs directory.
-- rect: Whether to enable rectangular inference, default is True. If set to True, images in the same batch will be scaled while maintaining aspect ratio and padded to the same size; if False, all images in the same batch will be resized to (img_size, img_size) for inference.
 
 
 **2. layoutlmv3**
@@ -127,7 +167,7 @@ The layout detection script in PDF-Extract-Kit supports input formats such as a 
    - PDF directory: path/to/pdfs  
 
 .. note::
-   When using PDF as input, you need to change ``predict_images`` to ``predict_pdfs`` in ``formula_detection.py``.
+   When using PDF as input, you need to change ``predict_images`` to ``predict_pdfs`` in ``layout_detection.py``.
 
    .. code:: python
 

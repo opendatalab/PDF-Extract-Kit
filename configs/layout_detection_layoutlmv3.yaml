@@ -4,4 +4,4 @@ tasks:
   layout_detection:
     model: layout_detection_layoutlmv3
     model_config:
-      model_path: ./models/Layout/LayoutLMv3/model_final.pth
+      model_path: models/Layout/LayoutLMv3/model_final.pth

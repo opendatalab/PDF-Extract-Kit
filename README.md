@@ -41,7 +41,7 @@ English | [简体中文](./README_zh-CN.md)
 
 | **Task Type**     | **Description**                                                                 | **Models**                    |
 |-------------------|---------------------------------------------------------------------------------|-------------------------------|
-| **Layout Detection** | Locate different elements in a document: including images, tables, text, titles, formulas | `YOLOv10_ft`, `LayoutLMv3_ft` | 
+| **Layout Detection** | Locate different elements in a document: including images, tables, text, titles, formulas | `DocLayout-YOLO_ft`, `YOLO-v10_ft`, `LayoutLMv3_ft` | 
 | **Formula Detection** | Locate formulas in documents: including inline and block formulas            | `YOLOv8_ft`                   |  
 | **Formula Recognition** | Recognize formula images into LaTeX source code                             | `UniMERNet`                   |  
 | **OCR**           | Extract text content from images (including location and recognition)            | `PaddleOCR`                   | 
@@ -60,7 +60,7 @@ Many current open-source SOTA models are trained and evaluated on academic datas
 ### Layout Detection
 
 We trained robust `Layout Detection` models using diverse PDF document annotations. Our fine-tuned models achieve accurate extraction results on diverse PDF documents such as papers, textbooks, research reports, and financial reports, and demonstrate high robustness to challenges like blurring and watermarks. The visualization example below shows the inference results of the fine-tuned LayoutLMv3 model.
-
+ 
 ![](assets/readme/layout_example.png)
 
 ### Formula Detection
@@ -101,7 +101,7 @@ Please refer to the [Model Weights Download Tutorial](https://pdf-extract-kit.re
 ```bash 
 python scripts/layout_detection.py --config=configs/layout_detection.yaml
 ```
-You can view the layout detection results in the `outputs/layout_detection` folder.
+Layout detection models support **DocLayout-YOLO** (default model), YOLO-v10, and LayoutLMv3. For YOLO-v10 and LayoutLMv3, please refer to [Layout Detection Algorithm](https://pdf-extract-kit.readthedocs.io/en/latest/algorithm/layout_detection.html). You can view the layout detection results in the `outputs/layout_detection` folder.
 
 #### Formula Detection Model
 
