@@ -376,8 +376,7 @@ def fast_dealwith_one_dataset(dataset,layout_model, mfd_model, ocrmodel,
             pdf_paths  = [dataset.metadata[pdf_index]['path'] for pdf_index in pdf_index]
             with timer('get_layout'):
                 layout_res = inference_layout((layout_images,heights, widths),layout_model,inner_batch_size)
-            print(layout_res)
-            raise
+
             with timer('get_mfd'):
                 mfd_res    = inference_mfd(mfd_images,mfd_model,inner_batch_size)
             with timer('combine_layout_mfd_result'):

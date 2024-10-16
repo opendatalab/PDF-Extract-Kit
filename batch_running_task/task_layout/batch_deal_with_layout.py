@@ -26,6 +26,7 @@ class BatchLayoutConfig(BatchModeConfig):
     result_save_path: str=RESULT_SAVE_PATH
     use_lock: bool = True
     debug:bool = False
+    lock_server_path: str=LOCKSERVER
     def from_dict(kargs):
         return BatchLayoutConfig(**kargs)
     def to_dict(self):
@@ -122,19 +123,19 @@ if __name__ == '__main__':
 
             
             result_path = os.path.join(result_save_root, filename_with_partion)
-
-            lock_path = os.path.join(LOCKSERVER, "checklocktime", filename_with_partion)
-            last_start_time = check_lock_and_last_start_time(lock_path,client)
-            if last_start_time and not args.redo:
-                date_string = last_start_time
-                date_format = "%Y-%m-%d %H:%M:%S"
-                date = datetime.strptime(date_string, date_format)
-                deltatime = datetime.now() - date
-                if deltatime < timedelta(hours=1):
-                    tqdm.write(f"[Skip]: {filename_with_partion} is locked by {date_string} created at {last_start_time} [now is {deltatime}]")
-                    continue
-            
-            create_last_start_time_lock(os.path.join(LOCKSERVER,"createlocktime", filename_with_partion),client)
+            if args.use_lock:
+                lock_path = os.path.join(args.lock_server_path, "checklocktime", filename_with_partion)
+                last_start_time = check_lock_and_last_start_time(lock_path,client)
+                if last_start_time and not args.redo:
+                    date_string = last_start_time
+                    date_format = "%Y-%m-%d %H:%M:%S"
+                    date = datetime.strptime(date_string, date_format)
+                    deltatime = datetime.now() - date
+                    if deltatime < timedelta(hours=1):
+                        tqdm.write(f"[Skip]: {filename_with_partion} is locked by {date_string} created at {last_start_time} [now is {deltatime}]")
+                        continue
+                
+                create_last_start_time_lock(os.path.join(args.lock_server_path,"createlocktime", filename_with_partion),client)
 
             print(f"now we deal with {inputs_path} to {result_path}")
             os.makedirs(os.path.dirname(result_path), exist_ok=True)

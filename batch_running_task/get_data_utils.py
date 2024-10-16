@@ -196,6 +196,7 @@ def check_lock_exists(path, client):
         raise NotImplementedError("please donot use lock lock")
         return os.path.exists(path)
 
+from datetime import datetime
 def check_lock_and_last_start_time(path, client):
     if "s3:" in path:
         raise NotImplementedError(f"s3 lock not implemented. Now path {path}")
@@ -209,8 +210,14 @@ def check_lock_and_last_start_time(path, client):
         else:
             return False
     else:
-        raise NotImplementedError("s3 lock not implemented")
-
+        last_start_time = False
+        if os.path.exists(path):
+            with open(path,'r') as f:
+                last_start_time = f.read()
+        # then rewrite current time into the file
+        with open(path,'w') as f:
+            f.write(str(datetime.now()))
+        return last_start_time
 def create_last_start_time_lock(path, client):
     if "s3:" in path:
         raise NotImplementedError("s3 lock not implemented")
@@ -218,7 +225,9 @@ def create_last_start_time_lock(path, client):
         assert 'createlocktime' in path, "please use `createlocktime` flag for data path"
         response = requests.get(path)
     else:
-        raise NotImplementedError("s3 lock not implemented")
+        path = path.replace('createlocktime','checklocktime')
+        with open(path,'w') as f:
+            f.write(str(datetime.now()))
 
 from PIL import Image
 import numpy as np

@@ -29,6 +29,7 @@ class BatchRECConfig(BatchModeConfig):
     update_origin: bool = False
     compile: bool = False
     replace:bool=False
+    lock_server_path: str=LOCKSERVER
 if __name__ == '__main__':
     task_name = "physics_part"
     version   = "mfr_patch_bf16"
@@ -115,7 +116,7 @@ if __name__ == '__main__':
             
             result_path = os.path.join(result_save_root, filename_with_partion)
             if args.check_lock:
-                lock_path = os.path.join(LOCKSERVER, "checklocktime", filename_with_partion)
+                lock_path = os.path.join(args.lock_server_path, "checklocktime", filename_with_partion)
                 last_start_time = check_lock_and_last_start_time(lock_path,client)
                 if last_start_time and not args.redo:
                     date_string = last_start_time
@@ -126,7 +127,7 @@ if __name__ == '__main__':
                         tqdm.write(f"[Skip]: {filename_with_partion} is locked by {date_string} created at {last_start_time} [now is {deltatime}]")
                         continue
                 
-                create_last_start_time_lock(os.path.join(LOCKSERVER,"createlocktime", filename_with_partion),client)
+                create_last_start_time_lock(os.path.join(args.lock_server_path,"createlocktime", filename_with_partion),client)
 
             print(f"now we deal with {inputs_path} to {result_path}")
             os.makedirs(os.path.dirname(result_path), exist_ok=True)

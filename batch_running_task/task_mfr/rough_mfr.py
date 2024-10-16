@@ -37,7 +37,7 @@ def latex_rm_whitespace(s: str):
             break
     return s
 
-def mfr_model_init2(weight_dir, device='cpu',batch_size=128):
+def mfr_model_init_origin(weight_dir, device='cpu',batch_size=128):
     args = argparse.Namespace(cfg_path="modules/UniMERNet/configs/demo.yaml", options=None)
     import unimernet.tasks as tasks
     from unimernet.common.config import Config
