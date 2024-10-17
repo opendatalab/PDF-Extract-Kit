@@ -148,8 +148,9 @@ Since this project uses YOLO code and PyMuPDF for file processing, these compone
    - [LayoutLMv3](https://github.com/microsoft/unilm/tree/master/layoutlmv3): Layout detection model
    - [UniMERNet](https://github.com/opendatalab/UniMERNet): Formula recognition model
    - [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy): Table recognition model
-   - [YOLOv8](https://github.com/ultralytics/ultralytics): Formula detection model
+   - [YOLOv8,YOLOv10](https://github.com/ultralytics/ultralytics): Formula detection model
    - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR model
+   - [DocLayout-YOLO](https://github.com/opendatalab/DocLayout-YOLO): Layout detection model
 
 ## Citation
 If you find our models / code / papers useful in your research, please consider giving ⭐ and citations 📝, thx :)  

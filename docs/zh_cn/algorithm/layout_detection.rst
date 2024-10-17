@@ -95,7 +95,7 @@
 - img_size: 定义图像长边大小，短边会根据长边等比例缩放，默认长边保持1024
 - conf_thres: 定义置信度阈值，仅检测大于该阈值的目标
 - iou_thres: 定义IoU阈值，去除重叠度大于该阈值的目标
-- model_path: 模型权重路径。根据模型权重决定使用DocLayout-YOLO还是YOLO-v10
+- model_path: 模型权重路径
 - visualize: 是否对模型结果进行可视化，可视化结果会保存在outputs目录下
 
 

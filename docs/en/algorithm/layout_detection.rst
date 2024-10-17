@@ -49,7 +49,7 @@ Layout detection supports following models：
         <td class="tg-0lax">Model weight</td>
         <td class="tg-0lax"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/doclayout_yolo_ft.pt">doclayout_yolo_ft.pt</a></td>
         <td class="tg-0lax"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/yolov10l_ft.pt" target="_blank" rel="noopener noreferrer">yolov10l_ft.pt</a></td>
-        <td class="tg-0lax"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/tree/main/models/Layout/LayoutLMv3" target="_blank" rel="noopener noreferrer">layoutlmv3_weight</a></td>
+        <td class="tg-0lax"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/tree/main/models/Layout/LayoutLMv3" target="_blank" rel="noopener noreferrer">layoutlmv3_ft</a></td>
       </tr>
       <tr>
         <td class="tg-0lax">Config file</td>
@@ -93,7 +93,7 @@ Model Configuration
 - img_size: Define the image long edge size; the short edge will be scaled proportionally based on the long edge, with the default long edge being 1024.
 - conf_thres: Define the confidence threshold, detecting only targets above this threshold.
 - iou_thres: Define the IoU threshold, removing targets with an overlap greater than this threshold.
-- model_path: Path to the model weights. Use DocLayout-YOLO or YOLO-v10 depends on input model weight.
+- model_path: Path to the model weights.
 - visualize: Whether to visualize the model results; visualized results will be saved in the outputs directory.
 
 
