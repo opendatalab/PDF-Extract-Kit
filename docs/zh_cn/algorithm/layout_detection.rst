@@ -38,21 +38,21 @@
       <tr>
         <td class="tg-0lax">DocLayout-YOLO</td>
         <td class="tg-0pky">基于YOLO-v10模型改进：<br>1. 生成多样性预训练数据，提升对多种类型文档泛化性<br>2. 模型结构改进，提升对多尺度目标感知能力<br>详见<a href="https://github.com/opendatalab/DocLayout-YOLO" target="_blank" rel="noopener noreferrer">DocLayout-YOLO</a></td>
-        <td class="tg-0pky">和YOLO-v10相比精度更高</td>
+        <td class="tg-0pky">速度快、精度高</td>
         <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/doclayout_yolo_ft.pt" target="_blank" rel="noopener noreferrer">doclayout_yolo_ft.pt</a></td>
         <td class="tg-0pky">layout_detection.yaml</td>
       </tr>
       <tr>
         <td class="tg-0lax">YOLO-v10</td>
         <td class="tg-0pky">基础YOLO-v10模型</td>
-        <td class="tg-0pky">精度较高，速度较快</td>
+        <td class="tg-0pky">速度快，精度一般</td>
         <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/yolov10l_ft.pt" target="_blank" rel="noopener noreferrer">yolov10l_ft.pt</a></td>
         <td class="tg-0pky">layout_detection_yolo.yaml</td>
       </tr>
       <tr>
         <td class="tg-0lax">LayoutLMv3</td>
         <td class="tg-0pky">基础LayoutLMv3模型</td>
-        <td class="tg-0pky">精度较高，速度较慢</td>
+        <td class="tg-0pky">速度慢，精度较好</td>
         <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/tree/main/models/Layout/LayoutLMv3" target="_blank" rel="noopener noreferrer">layoutlmv3_ft</a></td>
         <td class="tg-0pky">layout_detection_layoutlmv3.yaml</td>
       </tr>

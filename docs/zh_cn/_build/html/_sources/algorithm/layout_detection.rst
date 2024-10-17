@@ -12,9 +12,56 @@
 模型使用
 =================
 
-布局检测模型支持 ``YOLOv10`` ， ``DocLayout-YOLO`` 和 ``LayoutLMv3`` ，在配置好环境的情况下，直接执行 ``scripts/layout_detection.py`` 即可运行布局检测算法脚本。
+布局检测模型支持以下模型：
 
-   
+.. raw:: html
+
+    <style type="text/css">
+    .tg  {border-collapse:collapse;border-color:#9ABAD9;border-spacing:0;}
+    .tg td{background-color:#EBF5FF;border-color:#9ABAD9;border-style:solid;border-width:1px;color:#444;
+      font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;word-break:normal;}
+    .tg th{background-color:#409cff;border-color:#9ABAD9;border-style:solid;border-width:1px;color:#fff;
+      font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+    .tg .tg-f8tz{background-color:#409cff;border-color:inherit;text-align:left;vertical-align:top}
+    .tg .tg-0lax{text-align:left;vertical-align:top}
+    .tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+    </style>
+    <table class="tg"><thead>
+      <tr>
+        <th class="tg-0lax">模型</th>
+        <th class="tg-f8tz">简述</th>
+        <th class="tg-f8tz">特点</th>
+        <th class="tg-f8tz">模型权重</th>
+        <th class="tg-f8tz">配置文件</th>
+      </tr></thead>
+    <tbody>
+      <tr>
+        <td class="tg-0lax">DocLayout-YOLO</td>
+        <td class="tg-0pky">基于YOLO-v10模型改进：<br>1. 生成多样性预训练数据，提升对多种类型文档泛化性<br>2. 模型结构改进，提升对多尺度目标感知能力<br>详见<a href="https://github.com/opendatalab/DocLayout-YOLO" target="_blank" rel="noopener noreferrer">DocLayout-YOLO</a></td>
+        <td class="tg-0pky">速度快、精度高</td>
+        <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/doclayout_yolo_ft.pt" target="_blank" rel="noopener noreferrer">doclayout_yolo_ft.pt</a></td>
+        <td class="tg-0pky">layout_detection.yaml</td>
+      </tr>
+      <tr>
+        <td class="tg-0lax">YOLO-v10</td>
+        <td class="tg-0pky">基础YOLO-v10模型</td>
+        <td class="tg-0pky">速度快，精度一般</td>
+        <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/yolov10l_ft.pt" target="_blank" rel="noopener noreferrer">yolov10l_ft.pt</a></td>
+        <td class="tg-0pky">layout_detection_yolo.yaml</td>
+      </tr>
+      <tr>
+        <td class="tg-0lax">LayoutLMv3</td>
+        <td class="tg-0pky">基础LayoutLMv3模型</td>
+        <td class="tg-0pky">速度慢，精度较好</td>
+        <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/tree/main/models/Layout/LayoutLMv3" target="_blank" rel="noopener noreferrer">layoutlmv3_ft</a></td>
+        <td class="tg-0pky">layout_detection_layoutlmv3.yaml</td>
+      </tr>
+    </tbody></table>
+
+
+在配置好环境的情况下，直接执行 ``scripts/layout_detection.py`` 即可运行布局检测算法脚本。
+
+
 **执行布局检测程序**
 
 .. code:: shell
@@ -24,9 +71,7 @@
 模型配置
 -----------------
 
-**1. YOLOv10**
-
-和LayoutLMv3相比，YOLOv10推理速度更快，支持batch模式推理
+**1. DocLayout-YOLO / YOLO-v10**
 
 .. code:: yaml
 
@@ -36,26 +81,20 @@
       layout_detection:
         model: layout_detection_yolo
         model_config:
-          img_size: 1280
+          img_size: 1024
           conf_thres: 0.25
           iou_thres: 0.45
-          batch_size: 2
-          model_path: path/to/yolov10_model
+          model_path: path/to/doclayout_yolo_model
           visualize: True
-          rect: True
-          device: "0"
 
 - inputs/outputs: 分别定义输入文件路径和可视化输出目录
 - tasks: 定义任务类型，当前只包含一个布局检测任务
 - model: 定义具体模型类型，例如 ``layout_detection_yolo``
 - model_config: 定义模型配置
-- img_size: 定义图像长边大小，短边会根据长边等比例缩放，默认长边保持1280
+- img_size: 定义图像长边大小，短边会根据长边等比例缩放，默认长边保持1024
 - conf_thres: 定义置信度阈值，仅检测大于该阈值的目标
 - iou_thres: 定义IoU阈值，去除重叠度大于该阈值的目标
-- batch_size: 定义批量大小，推理时每次同时推理的图像数，一般情况下越大推理速度越快，显卡越好该数值可以设置的越大
 - model_path: 模型权重路径
-- visualize: 是否对模型结果进行可视化，可视化结果会保存在outputs目录下
-- rect: 是否开启rectangular推理，默认为True。若设为True，同一batch中的图像会保持长宽比进行缩放并且padding到同一尺寸；若为False，同一batch中所有图像都resize到(img_size, img_size)尺寸进行推理
 - visualize: 是否对模型结果进行可视化，可视化结果会保存在outputs目录下
 
 
@@ -63,7 +102,7 @@
 
 .. note::
 
-   LayoutLMv3 默认情况下不能直接运行。请按照以下步骤进行配置修改：
+   LayoutLMv3 默认情况下不能直接运行。运行时请将配置文件修改为configs/layout_detection_layoutlmv3.yaml，并且请按照以下步骤进行配置修改：
 
    1. **Detectron2 环境配置**
 
@@ -127,7 +166,7 @@ PDF-Extract-Kit中的布局检测脚本支持 ``单个图像`` 、 ``只包含�
    - PDF文件夹: path/to/pdfs  
 
 .. note::
-   当使用PDF作为输入时，需要将 ``formula_detection.py``
+   当使用PDF作为输入时，需要将 ``layout_detection.py``
 
    .. code:: python
 

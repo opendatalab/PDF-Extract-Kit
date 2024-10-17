@@ -387,29 +387,66 @@ document.write(`
 </section>
 <section id="id3">
 <h2>模型使用<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>
-<p>布局检测模型支持 <code class="docutils literal notranslate"><span class="pre">YOLOv10</span></code> ， <code class="docutils literal notranslate"><span class="pre">DocLayout-YOLO</span></code> 和 <code class="docutils literal notranslate"><span class="pre">LayoutLMv3</span></code> ，在配置好环境的情况下，直接执行 <code class="docutils literal notranslate"><span class="pre">scripts/layout_detection.py</span></code> 即可运行布局检测算法脚本。</p>
+<p>布局检测模型支持以下模型：</p>
+<style type="text/css">
+.tg  {border-collapse:collapse;border-color:#9ABAD9;border-spacing:0;}
+.tg td{background-color:#EBF5FF;border-color:#9ABAD9;border-style:solid;border-width:1px;color:#444;
+  font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{background-color:#409cff;border-color:#9ABAD9;border-style:solid;border-width:1px;color:#fff;
+  font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-f8tz{background-color:#409cff;border-color:inherit;text-align:left;vertical-align:top}
+.tg .tg-0lax{text-align:left;vertical-align:top}
+.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+</style>
+<table class="tg"><thead>
+  <tr>
+    <th class="tg-0lax">模型</th>
+    <th class="tg-f8tz">简述</th>
+    <th class="tg-f8tz">特点</th>
+    <th class="tg-f8tz">模型权重</th>
+    <th class="tg-f8tz">配置文件</th>
+  </tr></thead>
+<tbody>
+  <tr>
+    <td class="tg-0lax">DocLayout-YOLO</td>
+    <td class="tg-0pky">基于YOLO-v10模型改进：<br>1. 生成多样性预训练数据，提升对多种类型文档泛化性<br>2. 模型结构改进，提升对多尺度目标感知能力<br>详见<a href="https://github.com/opendatalab/DocLayout-YOLO" target="_blank" rel="noopener noreferrer">DocLayout-YOLO</a></td>
+    <td class="tg-0pky">速度快、精度高</td>
+    <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/doclayout_yolo_ft.pt" target="_blank" rel="noopener noreferrer">doclayout_yolo_ft.pt</a></td>
+    <td class="tg-0pky">layout_detection.yaml</td>
+  </tr>
+  <tr>
+    <td class="tg-0lax">YOLO-v10</td>
+    <td class="tg-0pky">基础YOLO-v10模型</td>
+    <td class="tg-0pky">速度快，精度一般</td>
+    <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/yolov10l_ft.pt" target="_blank" rel="noopener noreferrer">yolov10l_ft.pt</a></td>
+    <td class="tg-0pky">layout_detection_yolo.yaml</td>
+  </tr>
+  <tr>
+    <td class="tg-0lax">LayoutLMv3</td>
+    <td class="tg-0pky">基础LayoutLMv3模型</td>
+    <td class="tg-0pky">速度慢，精度较好</td>
+    <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/tree/main/models/Layout/LayoutLMv3" target="_blank" rel="noopener noreferrer">layoutlmv3_ft</a></td>
+    <td class="tg-0pky">layout_detection_layoutlmv3.yaml</td>
+  </tr>
+</tbody></table><p>在配置好环境的情况下，直接执行 <code class="docutils literal notranslate"><span class="pre">scripts/layout_detection.py</span></code> 即可运行布局检测算法脚本。</p>
 <p><strong>执行布局检测程序</strong></p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>scripts/layout_detection.py<span class="w"> </span>--config<span class="w"> </span>configs/layout_detection.yaml
 </pre></div>
 </div>
 <section id="id4">
 <h3>模型配置<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
-<p><strong>1. YOLOv10</strong></p>
-<p>和LayoutLMv3相比，YOLOv10推理速度更快，支持batch模式推理</p>
+<p><strong>1. DocLayout-YOLO / YOLO-v10</strong></p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">assets/demo/layout_detection</span>
 <span class="nt">outputs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">outputs/layout_detection</span>
 <span class="nt">tasks</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">layout_detection</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">layout_detection_yolo</span>
 <span class="w">    </span><span class="nt">model_config</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">img_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1280</span>
+<span class="w">      </span><span class="nt">img_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span>
 <span class="w">      </span><span class="nt">conf_thres</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.25</span>
 <span class="w">      </span><span class="nt">iou_thres</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.45</span>
-<span class="w">      </span><span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
-<span class="w">      </span><span class="nt">model_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">path/to/yolov10_model</span>
+<span class="w">      </span><span class="nt">model_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">path/to/doclayout_yolo_model</span>
 <span class="w">      </span><span class="nt">visualize</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
-<span class="w">      </span><span class="nt">rect</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
-<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0&quot;</span>
 </pre></div>
 </div>
 <ul class="simple">
@@ -417,19 +454,16 @@ document.write(`
 <li><p>tasks: 定义任务类型，当前只包含一个布局检测任务</p></li>
 <li><p>model: 定义具体模型类型，例如 <code class="docutils literal notranslate"><span class="pre">layout_detection_yolo</span></code></p></li>
 <li><p>model_config: 定义模型配置</p></li>
-<li><p>img_size: 定义图像长边大小，短边会根据长边等比例缩放，默认长边保持1280</p></li>
+<li><p>img_size: 定义图像长边大小，短边会根据长边等比例缩放，默认长边保持1024</p></li>
 <li><p>conf_thres: 定义置信度阈值，仅检测大于该阈值的目标</p></li>
 <li><p>iou_thres: 定义IoU阈值，去除重叠度大于该阈值的目标</p></li>
-<li><p>batch_size: 定义批量大小，推理时每次同时推理的图像数，一般情况下越大推理速度越快，显卡越好该数值可以设置的越大</p></li>
 <li><p>model_path: 模型权重路径</p></li>
-<li><p>visualize: 是否对模型结果进行可视化，可视化结果会保存在outputs目录下</p></li>
-<li><p>rect: 是否开启rectangular推理，默认为True。若设为True，同一batch中的图像会保持长宽比进行缩放并且padding到同一尺寸；若为False，同一batch中所有图像都resize到(img_size, img_size)尺寸进行推理</p></li>
 <li><p>visualize: 是否对模型结果进行可视化，可视化结果会保存在outputs目录下</p></li>
 </ul>
 <p><strong>2. LayoutLMv3</strong></p>
 <div class="admonition note">
 <p class="admonition-title">备注</p>
-<p>LayoutLMv3 默认情况下不能直接运行。请按照以下步骤进行配置修改：</p>
+<p>LayoutLMv3 默认情况下不能直接运行。运行时请将配置文件修改为configs/layout_detection_layoutlmv3.yaml，并且请按照以下步骤进行配置修改：</p>
 <ol class="arabic simple">
 <li><p><strong>Detectron2 环境配置</strong></p></li>
 </ol>
@@ -492,7 +526,7 @@ pip<span class="w"> </span>install<span class="w"> </span>https://github.com/ope
 </div>
 <div class="admonition note">
 <p class="admonition-title">备注</p>
-<p>当使用PDF作为输入时，需要将 <code class="docutils literal notranslate"><span class="pre">formula_detection.py</span></code></p>
+<p>当使用PDF作为输入时，需要将 <code class="docutils literal notranslate"><span class="pre">layout_detection.py</span></code></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># for image detection</span>
 <span class="n">detection_results</span> <span class="o">=</span> <span class="n">model_layout_detection</span><span class="o">.</span><span class="n">predict_images</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">result_path</span><span class="p">)</span>
 </pre></div>

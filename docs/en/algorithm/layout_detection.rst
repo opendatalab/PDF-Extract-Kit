@@ -38,21 +38,21 @@ Layout detection supports following models：
       <tr>
         <td class="tg-0lax">DocLayout-YOLO</td>
         <td class="tg-0pky">Improved based on YOLO-v10：<br>1. Generate diverse pre-training data，enhance generalization ability across multiple document types<br>2. Model architecture improvement, improve perception ability on scale-varing instances<br>Details in <a href="https://github.com/opendatalab/DocLayout-YOLO" target="_blank" rel="noopener noreferrer">DocLayout-YOLO</a></td>
-        <td class="tg-0pky">Higher accuracy compared with YOLO-v10</td>
+        <td class="tg-0pky">Speed:Fast, Accuracy:High</td>
         <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/doclayout_yolo_ft.pt" target="_blank" rel="noopener noreferrer">doclayout_yolo_ft.pt</a></td>
         <td class="tg-0pky">layout_detection.yaml</td>
       </tr>
       <tr>
         <td class="tg-0lax">YOLO-v10</td>
         <td class="tg-0pky">Base YOLO-v10 model</td>
-        <td class="tg-0pky">High accuracy and fast speed</td>
+        <td class="tg-0pky">Speed:Fast, Accuracy:Moderate</td>
         <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/yolov10l_ft.pt" target="_blank" rel="noopener noreferrer">yolov10l_ft.pt</a></td>
         <td class="tg-0pky">layout_detection_yolo.yaml</td>
       </tr>
       <tr>
         <td class="tg-0lax">LayoutLMv3</td>
         <td class="tg-0pky">Base LayoutLMv3 model</td>
-        <td class="tg-0pky">High accuracy and slower speed</td>
+        <td class="tg-0pky">Speed:Slow, Accuracy:High</td>
         <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/tree/main/models/Layout/LayoutLMv3" target="_blank" rel="noopener noreferrer">layoutlmv3_ft</a></td>
         <td class="tg-0pky">layout_detection_layoutlmv3.yaml</td>
       </tr>
