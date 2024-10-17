@@ -1,7 +1,8 @@
 omegaconf
 matplotlib
 PyMuPDF
-ultralytics
+ultralytics>=8.2.85
+doclayout-yolo==0.0.2
 unimernet==0.2.1
 paddlepaddle
 paddleocr==2.7.3

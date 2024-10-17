@@ -1,13 +1,11 @@
 import os
 import cv2
 import torch
-from torch.utils.data import DataLoader, Dataset
-from ultralytics import YOLO
 from pdf_extract_kit.registry import MODEL_REGISTRY
 from pdf_extract_kit.utils.visualization import visualize_bbox
 from pdf_extract_kit.dataset.dataset import ImageDataset
-import torchvision.transforms as transforms
 
+import pdb
 
 @MODEL_REGISTRY.register('layout_detection_yolo')
 class LayoutDetectionYOLO:
@@ -33,19 +31,25 @@ class LayoutDetectionYOLO:
         }
 
         # Load the YOLO model from the specified path
-        self.model = YOLO(config['model_path'])
+        try:
+            from doclayout_yolo import YOLOv10
+            self.model = YOLOv10(config['model_path'])
+        except AttributeError:
+            pdb.set_trace()
+            from ultralytics import YOLO
+            self.model = YOLO(config['model_path'])
 
         # Set model parameters
         self.img_size = config.get('img_size', 1280)
-        self.pdf_dpi = config.get('pdf_dpi', 200)
         self.conf_thres = config.get('conf_thres', 0.25)
         self.iou_thres = config.get('iou_thres', 0.45)
         self.visualize = config.get('visualize', False)
-        self.device = config.get('device', 'cuda' if torch.cuda.is_available() else 'cpu')
-        self.batch_size = config.get('batch_size', 1)
-        self.max_det = config.get('max_det', 300)
         self.nc = config.get('nc', 10)
         self.workers = config.get('workers', 8)
+        
+        if self.iou_thres > 0:
+            import torchvision
+            self.nms_func = torchvision.ops.nms
 
     def predict(self, images, result_path, image_ids=None):
         """
@@ -68,6 +72,14 @@ class LayoutDetectionYOLO:
                 boxes = result.__dict__['boxes'].xyxy
                 classes = result.__dict__['boxes'].cls
                 scores = result.__dict__['boxes'].conf
+
+                if self.iou_thres > 0:
+                    indices = self.nms_func(boxes=torch.Tensor(boxes), scores=torch.Tensor(scores),iou_threshold=self.iou_thres)
+                    boxes, scores, classes = boxes[indices], scores[indices], classes[indices]
+                    if len(boxes.shape) == 1:
+                        boxes = np.expand_dims(boxes, 0)
+                        scores = np.expand_dims(scores, 0)
+                        classes = np.expand_dims(classes, 0)
                 
                 vis_result = visualize_bbox(image, boxes, classes, scores, self.id_to_names)
 
