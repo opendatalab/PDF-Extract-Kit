@@ -1,6 +1,7 @@
 from magic_pdf.pipe.UNIPipe import UNIPipe
 import json
 from magic_pdf.rw.S3ReaderWriter import S3ReaderWriter
+from magic_pdf.rw.DiskReaderWriter import DiskReaderWriter
 import sys,os
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 from batch_running_task.get_data_utils import *
@@ -10,7 +11,7 @@ from tqdm.auto import tqdm
 from simple_parsing import ArgumentParser
 import time
 import subprocess
-client = build_client()
+
 from batch_running_task.utils import convert_boxes
 # set logging level to Error
 from loguru import logger
@@ -86,10 +87,10 @@ def reformat_to_minerU_input(pool):
         }
         new_doc_layout_result.append(new_page)
     return new_doc_layout_result
-
+client = build_client()
 def process_file(jsonl_path, args):
     filename  = os.path.basename(jsonl_path)
-    saveroot  = os.path.dirname(os.path.dirname(jsonl_path))
+    saveroot  = args.savepath #os.path.dirname(os.path.dirname(jsonl_path))
     targetpath= os.path.join(saveroot,"markdown",filename)
     image_save_root = os.path.join(saveroot,"images_per_pdf",filename[:-len(".jsonl")])
     if not args.redo and check_path_exists(targetpath,client):
@@ -98,22 +99,30 @@ def process_file(jsonl_path, args):
     jsonl_data = read_json_from_path(jsonl_path,client)
     markdown_for_this_bulk = []
     for pdf_info in tqdm(jsonl_data,desc=f"process {filename}",leave=False,position=1):
+        
         try:
             model_list = reformat_to_minerU_input(pdf_info) #pdf_info['doc_layout_result']
             track_id   = pdf_info['track_id']
             img_save_dir = os.path.join(image_save_root, track_id)
             if img_save_dir.startswith("opendata:"):
                 img_save_dir = img_save_dir[len("opendata:"):]
-            # if img_save_dir.startswith("s3://"):
-            #     img_save_dir = img_save_dir[len("s3://"):]
-            image_writer = S3ReaderWriter(ak="ZSLIM2EYKENEX5B4AYBI", 
-                                        sk="2ke199F35V9Orwcu8XJyGUcaJzeDz4LzvMP5yEFD", 
-                                        endpoint_url='http://p-ceph-norm-outside.pjlab.org.cn',
-                                        parent_path=img_save_dir)
+            if img_save_dir.startswith("s3://"):
+                img_save_dir = img_save_dir[len("s3://"):]
+                image_writer = S3ReaderWriter(ak="ZSLIM2EYKENEX5B4AYBI", 
+                                              sk="2ke199F35V9Orwcu8XJyGUcaJzeDz4LzvMP5yEFD", 
+                                              endpoint_url='http://p-ceph-norm-outside.pjlab.org.cn',
+                                              parent_path=img_save_dir)
+            else:
+                image_writer = DiskReaderWriter(img_save_dir)
+                
             pdf_path = pdf_info["path"]
+            if pdf_path.startswith("opendata:"):
+                pdf_path = pdf_path[len("opendata:"):]
             if pdf_path.startswith("s3:"):
                 pdf_path = "opendata:"+pdf_path
-            pdf_bytes = client.get(pdf_path)#read_pdf_from_path(pdf_path,client)
+                pdf_bytes = client.get(pdf_path)#read_pdf_from_path(pdf_path,client)
+            else:
+                pdf_bytes = open(pdf_path,"rb").read()
             pip = UNIPipe(pdf_bytes, {"_pdf_type":"", "model_list":model_list}, image_writer=image_writer)
             pip.pdf_type = pip.PIP_OCR
             pip.pipe_parse()

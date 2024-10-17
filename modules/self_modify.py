@@ -11,7 +11,7 @@ from paddleocr import PaddleOCR
 from ppocr.utils.logging import get_logger
 from ppocr.utils.utility import check_and_read, alpha_to_color, binarize_img
 from tools.infer.utility import draw_ocr_box_txt, get_rotate_crop_image, get_minarea_rect_crop
-from .batch_text_detector import BatchTextDetector
+
 logger = get_logger()
 
 def img_decode(content: bytes):
@@ -123,9 +123,7 @@ def update_det_boxes(dt_boxes, mfdetrec_res):
 
 
 class ModifiedPaddleOCR(PaddleOCR):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.batch_det_model = BatchTextDetector()
+    
     
     def batch_detect(self, img_list, mfd_res_list, ori_im_list, cls=True):
         time_dict = {'det': 0, 'rec': 0, 'cls': 0, 'all': 0}

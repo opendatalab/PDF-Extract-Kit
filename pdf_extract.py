@@ -19,7 +19,6 @@ from ultralytics import YOLO
 from unimernet.common.config import Config
 import unimernet.tasks as tasks
 from unimernet.processors import load_processor
-from struct_eqtable import build_model
 
 from modules.latex2png import tex2pil, zhtext2pil
 from modules.extract_pdf import load_pdf_fitz
@@ -50,6 +49,7 @@ def layout_model_init(weight):
     return model
 
 def tr_model_init(weight, max_time, device='cuda'):
+    from struct_eqtable import build_model
     tr_model = build_model(weight, max_new_tokens=4096, max_time=max_time)
     if device == 'cuda':
         tr_model = tr_model.cuda()
@@ -138,7 +138,8 @@ if __name__ == '__main__':
     mfd_model = mfd_model_init(model_configs['model_args']['mfd_weight'])
     mfr_model, mfr_vis_processors = mfr_model_init(model_configs['model_args']['mfr_weight'], device=device)
     mfr_transform = transforms.Compose([mfr_vis_processors, ])
-    tr_model = tr_model_init(model_configs['model_args']['tr_weight'], max_time=model_configs['model_args']['table_max_time'], device=device)
+    tr_model = None
+    # tr_model = tr_model_init(model_configs['model_args']['tr_weight'], max_time=model_configs['model_args']['table_max_time'], device=device)
     layout_model = layout_model_init(model_configs['model_args']['layout_weight'])
     ocr_model = ModifiedPaddleOCR(show_log=True)
     print(now.strftime('%Y-%m-%d %H:%M:%S'))
@@ -240,6 +241,7 @@ if __name__ == '__main__':
                                 'text': text,
                             })
                 elif int(res['category_id']) == 5: # do table recognition
+                    continue
                     xmin, ymin = int(res['poly'][0]), int(res['poly'][1])
                     xmax, ymax = int(res['poly'][4]), int(res['poly'][5])
                     crop_box = [xmin, ymin, xmax, ymax]

@@ -604,6 +604,7 @@ class MFRImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):
         client = self.client
         images_pool = {}
         pdf_path = pdf_metadata['path']
+        
         height = pdf_metadata['height']
         width  = pdf_metadata['width']
         if pdf_path.startswith('s3'):

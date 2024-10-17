@@ -27,6 +27,7 @@ class BatchMFRConfig(BatchModeConfig):
     update_origin: bool = False
     lock_server_path: str=LOCKSERVER
     accelerated_mfr: bool = False
+    replace:bool=False
 if __name__ == '__main__':
     task_name = "physics_part"
     version   = "final2"
@@ -56,9 +57,16 @@ if __name__ == '__main__':
     mfr_model = None
     page_num_map_whole = None #get_page_num_map_whole()
     for inputs_path in tqdm(all_file_list, leave=False, position=1):
+        if args.replace:
+            origin_root = os.path.dirname(inputs_path).split('/')
+            task_name = origin_root[-2]
+            version   = origin_root[-1]
+            args.result_save_path = os.path.dirname(os.path.dirname(os.path.dirname(inputs_path)))
+            args.redo = True
+            args.update_origin = True
         filename    = os.path.basename(inputs_path)
         result_save_root = os.path.join(args.result_save_path, task_name, version)
-            
+             
         if inputs_path.startswith('s3'):
             inputs_path = "opendata:"+inputs_path
         # assert inputs_path.startswith('opendata:s3')

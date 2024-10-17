@@ -176,10 +176,11 @@ def fast_deal_with_one_dataset(images_dataset:MFRImageDataset,
         
         for index, latex in zip(indexes, mfr_res):
             location = locations[index]
+            #print(latex)
             location_to_mfr[location] = latex_rm_whitespace(latex)
 
        
-
+ 
     patch_metadata_list = []
     for pdf_index, pdf_metadata in enumerate(tqdm(images_dataset.metadata)):
         pdf_path = clean_pdf_path(pdf_metadata['path'])
@@ -201,6 +202,7 @@ def fast_deal_with_one_dataset(images_dataset:MFRImageDataset,
                     bbox_metadata.update({'latex':latex})
                 else:
                     this_line_pool['layout_dets'].append({'category_id':category_id, 'latex':latex})
+                
             patch_metadata['doc_layout_result'].append(this_line_pool)
         patch_metadata_list.append(patch_metadata)
     if update_origin:
