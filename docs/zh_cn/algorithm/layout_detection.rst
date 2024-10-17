@@ -22,40 +22,39 @@
       font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;word-break:normal;}
     .tg th{background-color:#409cff;border-color:#9ABAD9;border-style:solid;border-width:1px;color:#fff;
       font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
-    .tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+    .tg .tg-f8tz{background-color:#409cff;border-color:inherit;text-align:left;vertical-align:top}
     .tg .tg-0lax{text-align:left;vertical-align:top}
+    .tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
     </style>
     <table class="tg"><thead>
       <tr>
-        <th class="tg-0pky">模型</th>
-        <th class="tg-0pky">DocLayout-YOLO (默认模型)</th>
-        <th class="tg-0pky">YOLO-v10</th>
-        <th class="tg-0pky">LayoutLMv3</th>
+        <th class="tg-0lax">模型</th>
+        <th class="tg-f8tz">简述</th>
+        <th class="tg-f8tz">特点</th>
+        <th class="tg-f8tz">模型权重</th>
+        <th class="tg-f8tz">配置文件</th>
       </tr></thead>
     <tbody>
       <tr>
-        <td class="tg-0pky">简述</td>
-        <td class="tg-0pky">基于YOLO-v10模型，预训练和模型方面改进</td>
+        <td class="tg-0lax">DocLayout-YOLO</td>
+        <td class="tg-0pky">基于YOLO-v10模型改进：<br>1. 生成多样性预训练数据，提升对多种类型文档泛化性<br>2. 模型结构改进，提升对多尺度目标感知能力<br>详见<a href="https://github.com/opendatalab/DocLayout-YOLO" target="_blank" rel="noopener noreferrer">DocLayout-YOLO</a></td>
+        <td class="tg-0pky">和YOLO-v10相比精度更高</td>
+        <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/doclayout_yolo_ft.pt" target="_blank" rel="noopener noreferrer">doclayout_yolo_ft.pt</a></td>
+        <td class="tg-0pky">layout_detection.yaml</td>
+      </tr>
+      <tr>
+        <td class="tg-0lax">YOLO-v10</td>
         <td class="tg-0pky">基础YOLO-v10模型</td>
+        <td class="tg-0pky">精度较高，速度较快</td>
+        <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/yolov10l_ft.pt" target="_blank" rel="noopener noreferrer">yolov10l_ft.pt</a></td>
+        <td class="tg-0pky">layout_detection_yolo.yaml</td>
+      </tr>
+      <tr>
+        <td class="tg-0lax">LayoutLMv3</td>
         <td class="tg-0pky">基础LayoutLMv3模型</td>
-      </tr>
-      <tr>
-        <td class="tg-0lax">特点</td>
-        <td class="tg-0lax">和基础YOLO-v10模型相比精度更高</td>
-        <td class="tg-0lax">精度较好，速度较快</td>
-        <td class="tg-0lax">精度较高，速度较快</td>
-      </tr>
-      <tr>
-        <td class="tg-0lax">模型权重</td>
-        <td class="tg-0lax"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/doclayout_yolo_ft.pt">doclayout_yolo_ft.pt</a></td>
-        <td class="tg-0lax"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/yolov10l_ft.pt" target="_blank" rel="noopener noreferrer">yolov10l_ft.pt</a></td>
-        <td class="tg-0lax"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/tree/main/models/Layout/LayoutLMv3" target="_blank" rel="noopener noreferrer">layoutlmv3_weight</a></td>
-      </tr>
-      <tr>
-        <td class="tg-0lax">配置文件</td>
-        <td class="tg-0lax">layout_detection.yaml</td>
-        <td class="tg-0lax">layout_detection_yolo.yaml</td>
-        <td class="tg-0lax">layout_detection_layoutlmv3.yaml</td>
+        <td class="tg-0pky">精度较高，速度较慢</td>
+        <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/tree/main/models/Layout/LayoutLMv3" target="_blank" rel="noopener noreferrer">layoutlmv3_ft</a></td>
+        <td class="tg-0pky">layout_detection_layoutlmv3.yaml</td>
       </tr>
     </tbody></table>
 

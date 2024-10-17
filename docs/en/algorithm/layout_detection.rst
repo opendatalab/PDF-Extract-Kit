@@ -22,40 +22,39 @@ Layout detection supports following models：
       font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;word-break:normal;}
     .tg th{background-color:#409cff;border-color:#9ABAD9;border-style:solid;border-width:1px;color:#fff;
       font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
-    .tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+    .tg .tg-f8tz{background-color:#409cff;border-color:inherit;text-align:left;vertical-align:top}
     .tg .tg-0lax{text-align:left;vertical-align:top}
+    .tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
     </style>
     <table class="tg"><thead>
       <tr>
-        <th class="tg-0pky">Model</th>
-        <th class="tg-0pky">DocLayout-YOLO (Default model)</th>
-        <th class="tg-0pky">YOLO-v10</th>
-        <th class="tg-0pky">LayoutLMv3</th>
+        <th class="tg-0lax">Model</th>
+        <th class="tg-f8tz">Description</th>
+        <th class="tg-f8tz">Characteristics</th>
+        <th class="tg-f8tz">Model weight</th>
+        <th class="tg-f8tz">Config file</th>
       </tr></thead>
     <tbody>
       <tr>
-        <td class="tg-0pky">Description</td>
-        <td class="tg-0pky">Based on YOLO-v10, optimized from both pre-training and architecture</td>
+        <td class="tg-0lax">DocLayout-YOLO</td>
+        <td class="tg-0pky">Improved based on YOLO-v10：<br>1. Generate diverse pre-training data，enhance generalization ability across multiple document types<br>2. Model architecture improvement, improve perception ability on scale-varing instances<br>Details in <a href="https://github.com/opendatalab/DocLayout-YOLO" target="_blank" rel="noopener noreferrer">DocLayout-YOLO</a></td>
+        <td class="tg-0pky">Higher accuracy compared with YOLO-v10</td>
+        <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/doclayout_yolo_ft.pt" target="_blank" rel="noopener noreferrer">doclayout_yolo_ft.pt</a></td>
+        <td class="tg-0pky">layout_detection.yaml</td>
+      </tr>
+      <tr>
+        <td class="tg-0lax">YOLO-v10</td>
         <td class="tg-0pky">Base YOLO-v10 model</td>
+        <td class="tg-0pky">High accuracy and fast speed</td>
+        <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/yolov10l_ft.pt" target="_blank" rel="noopener noreferrer">yolov10l_ft.pt</a></td>
+        <td class="tg-0pky">layout_detection_yolo.yaml</td>
+      </tr>
+      <tr>
+        <td class="tg-0lax">LayoutLMv3</td>
         <td class="tg-0pky">Base LayoutLMv3 model</td>
-      </tr>
-      <tr>
-        <td class="tg-0lax">Characteristics</td>
-        <td class="tg-0lax">More accurate compared to base YOLO-v10 model</td>
-        <td class="tg-0lax">High accuracy and fast</td>
-        <td class="tg-0lax">High accuracy but slower</td>
-      </tr>
-      <tr>
-        <td class="tg-0lax">Model weight</td>
-        <td class="tg-0lax"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/doclayout_yolo_ft.pt">doclayout_yolo_ft.pt</a></td>
-        <td class="tg-0lax"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/blob/main/models/Layout/YOLO/yolov10l_ft.pt" target="_blank" rel="noopener noreferrer">yolov10l_ft.pt</a></td>
-        <td class="tg-0lax"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/tree/main/models/Layout/LayoutLMv3" target="_blank" rel="noopener noreferrer">layoutlmv3_ft</a></td>
-      </tr>
-      <tr>
-        <td class="tg-0lax">Config file</td>
-        <td class="tg-0lax">layout_detection.yaml</td>
-        <td class="tg-0lax">layout_detection_yolo.yaml</td>
-        <td class="tg-0lax">layout_detection_layoutlmv3.yaml</td>
+        <td class="tg-0pky">High accuracy and slower speed</td>
+        <td class="tg-0pky"><a href="https://huggingface.co/opendatalab/PDF-Extract-Kit-1.0/tree/main/models/Layout/LayoutLMv3" target="_blank" rel="noopener noreferrer">layoutlmv3_ft</a></td>
+        <td class="tg-0pky">layout_detection_layoutlmv3.yaml</td>
       </tr>
     </tbody></table>
 
