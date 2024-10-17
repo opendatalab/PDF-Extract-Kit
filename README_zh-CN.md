@@ -41,7 +41,7 @@
 
 | **任务类型** | **任务描述**                                                                    | **模型**                     |
 |--------------|---------------------------------------------------------------------------------|------------------------------|
-| **布局检测** | 定位文档中不同元素位置：包含图像、表格、文本、标题、公式等 | `YOLOv10_ft`,`LayoutLMv3_ft` |
+| **布局检测** | 定位文档中不同元素位置：包含图像、表格、文本、标题、公式等 | `DocLayout-YOLO_ft`, `YOLO-v10_ft`, `LayoutLMv3_ft` |
 | **公式检测** | 定位文档中公式位置：包含行内公式和行间公式                                      | `YOLOv8_ft`                       |
 | **公式识别** | 识别公式图像为latex源码                                                         | `UniMERNet`                  |
 |    **OCR**   | 提取图像中的文本内容（包括定位和识别）                                          | `PaddleOCR`                  |
@@ -109,7 +109,7 @@ pip install -r requirements.txt
 ```bash 
 python scripts/layout_detection.py --config=configs/layout_detection.yaml
 ```
-你可以在 `outputs/layout_detection` 文件夹下查看布局检测结果。
+布局检测模型支持**DocLayout-YOLO**（默认模型），YOLO-v10，以及LayoutLMv3。对于YOLO-v10和LayoutLMv3的布局检测，请参考[Layout Detection Algorithm](https://pdf-extract-kit.readthedocs.io/zh-cn/latest/algorithm/layout_detection.html)。你可以在 `outputs/layout_detection` 文件夹下查看布局检测结果。
 
 #### 公式检测模型
 
@@ -163,6 +163,7 @@ python scripts/formula_recognition.py --config=configs/formula_recognition.yaml
    - [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy): 表格识别模型
    - [YOLO](https://github.com/ultralytics/ultralytics): 公式检测模型
    - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR): OCR模型
+   - [DocLayout-YOLO](https://github.com/opendatalab/DocLayout-YOLO): 布局检测模型
 
 
 ## Citation
