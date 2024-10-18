@@ -329,7 +329,7 @@ class PDF2MARKDOWN(OCRTask):
         for fpath in file_list:
             basename = os.path.basename(fpath)[:-4]
             if fpath.endswith(".pdf") or fpath.endswith(".PDF"):
-                images = load_pdf(pdf_path)
+                images = load_pdf(fpath)
             else:
                 images = [Image.open(fpath)]
             pdf_extract_res = self.process_single_pdf(images)
