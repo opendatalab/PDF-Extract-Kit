@@ -5,8 +5,6 @@ from pdf_extract_kit.registry import MODEL_REGISTRY
 from pdf_extract_kit.utils.visualization import visualize_bbox
 from pdf_extract_kit.dataset.dataset import ImageDataset
 
-import pdb
-
 @MODEL_REGISTRY.register('layout_detection_yolo')
 class LayoutDetectionYOLO:
     def __init__(self, config):
@@ -35,7 +33,6 @@ class LayoutDetectionYOLO:
             from doclayout_yolo import YOLOv10
             self.model = YOLOv10(config['model_path'])
         except AttributeError:
-            pdb.set_trace()
             from ultralytics import YOLO
             self.model = YOLO(config['model_path'])
 
