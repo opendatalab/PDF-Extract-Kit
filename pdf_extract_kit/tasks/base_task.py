@@ -33,7 +33,7 @@ class BaseTask:
             # Determine the type of input data and process accordingly
             if input_data.lower().endswith(('.png', '.jpg', '.jpeg')):
                 # If input is a single image file
-                image = [input_data]
+                images = [input_data]
             else:
                 raise ValueError("Unsupported input data format: {}".format(input_data))
 
