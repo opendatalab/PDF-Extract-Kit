@@ -75,7 +75,7 @@ Similarly, we collected and annotated documents containing formulas in both Engl
 
 [UniMERNet](https://github.com/opendatalab/UniMERNet) is an algorithm designed for diverse formula recognition in real-world scenarios. By constructing large-scale training data and carefully designed results, it achieves excellent recognition performance for complex long formulas, handwritten formulas, and noisy screenshot formulas.
 
-### Formula Recognition
+### Table Recognition
 
 [StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy) is a high efficiency toolkit that can converts table images into LaTeX/HTML/MarkDown. The latest version, powered by the InternVL2-1B foundation model,  improves Chinese recognition accuracy and expands multi-format output options.
 
