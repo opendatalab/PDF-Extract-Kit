@@ -21,6 +21,7 @@ class TableParsingStructEqTable:
         self.max_time = config.get('max_time', 30)
 
         self.lmdeploy = config.get('lmdeploy', False)
+        self.flash_attn = config.get('flash_attn', True)
         self.batch_size = config.get('batch_size', 1)
         self.default_format = config.get('output_format', 'latex')
 
@@ -30,6 +31,7 @@ class TableParsingStructEqTable:
             max_new_tokens=self.max_new_tokens,
             max_time=self.max_time,
             lmdeploy=self.lmdeploy,
+            flash_attn=self.flash_attn,
             batch_size=self.batch_size,
         ).cuda()
 

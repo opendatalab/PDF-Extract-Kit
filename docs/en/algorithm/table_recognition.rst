@@ -34,6 +34,7 @@ Model Configuration
           max_time: 30
           output_format: latex
           lmdeploy: False
+          flash_attn: True
 
 - inputs/outputs: Define the input file path and table recognition result directory respectively
 - tasks: Define the task type, currently only including one table recognition task
@@ -44,6 +45,7 @@ Model Configuration
 - max_time: Maximum runtime for the model (in seconds)
 - output_format: Output format, default is set to ``latex``, options include ``html`` and ``markdown``
 - lmdeploy: Whether to use LMDeploy for deployment, currently set to False
+- flash_attn: Whether to use flash attention, only available for Ampere GPUs
 
 Diverse Input Support
 -----------------

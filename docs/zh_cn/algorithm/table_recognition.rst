@@ -34,6 +34,7 @@
           max_time: 30
           output_format: latex
           lmdeploy: False
+          flash_attn: True
 
 - inputs/outputs: 分别定义输入文件路径和表格识别结果目录
 - tasks: 定义任务类型，当前只包含一个表格识别任务
@@ -44,6 +45,7 @@
 - max_time: 模型运行的最大时间（秒）
 - output_format: 输出格式，默认设置为 ``latex``, 可选有 ``html`` 和 ``markdown``
 - lmdeploy: 是否使用 LMDeploy 进行部署，当前设置为 False
+- flash_attn: 是否使用flash attention，仅适用于Ampere GPU
 
 
 多样化输入支持
