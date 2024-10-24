@@ -49,6 +49,7 @@ English | [简体中文](./README_zh-CN.md)
 | **Reading Order** | Sort and concatenate discrete text paragraphs                                    | Coming Soon!                  | 
 
 ## News and Updates
+- `2024.10.22` 🎉🎉🎉 We are excited to announce that table recognition model [StructTable-InternVL2-1B](https://huggingface.co/U4R/StructTable-InternVL2-1B), which supports output LaTeX, HTML and MarkdDown formats has been officially integrated into `PDF-Extract-Kit 1.0`. Please refer to the [table recognition algorithm documentation](https://pdf-extract-kit.readthedocs.io/en/latest/algorithm/table_recognition.html) for usage instructions!
 - `2024.10.17` 🎉🎉🎉 We are excited to announce that the more accurate and faster layout detection model, [DocLayout-YOLO](https://github.com/opendatalab/DocLayout-YOLO), has been officially integrated into `PDF-Extract-Kit 1.0`. Please refer to the [layout detection algorithm documentation](https://pdf-extract-kit.readthedocs.io/en/latest/algorithm/layout_detection.html) for usage instructions!
 - `2024.10.10` 🎉🎉🎉 The official release of `PDF-Extract-Kit 1.0`, rebuilt with modularity for more convenient and flexible model usage! Please switch to the [release/0.1.1](https://github.com/opendatalab/PDF-Extract-Kit/tree/release/0.1.1) branch for the old version.
 - `2024.08.01` 🎉🎉🎉 Added the [StructEqTable](demo/TabRec/StructEqTable/README_TABLE.md) module for table content extraction. Welcome to use it!
@@ -73,6 +74,10 @@ Similarly, we collected and annotated documents containing formulas in both Engl
 ### Formula Recognition
 
 [UniMERNet](https://github.com/opendatalab/UniMERNet) is an algorithm designed for diverse formula recognition in real-world scenarios. By constructing large-scale training data and carefully designed results, it achieves excellent recognition performance for complex long formulas, handwritten formulas, and noisy screenshot formulas.
+
+### Table Recognition
+
+[StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy) is a high efficiency toolkit that can converts table images into LaTeX/HTML/MarkDown. The latest version, powered by the InternVL2-1B foundation model,  improves Chinese recognition accuracy and expands multi-format output options.
 
 #### For more visual and inference results of the models, please refer to the [PDF-Extract-Kit tutorial documentation](xxx).
 
@@ -125,7 +130,14 @@ You can view the OCR results in the `outputs/ocr` folder.
 ```bash 
 python scripts/formula_recognition.py --config=configs/formula_recognition.yaml
 ```
-You can view the formula recognition results in the `outputs/layout_detection` folder.
+You can view the formula recognition results in the `outputs/formula_recognition` folder.
+
+#### Table Recognition Model
+
+```bash 
+python scripts/table_parsing.py --config configs/table_parsing.yaml
+```
+You can view the table recognition results in the `outputs/table_parsing` folder.
 
 > **Note:** For more details on using the model, please refer to the[PDF-Extract-Kit-1.0 Tutorial](https://pdf-extract-kit.readthedocs.io/en/latest/get_started/pretrained_model.html).
 

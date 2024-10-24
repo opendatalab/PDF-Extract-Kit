@@ -51,6 +51,7 @@
 
 
 ## 新闻和更新
+- `2024.10.22` 🎉🎉🎉 支持LaTex和HTML等多种输出格式的表格模型[StructTable-InternVL2-1B](https://huggingface.co/U4R/StructTable-InternVL2-1B)正式接入`PDF-Extract-Kit 1.0`，请参考[表格识别算法文档](https://pdf-extract-kit.readthedocs.io/zh-cn/latest/algorithm/table_recognition.html)进行使用！
 - `2024.10.17` 🎉🎉🎉 检测结果更准确，速度更快的布局检测模型`DocLayout-YOLO`正式接入`PDF-Extract-Kit 1.0`，请参考[布局检测算法文档](https://pdf-extract-kit.readthedocs.io/zh-cn/latest/algorithm/layout_detection.html)进行使用！
 - `2024.10.10` 🎉🎉🎉 基于模块化重构的`PDF-Extract-Kit 1.0`正式版本正式发布，模型使用更加便捷灵活！老版本请切换至[release/0.1.1](https://github.com/opendatalab/PDF-Extract-Kit/tree/release/0.1.1)分支进行使用。
 - `2024.08.01` 🎉🎉🎉 新增了[StructEqTable](demo/TabRec/StructEqTable/README_TABLE.md)表格识别模块用于表格内容提取，欢迎使用！
@@ -79,6 +80,10 @@
 ### 公式识别
 
 [UniMERNet](https://github.com/opendatalab/UniMERNet)是针对真实场景下多样性公式识别的算法，通过构建大规模训练数据及精心设计的结果，使得其可以对复杂长公式、手写公式、含噪声的截图公式均有不错的识别效果。
+
+### 表格识别
+
+[StructEqTable](https://github.com/UniModal4Reasoning/StructEqTable-Deploy)是一个高效表格内容提取工具，能够将表格图像转换为LaTeX/HTML/Markdown格式，最新版本使用InternVL2-1B基础模型，提高了中文识别准确度并增加了多格式输出能力。
 
 #### 更多模型的可视化结果及推理结果可以参考[PDF-Extract-Kit教程文档](xxx)
 
@@ -135,7 +140,16 @@ python scripts/ocr.py --config=configs/ocr.yaml
 ```bash 
 python scripts/formula_recognition.py --config=configs/formula_recognition.yaml
 ```
-你可以在 `outputs/layout_detection` 文件夹下查看公式识别结果。
+你可以在 `outputs/formula_recognition` 文件夹下查看公式识别结果。
+
+
+#### 表格识别模型
+
+```bash 
+python scripts/table_parsing.py --config configs/table_parsing.yaml
+```
+你可以在 `outputs/table_parsing` 文件夹下查看表格内容识别结果。
+
 
 > **注意：** 更多模型使用细节请查看[PDF-Extract-Kit-1.0 中文教程](https://pdf-extract-kit.readthedocs.io/zh-cn/latest/get_started/pretrained_model.html).
 

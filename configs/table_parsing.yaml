@@ -1,0 +1,12 @@
+inputs: assets/demo/table_parsing
+outputs: outputs/table_parsing
+tasks:
+  table_parsing:
+    model: table_parsing_struct_eqtable
+    model_config:
+      model_path: models/TabRec/StructEqTable
+      max_new_tokens: 1024
+      max_time: 30
+      output_format: latex
+      lmdeploy: False
+      flash_atten: True
