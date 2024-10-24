@@ -49,8 +49,11 @@ class LayoutDetectionLayoutlmv3:
             os.makedirs(result_path)
         
         results = []
-        for im_file in images:
-            im = Image.open(im_file).convert("RGB")
+        for idx, im_file in enumerate(images):
+            if isinstance(im_file, Image.Image):
+                im = im_file.convert("RGB")  # extracted PDF pages
+            elif isinstance(im_file, str):
+                im = Image.open(im_file).convert("RGB")  # image path
             layout_res = self.model(np.array(im), ignore_catids=[])
             poly = np.array([det["poly"] for det in layout_res["layout_dets"]])
             boxes = poly[:, [0,1,4,5]] 
@@ -60,7 +63,10 @@ class LayoutDetectionLayoutlmv3:
             if self.visualize:
                 vis_result = visualize_bbox(im_file, boxes, classes, scores, self.id_to_names)
                 # Determine the base name of the image
-                base_name = os.path.basename(im_file)
+                if image_ids:
+                    base_name = image_ids[idx]
+                else:
+                    base_name = os.path.splitext(os.path.basename(im_file))[0]  # Remove file extension
                 result_name = f"{base_name}_layout.png"
                 # Save the visualized result                
                 cv2.imwrite(os.path.join(result_path, result_name), vis_result)
