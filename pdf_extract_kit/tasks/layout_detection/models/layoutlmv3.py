@@ -67,7 +67,7 @@ class LayoutDetectionLayoutlmv3:
                     base_name = image_ids[idx]
                 else:
                     base_name = os.path.splitext(os.path.basename(im_file))[0]  # Remove file extension
-                result_name = f"{base_name}_MFD.png"
+                result_name = f"{base_name}_layout.png"
                 # Save the visualized result                
                 cv2.imwrite(os.path.join(result_path, result_name), vis_result)
 
