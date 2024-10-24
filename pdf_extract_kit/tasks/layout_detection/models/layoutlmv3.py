@@ -8,8 +8,6 @@ from pdf_extract_kit.utils.visualization import visualize_bbox
 
 from .layoutlmv3_util.model_init import Layoutlmv3_Predictor
 
-import pdb
-
 @MODEL_REGISTRY.register("layout_detection_layoutlmv3")
 class LayoutDetectionLayoutlmv3:
     def __init__(self, config):
