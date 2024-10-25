@@ -117,8 +117,8 @@ def deal_with_one_dataset(pdf_path, result_path,  mfr_model, mfr_transform,
                           image_batch_size=256,
                           num_workers=8,
                           partion_num = 1,
-                          partion_idx = 0, update_origin=False):
-    images_dataset = MFRImageDataset(pdf_path,mfr_transform,partion_num = partion_num, partion_idx = partion_idx)
+                          partion_idx = 0, update_origin=False, force_reparse=False):
+    images_dataset = MFRImageDataset(pdf_path,mfr_transform,partion_num = partion_num, partion_idx = partion_idx,force_reparse=force_reparse)
     data_to_save =  fast_deal_with_one_dataset(images_dataset,mfr_model,
                                                pdf_batch_size  =pdf_batch_size,
                           image_batch_size=image_batch_size,num_workers=num_workers,update_origin=update_origin)

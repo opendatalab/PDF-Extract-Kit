@@ -581,7 +581,8 @@ class MFRImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):
     error_count=0
     def __init__(self, metadata_filepath,mfr_transform,
                  partion_num = 1,
-                 partion_idx = 0):
+                 partion_idx = 0,
+                 force_reparse=False):
         super().__init__()
         self.metadata= self.smart_read_json(metadata_filepath)
         self.metadata= np.array_split(self.metadata, partion_num)[partion_idx]
@@ -589,6 +590,7 @@ class MFRImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):
         self.timer = Timers(False)
         self.mfr_transform=mfr_transform
         self.client = build_client()
+        self.force_reparse = force_reparse
     def __len__(self):
         return len(self.metadata)
     
@@ -620,7 +622,7 @@ class MFRImageDataset(Dataset, DatasetUtils,ImageTransformersUtils):
                 ori_im  = process_pdf_page_to_image(page, 200, output_width=width,output_height=height)     
                 for bbox_metadata in pdf_page_metadata['layout_dets']:
                     if bbox_metadata['category_id'] not in [13, 14]:continue
-                    if bbox_metadata.get('latex',"")!="":
+                    if bbox_metadata.get('latex',"")!="" and not self.force_reparse:
                         #print("we can skip this one because it has latex")
                         continue # skip the part that has latex parsed
                     

@@ -21,5 +21,5 @@ else
     batch_size=8
 
 fi
-EXTRA_ARGS=$1
+EXTRA_ARGS=$4
 python batch_running_task/task_layout/batch_deal_with_layout.py --root_path $1 --index_part $2 --num_parts $3 --inner_batch_size $inner_batch_size --batch_size $batch_size --num_workers 8 $EXTRA_ARGS  # --redo   # --result_save_path custom_collection/result --lock_server_path custom_collection # --accelerated_layout --accelerated_mfd 

@@ -22,13 +22,12 @@ if [[ $(hostname) == SH* ]]; then
     export OPENMPIPATH=/mnt/petrelfs/share/openmpi-3.1.2-cuda9.0
     export PATH=$OPENMPIPATH/bin:$PATH
     export LD_LIBRARY_PATH=$OPENMPIPATH/lib:$LD_LIBRARY_PATH
-    export LD_LIBRARY_PATH=/mnt/petrelfs/share/test-cuda/cuda-12.1/lib64:$LD_LIBRARY_PATH; ##### <<---- this line will extremly slow the bash
-    export LD_LIBRARY_PATH=/mnt/petrelfs/share/test-cuda/cuda-12.1/targets/x86_64-linux/lib:$LD_LIBRARY_PATH
 
 else
     inner_batch_size=8
     batch_size=8
 
 fi
-EXTRA_ARGS=$1
-python batch_running_task/task_mfr/batch_deal_with_mfr.py --root_path $1 --index_part $2 --num_parts $3 --shuffle --num_workers 8 $EXTRA_ARGS # --replace --update_origin --check_lock False --accelerated_mfr True
+
+EXTRA_ARGS=$4
+python batch_running_task/task_mfr/batch_deal_with_mfr.py --root_path $1 --index_part $2 --num_parts $3 --num_workers 8 --replace --check_lock False --force_reparse $EXTRA_ARGS # --replace --update_origin --check_lock False --accelerated_mfr True

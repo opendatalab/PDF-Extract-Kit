@@ -28,6 +28,7 @@ class BatchMFRConfig(BatchModeConfig):
     lock_server_path: str=LOCKSERVER
     accelerated_mfr: bool = False
     replace:bool=False
+    force_reparse:bool=False
 if __name__ == '__main__':
     task_name = "physics_part"
     version   = "final2"
@@ -140,7 +141,8 @@ if __name__ == '__main__':
                           pdf_batch_size=16, image_batch_size=128,
                           num_workers = args.num_workers,
                           partion_num = partion_num,
-                          partion_idx = partion_idx,update_origin=args.update_origin)
+                          partion_idx = partion_idx,update_origin=args.update_origin,
+                          force_reparse=args.force_reparse)
                 print(f"""
 =========================================
 finish dealing with {result_path}
