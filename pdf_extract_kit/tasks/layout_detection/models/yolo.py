@@ -43,6 +43,7 @@ class LayoutDetectionYOLO:
         self.visualize = config.get('visualize', False)
         self.nc = config.get('nc', 10)
         self.workers = config.get('workers', 8)
+        self.device = config.get('device', 'cpu')
         
         if self.iou_thres > 0:
             import torchvision
@@ -62,7 +63,7 @@ class LayoutDetectionYOLO:
         """
         results = []
         for idx, image in enumerate(images):
-            result = self.model.predict(image, imgsz=self.img_size, conf=self.conf_thres, iou=self.iou_thres, verbose=False)[0]
+            result = self.model.predict(image, imgsz=self.img_size, conf=self.conf_thres, iou=self.iou_thres, verbose=False, device=self.device)[0]
             if self.visualize:
                 if not os.path.exists(result_path):
                     os.makedirs(result_path)
