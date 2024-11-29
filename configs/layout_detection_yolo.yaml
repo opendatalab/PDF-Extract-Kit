@@ -7,5 +7,6 @@ tasks:
       img_size: 1024
       conf_thres: 0.25
       iou_thres: 0.45
-      model_path: models/Layout/YOLO/yolov10l_ft.pt
+      model_path: models/Layout/YOLO/doclayout_yolo_ft.pt
       visualize: True
+      device: 0
