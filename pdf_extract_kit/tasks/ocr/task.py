@@ -61,7 +61,7 @@ class OCRTask(BaseTask):
         for fpath in file_list:
             basename = os.path.basename(fpath)[:-4]
             if fpath.endswith(".pdf") or fpath.endswith(".PDF"):
-                images = load_pdf(pdf_path)
+                images = load_pdf(fpath)
                 pdf_res = []
                 for page, img in enumerate(images):
                     page_res = self.predict_image(img)
