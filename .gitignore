@@ -10,6 +10,7 @@ test*
 # python
 .ipynb_checkpoints
 *.ipynb
+!pdf_extract_kit.ipynb
 **/__pycache__/
 
 # logs
