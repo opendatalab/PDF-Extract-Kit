@@ -20,3 +20,4 @@ models/*
 
 # Sphinx documentation
 docs/*/_build/
+.idea
