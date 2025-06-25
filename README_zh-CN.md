@@ -103,7 +103,7 @@ pip install -r requirements.txt
 ```
 > **注意：** 如果你的设备不支持 GPU，请使用 `requirements-cpu.txt` 安装 CPU 版本的依赖。
 
-> **注意：** 目前doclayout-yolo仅支持从pypi源安装，如果出现doclayout-yolo无法安装，请通过 `pip3 install doclayout-yolo==0.0.2 --extra-index-url=https://pypi.org/simple` 安装。
+> **注意：** 目前doclayout-yolo仅支持从pypi源安装，如果出现doclayout-yolo无法安装，请通过 `pip3 install doclayout-yolo==0.0.2b1 --extra-index-url=https://pypi.org/simple` 安装。
 
 ### 模型下载
 

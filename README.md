@@ -96,7 +96,7 @@ pip install -r requirements.txt
 ```
 > **Note:** If your device does not support GPU, please install the CPU version dependencies using `requirements-cpu.txt` instead of `requirements.txt`.
 
-> **Note：** Current Doclayout-YOLO only supports installation from pypi，if error raises during DocLayout-YOLO installation，please install through `pip3 install doclayout-yolo==0.0.2 --extra-index-url=https://pypi.org/simple` .
+> **Note：** Current Doclayout-YOLO only supports installation from pypi，if error raises during DocLayout-YOLO installation，please install through `pip3 install doclayout-yolo==0.0.2b1 --extra-index-url=https://pypi.org/simple` .
 
 ### Model Download
 
