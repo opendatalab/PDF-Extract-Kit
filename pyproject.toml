@@ -10,7 +10,7 @@ authors = [
 ]
 description = "A Comprehensive Toolkit for High-Quality PDF Content Extraction."
 readme = "README.md"
-license = { file="LICENSE" }
+license = { file="LICENSE.md" }
 requires-python = ">=3.10"
 dependencies = [
     "PyPDF2",
@@ -18,7 +18,7 @@ dependencies = [
     "pyyaml",
     "frontend",
     "pymupdf",
-    opencv-python = "^4.6.0"
+    "opencv-python>=4.6.0"
     # Add other common dependencies
 ]
 
@@ -32,3 +32,5 @@ formula_detection = [
     # Add other dependencies for formula detection
 ]
 # Add additional dependencies for other models
+[tool.setuptools.packages.find]
+include = ["pdf_extract_kit"]

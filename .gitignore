@@ -20,3 +20,7 @@ models/*
 
 # Sphinx documentation
 docs/*/_build/
+
+# environment
+.venv
+.env
