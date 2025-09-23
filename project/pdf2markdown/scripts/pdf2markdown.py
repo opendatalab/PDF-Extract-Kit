@@ -343,7 +343,7 @@ class PDF2MARKDOWN(OCRTask):
                     for extract_res in pdf_extract_res:
                         md_text = self.convert2md(extract_res)
                         md_content.append(md_text)
-                    with open(os.path.join(save_dir, f"{basename}.md"), "w") as f:
+                    with open(os.path.join(save_dir, f"{basename}.md"), "w", encoding="utf-8") as f:
                         f.write("\n\n".join(md_content))
                         
                 if visualize:
